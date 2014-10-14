@@ -1,6 +1,6 @@
 
 var express = require ("express"),
-    skillmapsvg = require ("./errorreporter.js");
+    api = require ("./apiprocessor.js");
 
 var app = express ();
 app.set ("port", (process.env.PORT || 80));
@@ -12,6 +12,15 @@ app.engine ("ejs", require ("ejs").renderFile);
 app.get ("/", function (req, res) {
 
     res.render ("template.ejs");
+
+});
+
+app.get ("/api", function (req, res) {
+
+    var auth = api.processor.authenticate (req);
+
+    res.writeHead (200, {'Content-Type':"text/plain"});
+    res.end('authenticated: ' + auth);
 
 });
 
