@@ -1,4 +1,3 @@
-
 exports.processor = {
 
     authenticate: function (req) {
