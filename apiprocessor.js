@@ -16,9 +16,19 @@ exports.processor = {
                 callback (userData);
             },
             function () {
-                callback ({});
+                callback ();
             }
         );
+
+    },
+
+    getError: function (errorMessage) {
+
+        var error = {
+            error: errorMessage
+        };
+
+        return error;
 
     }
 

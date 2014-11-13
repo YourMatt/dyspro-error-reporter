@@ -25,15 +25,33 @@ app.get ("/", function (req, res) {
 
 });
 
-app.get ("/api", function (req, res) {
+// expose api methods
+app.get ("/api/:method", function (req, res) {
 
+    // authenticate all api requests
     var auth = api.processor.authenticate (req, function (userData) {
+        var returnData;
 
+        // return response for unauthenticated accounts
+        if (! userData) {
+            returnData = api.processor.getError ("Not authenticated.");
+        }
 
+        // evaluate the method
+        else {
+            switch (req.params.method) {
+                case "log":
+                    // TODO: Log the request
+                    break;
+                default:
+                    returnData = api.processor.getError ("Method not implemented.");
+                    break;
+            }
+        }
 
-        res.writeHead (200, {"Content-Type": "text/plain"});
-        console.log (userData);
-        res.end("Name = " + userData.username);
+        res.writeHead (200, {"Content-Type": "application/json"});
+        res.end (JSON.stringify (returnData));
+
     });
 
 });
