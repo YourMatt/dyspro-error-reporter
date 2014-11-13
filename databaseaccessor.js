@@ -12,12 +12,19 @@ exports.init = function (initDbLocation, initPg) {
 exports.query = {
 
     // authenticate the user
-    loadUser: function (userName, password, callback) {
+    loadUser: function (userName, password, success, fail) {
 
         pg.connect (dbLocation, function (err, client, done) {
+            if (err) {
+                fail ();
+                return;
+            }
             client.query ("select * from users where username = '" + userName + "' and password = md5('" + password + "')", function (err, result) {
                 done ();
-                callback (result.rows[0]);
+                if (! err && result.rows.length == 1) {
+                    success (result.rows[0]);
+                }
+                else fail ();
             });
         });
 

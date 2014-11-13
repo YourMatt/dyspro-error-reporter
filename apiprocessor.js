@@ -11,10 +11,15 @@ exports.processor = {
         var checkUser = req.headers.username;
         var checkPassword = req.headers.password;
 
-        database.query.loadUser (checkUser, checkPassword, function (userData) {
-            callback (userData);
-        });
+        database.query.loadUser (checkUser, checkPassword,
+            function (userData) {
+                callback (userData);
+            },
+            function () {
+                callback ({});
+            }
+        );
 
     }
-    
+
 }

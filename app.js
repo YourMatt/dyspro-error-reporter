@@ -28,6 +28,9 @@ app.get ("/", function (req, res) {
 app.get ("/api", function (req, res) {
 
     var auth = api.processor.authenticate (req, function (userData) {
+
+
+
         res.writeHead (200, {"Content-Type": "text/plain"});
         console.log (userData);
         res.end("Name = " + userData.username);
