@@ -1,20 +1,20 @@
 var database;
 var files = [];
 
-exports.init = function (initDatabase) {
-    database = initDatabase;
+exports.init = function (init_database) {
+    database = init_database;
 };
 
 exports.processor = {
 
     authenticate: function (req, callback) {
 
-        var checkUser = req.headers.username;
-        var checkPassword = req.headers.password;
+        var check_user = req.headers.username;
+        var check_password = req.headers.password;
 
-        database.query.loadUser (checkUser, checkPassword,
-            function (userData) {
-                callback (userData);
+        database.query.loadUser (check_user, check_password,
+            function (user_data) {
+                callback (user_data);
             },
             function () {
                 callback ();
@@ -23,19 +23,19 @@ exports.processor = {
 
     },
 
-    logError: function (req, errorData, callback) {
+    logError: function (req, error_data, callback) {
 
-        this.uploadFiles (req, function (errorMessage) {
+        this.uploadFiles (req, function (error_message) {
 
             // return if an error loading files
-            if (errorMessage) {
-                callback(errorMessage);
+            if (error_message) {
+                callback (error_message);
                 return;
             }
 
             // save the base error type
             database.query.logError (
-                errorData,
+                error_data,
                 files,
                 function () {
                     callback ();
@@ -56,18 +56,18 @@ exports.processor = {
         req.pipe (req.busboy);
 
         // save files to local variable
-        req.busboy.on ("file", function (fieldname, file, filename, encoding, mimetype) {
+        req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
 
             // load the file data
             file.on ("data", function (data) {
 
-                var fileData = {
-                    file_name: filename,
-                    file_type: that.getFileType (filename),
+                var file_data = {
+                    file_name: file_name,
+                    file_type: that.getFileType (file_name),
                     source: data.toString ("utf8")
                 };
 
-                files.push (fileData);
+                files.push (file_data);
 
             });
 
@@ -80,17 +80,17 @@ exports.processor = {
 
     },
 
-    getFileType: function (fileName) {
+    getFileType: function (file_name) {
 
-        var fileNameParts = fileName.split (".");
-        return fileNameParts[fileNameParts.length - 1].toLowerCase ();
+        var file_name_parts = file_name.split (".");
+        return file_name_parts[file_name_parts.length - 1].toLowerCase ();
 
     },
 
-    getErrorResponseData: function (errorMessage) {
+    getErrorResponseData: function (error_message) {
 
         var error = {
-            error: errorMessage
+            error: error_message
         };
 
         return error;
@@ -107,10 +107,10 @@ exports.processor = {
 
     },
 
-    sendResponse: function (res, returnData) {
+    sendResponse: function (res, return_data) {
 
         res.writeHead (200, {"Content-Type": "application/json"});
-        res.end (JSON.stringify (returnData));
+        res.end (JSON.stringify (return_data));
 
     }
 

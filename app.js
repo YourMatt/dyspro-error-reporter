@@ -10,7 +10,7 @@ var express = require ("express"),
 // initialize express
 var app = express ();
 app.set ("port", (process.env.PORT || 80));
-app.set ("dblocation", (process.env.DATABASE_URL || config.defaultDatabase));
+app.set ("dblocation", (process.env.DATABASE_URL || config.default_database));
 app.use (express.static (__dirname + "/public"));
 app.use (busboy ()); // allow file uploads
 
@@ -32,10 +32,10 @@ app.get ("/", function (req, res) {
 app.post ("/api/:method", function (req, res) {
 
     // authenticate all api requests
-    api.processor.authenticate (req, function (userData) {
+    api.processor.authenticate (req, function (user_data) {
 
         // return response for unauthenticated accounts
-        if (! userData) {
+        if (! user_data) {
             api.processor.sendResponse (res, api.processor.getErrorResponseData ("Not authenticated."));
             return;
         }
@@ -44,17 +44,17 @@ app.post ("/api/:method", function (req, res) {
         switch (req.params.method) {
             case "log":
 
-                var errorData = {
-                    user_id: userData.user_id,
+                var error_data = {
+                    user_id: user_data.user_id,
                     product: req.query.product,
                     environment: req.query.environment,
                     server: req.query.server,
                     message: req.query.message,
                     stack_trace: req.query.stack_trace
-                }
+                };
 
-                api.processor.logError (req, errorData, function (errorMessage) {
-                    if (errorMessage) api.processor.sendResponse (res, api.processor.getErrorResponseData (errorMessage));
+                api.processor.logError (req, error_data, function (error_message) {
+                    if (error_message) api.processor.sendResponse (res, api.processor.getErrorResponseData (error_message));
                     else api.processor.sendResponse (res, api.processor.getSuccessResponseData ());
                 });
 

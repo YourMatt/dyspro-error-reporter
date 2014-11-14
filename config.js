@@ -1,6 +1,6 @@
 module.exports = {
 
-    defaultDatabase: {
+    default_database: {
         port: 5432,
         password: "WDxChcUL72x7iO_OfUDwRHNClT",
         database: "drqjjjrp4u035",

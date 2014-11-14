@@ -1,18 +1,18 @@
-var dbLocation, pg;
+var db_location, pg;
 
-exports.init = function (initDbLocation, initPg) {
-    dbLocation = initDbLocation;
-    pg = initPg;
+exports.init = function (init_db_location, init_pg) {
+    db_location = init_db_location;
+    pg = init_pg;
 }
 
 exports.query = {
 
     // authenticate the user
-    loadUser: function (userName, password, success, fail) {
+    loadUser: function (user_name, password, success, fail) {
 
         this.run (
             "select * from users where user_name = $1 and password = md5($2)",
-            [userName, password],
+            [user_name, password],
             function (result) {
                 if (result.rows.length != 1) fail ();
                 else success (result.rows[0]);
@@ -23,7 +23,7 @@ exports.query = {
     },
 
     // load an existing error by product and stack trace
-    getErrorByData: function (errorData, success, fail) {
+    getErrorByData: function (error_data, success, fail) {
 
         this.run (
             "select error_id " +
@@ -31,7 +31,7 @@ exports.query = {
             "where  user_id = $1 " +
             "and    product = $2 " +
             "and    md5(stack_trace) = md5($3)",
-            [errorData.user_id, errorData.product, errorData.stack_trace],
+            [error_data.user_id, error_data.product, error_data.stack_trace],
             function (result) {
 
                 if (result.rows.length) success (result.rows[0].error_id);
@@ -44,21 +44,21 @@ exports.query = {
     },
 
     // save a new error type
-    logError: function (errorData, files, success, fail) {
+    logError: function (error_data, files, success, fail) {
         var that = this;
 
         this.getErrorByData (
-            errorData,
-            function (errorId) {
+            error_data,
+            function (error_id) {
 
                 // add to the existing error if found
-                if (errorId) {
-                    errorData.error_id = errorId;
+                if (error_id) {
+                    error_data.error_id = error_id;
                     that.logErrorOccurrence (
-                        errorData,
-                        function (errorMessage) {
+                        error_data,
+                        function (error_message) {
                             // TODO: Save the files
-                            success (errorMessage);
+                            success (error_message);
                         },
                         fail
                     );
@@ -71,20 +71,20 @@ exports.query = {
                         "(              user_id, product, stack_trace) " +
                         "values (       $1, $2, $3) " +
                         "returning      error_id",
-                        [errorData.user_id, errorData.product, errorData.stack_trace],
+                        [error_data.user_id, error_data.product, error_data.stack_trace],
                         function (result) {
                             if (! result.rows) fail ();
 
-                            var errorId = result.rows[0].error_id;
+                            var error_id = result.rows[0].error_id;
 
-                            console.log ("added record " + errorId);
-                            errorData.error_id = errorId;
+                            console.log ("added record " + error_id);
+                            error_data.error_id = error_id;
 
                             that.logErrorOccurrence (
-                                errorData,
-                                function (errorMessage) {
+                                error_data,
+                                function (error_message) {
                                     // TODO: Save the files
-                                    success (errorMessage);
+                                    success (error_message);
                                 },
                                 fail
                             );
@@ -100,20 +100,20 @@ exports.query = {
     },
 
     // save a new occurrence of an existing error
-    logErrorOccurrence: function (errorData, success, fail) {
+    logErrorOccurrence: function (error_data, success, fail) {
 
         this.run (
             "insert into    error_occurrences " +
             "(              error_id, environment, message, server) " +
             "values (       $1, $2, $3, $4) " +
             "returning      error_occurrence_id",
-            [errorData.error_id, errorData.environment, errorData.message, errorData.server],
+            [error_data.error_id, error_data.environment, error_data.message, error_data.server],
             function (result) {
 
                 if (! result.rows) {} // error
 
-                var errorOccurrenceId = result.rows[0].error_occurrence_id;
-                console.log ("address occ record " + errorOccurrenceId);
+                var error_occurrence_id = result.rows[0].error_occurrence_id;
+                console.log ("address occ record " + error_occurrence_id);
 
                 success();
 
@@ -131,15 +131,18 @@ exports.query = {
     // run a query against the database
     run: function (query, fields, success, fail) {
 
-        pg.connect (dbLocation, function (err, client, done) {
+        pg.connect (db_location, function (err, client, done) {
             if (err) {
                 fail ();
             }
             else {
                 client.query (query, fields, function (err, result) {
-                    done();
-                    if (err) { console.log(err); fail(); }
-                    else success(result);
+                    done ();
+                    if (err) {
+                        console.log(err);
+                        fail();
+                    }
+                    else success (result);
                 });
             }
         });
