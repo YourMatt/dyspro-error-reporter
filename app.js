@@ -1,6 +1,7 @@
 
 // include libraries
 var express = require ("express"),
+    busboy = require ("connect-busboy"),
     api = require ("./apiprocessor.js"),
     database = require ("./databaseaccessor.js"),
     pg = require ("pg"),
@@ -11,6 +12,7 @@ var app = express ();
 app.set ("port", (process.env.PORT || 80));
 app.set ("dblocation", (process.env.DATABASE_URL || config.defaultDatabase));
 app.use (express.static (__dirname + "/public"));
+app.use (busboy ()); // allow file uploads
 
 // initialize the library dependencies
 database.init (app.get ("dblocation"), pg);
@@ -26,31 +28,41 @@ app.get ("/", function (req, res) {
 });
 
 // expose api methods
-app.get ("/api/:method", function (req, res) {
+// TODO: make this accessible for get and post - but make sure no error with no files for get
+app.post ("/api/:method", function (req, res) {
 
     // authenticate all api requests
-    var auth = api.processor.authenticate (req, function (userData) {
-        var returnData;
+    api.processor.authenticate (req, function (userData) {
 
         // return response for unauthenticated accounts
         if (! userData) {
-            returnData = api.processor.getError ("Not authenticated.");
+            api.processor.sendResponse (res, api.processor.getErrorResponseData ("Not authenticated."));
+            return;
         }
 
         // evaluate the method
-        else {
-            switch (req.params.method) {
-                case "log":
-                    // TODO: Log the request
-                    break;
-                default:
-                    returnData = api.processor.getError ("Method not implemented.");
-                    break;
-            }
-        }
+        switch (req.params.method) {
+            case "log":
 
-        res.writeHead (200, {"Content-Type": "application/json"});
-        res.end (JSON.stringify (returnData));
+                var errorData = {
+                    user_id: userData.user_id,
+                    product: req.query.product,
+                    environment: req.query.environment,
+                    server: req.query.server,
+                    message: req.query.message,
+                    stack_trace: req.query.stack_trace
+                }
+
+                api.processor.logError (req, errorData, function (errorMessage) {
+                    if (errorMessage) api.processor.sendResponse (res, api.processor.getErrorResponseData (errorMessage));
+                    else api.processor.sendResponse (res, api.processor.getSuccessResponseData ());
+                });
+
+                break;
+            default:
+                api.processor.sendResponse (res, api.processor.getErrorResponseData ("Method not implemented."));
+                break;
+        }
 
     });
 

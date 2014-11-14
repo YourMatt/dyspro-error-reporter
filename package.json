@@ -4,6 +4,7 @@
     "dependencies": {
         "express": "~4.9.x",
         "ejs": "~1.0.x",
-        "pg": "2.x"
+        "pg": "2.x",
+        "connect-busboy": "0.0.2"
     }
 }

@@ -2,14 +2,14 @@
 -- Holds setup queries for the PostgreSQL database.
 
 CREATE TABLE    users
-(               user_id             INTEGER     NOT NULL UNIQUE
+(               user_id             SERIAL
 ,               user_name           VARCHAR(25) NOT NULL UNIQUE
 ,               password            VARCHAR(34) NOT NULL
 ,               create_date         TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
 , CONSTRAINT    pk_user_id                      PRIMARY KEY (user_id));
 
 CREATE TABLE    errors
-(               error_id            INTEGER     NOT NULL UNIQUE
+(               error_id            SERIAL
 ,               user_id             INTEGER     NOT NULL
 ,               product             VARCHAR(50) NOT NULL
 ,               stack_trace         TEXT
@@ -18,7 +18,7 @@ CREATE TABLE    errors
   REFERENCES    users (user_id));
 
 CREATE TABLE    error_occurrences
-(               error_occurrence_id INTEGER     NOT NULL UNIQUE
+(               error_occurrence_id SERIAL
 ,               error_id            INTEGER     NOT NULL
 ,               environment         VARCHAR(25) NOT NULL
 ,               message             TEXT
