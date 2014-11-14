@@ -8,22 +8,21 @@ exports.init = function (init_db_location, init_pg) {
 exports.query = {
 
     // authenticate the user
-    loadUser: function (user_name, password, success, fail) {
+    loadUser: function (user_name, password, callback) {
 
         this.run (
             "select * from users where user_name = $1 and password = md5($2)",
             [user_name, password],
             function (result) {
-                if (result.rows.length != 1) fail ();
-                else success (result.rows[0]);
-            },
-            fail
+                if (result.rows.length != 1) callback ();
+                else callback (result.rows[0]);
+            }
         );
 
     },
 
     // load an existing error by product and stack trace
-    getErrorByData: function (error_data, success, fail) {
+    getErrorByData: function (error_data, callback) {
 
         this.run (
             "select error_id " +
@@ -34,17 +33,16 @@ exports.query = {
             [error_data.user_id, error_data.product, error_data.stack_trace],
             function (result) {
 
-                if (result.rows.length) success (result.rows[0].error_id);
-                else success ();
+                if (result.rows.length) callback (result.rows[0].error_id);
+                else callback ();
 
-            },
-            fail
+            }
         );
 
     },
 
     // save a new error type
-    logError: function (error_data, files, success, fail) {
+    logError: function (error_data, files, callback) {
         var that = this;
 
         this.getErrorByData (
@@ -56,11 +54,8 @@ exports.query = {
                     error_data.error_id = error_id;
                     that.logErrorOccurrence (
                         error_data,
-                        function (error_message) {
-                            // TODO: Save the files
-                            success (error_message);
-                        },
-                        fail
+                        files,
+                        callback
                     );
                 }
 
@@ -73,34 +68,28 @@ exports.query = {
                         "returning      error_id",
                         [error_data.user_id, error_data.product, error_data.stack_trace],
                         function (result) {
-                            if (! result.rows) fail ();
+                            if (! result.rows) callback ("Error saving to errors table.");
 
-                            var error_id = result.rows[0].error_id;
-
-                            console.log ("added record " + error_id);
-                            error_data.error_id = error_id;
-
+                            // save the new occurrence of the error
+                            error_data.error_id = result.rows[0].error_id;
                             that.logErrorOccurrence (
                                 error_data,
-                                function (error_message) {
-                                    // TODO: Save the files
-                                    success (error_message);
-                                },
-                                fail
+                                files,
+                                callback
                             );
-                        },
-                        fail
+
+                        }
                     );
                 }
 
-            },
-            fail
+            }
         );
 
     },
 
     // save a new occurrence of an existing error
-    logErrorOccurrence: function (error_data, success, fail) {
+    logErrorOccurrence: function (error_data, files, callback) {
+        var that = this;
 
         this.run (
             "insert into    error_occurrences " +
@@ -109,40 +98,59 @@ exports.query = {
             "returning      error_occurrence_id",
             [error_data.error_id, error_data.environment, error_data.message, error_data.server],
             function (result) {
+                if (! result.rows) callback ("Error saving to the error_occurrences table.");
 
-                if (! result.rows) {} // error
-
+                // save the attachments provided with the error
                 var error_occurrence_id = result.rows[0].error_occurrence_id;
-                console.log ("address occ record " + error_occurrence_id);
+                if (files.length) that.logErrorAttachments (error_occurrence_id, files, callback);
+                else callback ();
 
-                success();
-
-            },
-            fail
+            }
         );
 
     },
 
     // save a file related to an error occurrence
-    logErrorAttachment: function () {
+    numAttachmentsSaved: 0,
+    logErrorAttachments: function (error_occurrence_id, files, callback) {
+        var that = this;
+
+        this.numAttachmentsSaved = 0; // reset the saved attachments counter
+        for (var i = 0; i < files.length; i++) {
+
+            this.run (
+                "insert into    error_attachments " +
+                "(              error_occurrence_id, file_name, file_type, source) " +
+                "values (       $1, $2, $3, $4)",
+                [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source],
+                function (result) {
+
+                    that.numAttachmentsSaved++;
+                    if (that.numAttachmentsSaved == files.length) callback ();
+
+                }
+            );
+
+        }
 
     },
 
     // run a query against the database
-    run: function (query, fields, success, fail) {
+    run: function (query, fields, callback) {
 
         pg.connect (db_location, function (err, client, done) {
             if (err) {
-                fail ();
+                console.error (err);
+                callback ({});
             }
             else {
                 client.query (query, fields, function (err, result) {
                     done ();
                     if (err) {
-                        console.log(err);
-                        fail();
+                        console.error (err);
+                        callback ({});
                     }
-                    else success (result);
+                    else callback (result);
                 });
             }
         });

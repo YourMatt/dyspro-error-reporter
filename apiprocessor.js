@@ -15,9 +15,6 @@ exports.processor = {
         database.query.loadUser (check_user, check_password,
             function (user_data) {
                 callback (user_data);
-            },
-            function () {
-                callback ();
             }
         );
 
@@ -37,12 +34,7 @@ exports.processor = {
             database.query.logError (
                 error_data,
                 files,
-                function () {
-                    callback ();
-                },
-                function () {
-                    callback ("Error saving data.");
-                }
+                callback
             );
 
         });
@@ -64,7 +56,7 @@ exports.processor = {
                 var file_data = {
                     file_name: file_name,
                     file_type: that.getFileType (file_name),
-                    source: data.toString ("utf8")
+                    source: data // data.toString ("utf8")
                 };
 
                 files.push (file_data);
