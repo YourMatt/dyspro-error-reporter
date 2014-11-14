@@ -27,6 +27,40 @@ app.get ("/", function (req, res) {
 
 });
 
+app.get ("/filetest", function (req, res) {
+
+    database.query.getErrorAttachment (16, "npm.png", function (file) {
+
+        if (file) {
+
+            /* // test download
+            res.writeHead (200, {"Content-Disposition": "attachment filename=" + file.file_name + ";"});
+            res.end (file.source);
+            */
+
+            // test inline
+            res.writeHead (200, {"Content-Type": "image/png"});
+            res.end (file.source);
+
+        }
+
+        else {
+            res.writeHead (200, {"Content-Type": "application/json"});
+            res.end("file not found");
+        }
+
+    });
+
+    /*
+    res.writeHead(
+        200,
+        {
+            "Content-Disposition": "attachment filename=" + file_name
+        }
+    */
+
+});
+
 // expose api methods
 // TODO: make this accessible for get and post - but make sure no error with no files for get
 app.post ("/api/:method", function (req, res) {

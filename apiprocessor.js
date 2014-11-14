@@ -12,7 +12,7 @@ exports.processor = {
         var check_user = req.headers.username;
         var check_password = req.headers.password;
 
-        database.query.loadUser (check_user, check_password,
+        database.query.getUserByLogin (check_user, check_password,
             function (user_data) {
                 callback (user_data);
             }

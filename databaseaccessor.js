@@ -7,8 +7,14 @@ exports.init = function (init_db_location, init_pg) {
 
 exports.query = {
 
+    /*******************************************************************************************************************
+     *
+     * INTERACTION WITH USERS TABLE
+     *
+     ******************************************************************************************************************/
+
     // authenticate the user
-    loadUser: function (user_name, password, callback) {
+    getUserByLogin: function (user_name, password, callback) {
 
         this.run (
             "select * from users where user_name = $1 and password = md5($2)",
@@ -20,6 +26,12 @@ exports.query = {
         );
 
     },
+
+    /*******************************************************************************************************************
+     *
+     * INTERACTION WITH ERRORS TABLE
+     *
+     ******************************************************************************************************************/
 
     // load an existing error by product and stack trace
     getErrorByData: function (error_data, callback) {
@@ -87,6 +99,12 @@ exports.query = {
 
     },
 
+    /*******************************************************************************************************************
+     *
+     * INTERACTION WITH ERROR_OCCURRENCES TABLE
+     *
+     ******************************************************************************************************************/
+
     // save a new occurrence of an existing error
     logErrorOccurrence: function (error_data, files, callback) {
         var that = this;
@@ -103,6 +121,31 @@ exports.query = {
                 // save the attachments provided with the error
                 var error_occurrence_id = result.rows[0].error_occurrence_id;
                 if (files.length) that.logErrorAttachments (error_occurrence_id, files, callback);
+                else callback ();
+
+            }
+        );
+
+    },
+
+    /*******************************************************************************************************************
+     *
+     * INTERACTION WITH ERROR_ATTACHMENTS TABLE
+     *
+     ******************************************************************************************************************/
+
+    // load an existing error by product and stack trace
+    getErrorAttachment: function (error_occurrence_id, file_name, callback) {
+
+        this.run (
+            "select * " +
+            "from   error_attachments " +
+            "where  error_occurrence_id = $1 " +
+            "and    file_name = $2",
+            [error_occurrence_id, file_name],
+            function (result) {
+
+                if (result.rows.length) callback (result.rows[0]);
                 else callback ();
 
             }
@@ -134,6 +177,12 @@ exports.query = {
         }
 
     },
+
+    /*******************************************************************************************************************
+     *
+     * GENERAL METHODS
+     *
+     ******************************************************************************************************************/
 
     // run a query against the database
     run: function (query, fields, callback) {
