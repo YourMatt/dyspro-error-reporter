@@ -1,7 +1,10 @@
 
 // include libraries
 var express = require ("express"),
+    session = require ("express-session"),
     busboy = require ("connect-busboy"),
+    bodyParser = require ("body-parser"),
+    sessionManager = require ("./sessionmanager.js"),
     api = require ("./apiprocessor.js"),
     database = require ("./databaseaccessor.js"),
     pg = require ("pg"),
@@ -13,20 +16,78 @@ app.set ("port", (process.env.PORT || 80));
 app.set ("dblocation", (process.env.DATABASE_URL || config.default_database));
 app.use (express.static (__dirname + "/public"));
 app.use (busboy ()); // allow file uploads
+app.use (bodyParser.urlencoded ({extended: false}));
+app.use (session ({secret: "dyspro-sess", resave: true, saveUninitialized: true}));
 
 // initialize the library dependencies
 database.init (app.get ("dblocation"), pg);
 api.init (database);
 
-// handle all other requests
+// set template engine
 app.set ("views", __dirname + "/views/layout");
 app.engine ("ejs", require ("ejs").renderFile);
-app.get ("/", function (req, res) {
 
-    res.render ("template.ejs");
-
+// load the session
+app.use (function (req, res, next) {
+    sessionManager.init (req);
+    next ();
 });
 
+// HANDLE PAGES
+
+// home page
+app.get ("/", function (req, res) {
+    res.render ("home.ejs",
+        {
+            error_message: sessionManager.getOnce ("error_message"),
+            success_message: sessionManager.getOnce ("success_message"),
+            user_id: sessionManager.data.user_id
+        }
+    );
+});
+
+// dashboard page
+app.get ("/dashboard", function (req, res) {
+    if (! sessionManager.loggedIn ()) {
+        res.redirect ("/");
+        return;
+    }
+    res.render ("dashboard.ejs",
+        {
+            error_message: sessionManager.getOnce ("error_message"),
+            success_message: sessionManager.getOnce ("success_message"),
+            user_id: sessionManager.data.user_id
+        }
+    );
+});
+
+// process login
+app.post ("/login", function (req, res) {
+    database.query.getUserByLogin (req.body.username, req.body.password, function (user_data) {
+
+        // user not authenticated
+        if (! user_data) {
+            sessionManager.set ("error_message", "Incorrect username or password.");
+            res.redirect (req.headers.referer);
+            return;
+        }
+
+        // save user to session and forward to the dashboard
+        sessionManager.set ("user_id", user_data.user_id);
+        res.redirect ("/dashboard");
+
+    });
+});
+
+// process logout
+app.get ("/logout", function (req, res) {
+    sessionManager.set ("user_id", "");
+    sessionManager.set ("success_message", "You have successfully logged out.");
+    res.redirect ("/");
+});
+
+// sample endpoints
+// TODO: Convert this to real method for loading attachments
 app.get ("/filetest", function (req, res) {
 
     database.query.getErrorAttachment (16, "npm.png", function (file) {
@@ -51,19 +112,10 @@ app.get ("/filetest", function (req, res) {
 
     });
 
-    /*
-    res.writeHead(
-        200,
-        {
-            "Content-Disposition": "attachment filename=" + file_name
-        }
-    */
-
 });
 
 // expose api methods
-// TODO: make this accessible for get and post - but make sure no error with no files for get
-app.post ("/api/:method", function (req, res) {
+app.all ("/api/:method", function (req, res) {
 
     // authenticate all api requests
     api.processor.authenticate (req, function (user_data) {

@@ -36,6 +36,9 @@
     background-color: rgba(255,255,255,0.95);
     color: #c00;
 }
+.navbar-default a {
+    color: #fff !important;
+}
 
 .form-control::-moz-placeholder {
     color: #c00;
