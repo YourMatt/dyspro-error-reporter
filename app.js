@@ -39,6 +39,8 @@ app.use (function (req, res, next) {
 app.get ("/", function (req, res) {
     res.render ("home.ejs",
         {
+            page: "home",
+            js_files: [],
             error_message: sessionManager.getOnce ("error_message"),
             success_message: sessionManager.getOnce ("success_message"),
             user_id: sessionManager.data.user_id
@@ -52,14 +54,19 @@ app.get ("/dashboard", function (req, res) {
         res.redirect ("/");
         return;
     }
-    res.render ("dashboard.ejs",
-        {
-            page: "dashboard",
-            error_message: sessionManager.getOnce ("error_message"),
-            success_message: sessionManager.getOnce ("success_message"),
-            user_id: sessionManager.data.user_id
-        }
-    );
+    database.query.getAccountEnvironments (sessionManager.data.account_id, function (environments) {
+        res.render ("dashboard.ejs",
+            {
+                page: "dashboard",
+                js_files: ["dashboard.js"],
+                error_message: sessionManager.getOnce ("error_message"),
+                success_message: sessionManager.getOnce ("success_message"),
+                user_id: sessionManager.data.user_id,
+                environments: environments,
+                selected_environment: environments[0] // TODO: Pull value from settings if exists
+            }
+        );
+    });
 });
 
 // settings page
@@ -71,6 +78,7 @@ app.get ("/settings", function (req, res) {
     res.render ("settings.ejs",
         {
             page: "settings",
+            js_files: [],
             error_message: sessionManager.getOnce ("error_message"),
             success_message: sessionManager.getOnce ("success_message"),
             user_id: sessionManager.data.user_id
@@ -91,6 +99,7 @@ app.post ("/login", function (req, res) {
 
         // save user to session and forward to the dashboard
         sessionManager.set ("user_id", user_data.user_id);
+        sessionManager.set ("account_id", user_data.account_id);
         res.redirect ("/dashboard");
 
     });

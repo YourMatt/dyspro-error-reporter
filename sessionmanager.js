@@ -1,5 +1,6 @@
 exports.data = {
 
+    account_id: 0,
     user_id: 0,
     error_message: "",
     success_message: ""

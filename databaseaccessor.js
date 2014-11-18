@@ -29,6 +29,28 @@ exports.query = {
 
     },
 
+    // get all environments
+    getAccountEnvironments: function (account_id, callback) {
+
+        this.run (
+                "select     distinct eo.environment " +
+                "from       errors e " +
+                "inner join error_occurrences eo on eo.error_id = e.error_id " +
+                "where      e.account_id = $1",
+            [account_id],
+            function (result) {
+                var environments = [];
+                if (result.rows) {
+                    for (var i = 0; i < result.rows.length; i++) {
+                        environments.push (result.rows[i].environment);
+                    }
+                }
+                callback (environments);
+            }
+        );
+
+    },
+
     /*******************************************************************************************************************
      *
      * INTERACTION WITH USERS TABLE
@@ -132,6 +154,24 @@ exports.query = {
      * INTERACTION WITH ERROR_OCCURRENCES TABLE
      *
      ******************************************************************************************************************/
+
+    // retrieve the latest errors
+    getLatestErrorOccurrences: function (account_id, limit, callback) {
+
+        this.run (
+            "select     eo.*, e.* " +
+            "from       error_occurrences eo " +
+            "inner join errors e on e.error_id = eo.error_id " +
+            "where      e.account_id = $1 " +
+            "order by   date desc " +
+            "limit $2   offset 0",
+            [account_id, limit],
+            function (result) {
+                console.log (result);
+            }
+        );
+
+    },
 
     // save a new occurrence of an existing error
     logErrorOccurrence: function (error_data, files, callback) {
