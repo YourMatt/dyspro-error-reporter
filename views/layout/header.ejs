@@ -29,10 +29,10 @@
                     </form>
                     <% } else { %>
                     <ul class="nav navbar-nav navbar-right">
-                        <li class="active">
+                        <li<% if (page == "dashboard") { %> class="active"<% } %>>
                             <a href="/dashboard"><span class="glyphicon glyphicon-dashboard"></span> Dashboard</a>
                         </li>
-                        <li>
+                        <li<% if (page == "settings") { %> class="active"<% } %>>
                             <a href="/settings"><span class="glyphicon glyphicon-edit"></span> Settings</a>
                         </li>
                         <li>

@@ -54,6 +54,7 @@ app.get ("/dashboard", function (req, res) {
     }
     res.render ("dashboard.ejs",
         {
+            page: "dashboard",
             error_message: sessionManager.getOnce ("error_message"),
             success_message: sessionManager.getOnce ("success_message"),
             user_id: sessionManager.data.user_id
@@ -69,6 +70,7 @@ app.get ("/settings", function (req, res) {
     }
     res.render ("settings.ejs",
         {
+            page: "settings",
             error_message: sessionManager.getOnce ("error_message"),
             success_message: sessionManager.getOnce ("success_message"),
             user_id: sessionManager.data.user_id
