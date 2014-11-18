@@ -7,16 +7,9 @@ exports.init = function (init_database) {
 
 exports.processor = {
 
-    authenticate: function (req, callback) {
+    authenticate: function (api_key, callback) {
 
-        var check_user = req.headers.username;
-        var check_password = req.headers.password;
-
-        database.query.getUserByLogin (check_user, check_password,
-            function (user_data) {
-                callback (user_data);
-            }
-        );
+        database.query.getAccountByApiKey (api_key, callback);
 
     },
 
@@ -43,32 +36,44 @@ exports.processor = {
 
     uploadFiles: function (req, callback) {
         var that = this;
+        files = [];
 
-        // open reqest to accept files
-        req.pipe (req.busboy);
+        if (req.busboy) {
 
-        // save files to local variable
-        req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
+            // skip if query string not part of url - means post provided, but no file available
+            // this is only applicable if set for body of post to be blank and use URL variables with post
+            if (req.originalUrl.indexOf ("?") < 0) {
+                callback ();
+                return;
+            }
 
-            // load the file data
-            file.on ("data", function (data) {
+            // open request to accept files
+            req.pipe (req.busboy);
 
-                var file_data = {
-                    file_name: file_name,
-                    file_type: that.getFileType (file_name),
-                    source: data // data.toString ("utf8")
-                };
+            // save files to local variable
+            req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
 
-                files.push (file_data);
+                // load the file data
+                file.on ("data", function (data) {
+
+                    var file_data = {
+                        file_name: file_name,
+                        file_type: that.getFileType(file_name),
+                        source: data
+                    };
+
+                    files.push(file_data);
+
+                });
 
             });
 
-        });
-
-        // continue when all files have completed uploading
-        req.busboy.on ("finish", function() {
-            callback ();
-        });
+            // continue when all files have completed uploading
+            req.busboy.on("finish", function () {
+                callback();
+            });
+        }
+        else callback ();
 
     },
 

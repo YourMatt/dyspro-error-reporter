@@ -9,16 +9,41 @@ exports.query = {
 
     /*******************************************************************************************************************
      *
+     * INTERACTION WITH ACCOUNTS TABLE
+     *
+     ******************************************************************************************************************/
+
+    // load account by api key
+    getAccountByApiKey: function (api_key, callback) {
+
+        this.run (
+            "select * " +
+            "from   accounts " +
+            "where  api_key = $1",
+            [api_key],
+            function (result) {
+                if (result.rows.length != 1) callback ();
+                else callback (result.rows[0]);
+            }
+        );
+
+    },
+
+    /*******************************************************************************************************************
+     *
      * INTERACTION WITH USERS TABLE
      *
      ******************************************************************************************************************/
 
     // authenticate the user
-    getUserByLogin: function (user_name, password, callback) {
+    getUserByLogin: function (email, password, callback) {
 
         this.run (
-            "select * from users where user_name = $1 and password = md5($2)",
-            [user_name, password],
+            "select * " +
+            "from   users " +
+            "where  email = $1 " +
+            "and    password = md5($2)",
+            [email, password],
             function (result) {
                 if (result.rows.length != 1) callback ();
                 else callback (result.rows[0]);
@@ -39,10 +64,10 @@ exports.query = {
         this.run (
             "select error_id " +
             "from   errors " +
-            "where  user_id = $1 " +
+            "where  account_id = $1 " +
             "and    product = $2 " +
             "and    md5(stack_trace) = md5($3)",
-            [error_data.user_id, error_data.product, error_data.stack_trace],
+            [error_data.account_id, error_data.product, error_data.stack_trace],
             function (result) {
 
                 if (result.rows.length) callback (result.rows[0].error_id);
@@ -75,12 +100,15 @@ exports.query = {
                 else {
                     that.run (
                         "insert into    errors " +
-                        "(              user_id, product, stack_trace) " +
+                        "(              account_id, product, stack_trace) " +
                         "values (       $1, $2, $3) " +
                         "returning      error_id",
-                        [error_data.user_id, error_data.product, error_data.stack_trace],
+                        [error_data.account_id, error_data.product, error_data.stack_trace],
                         function (result) {
-                            if (! result.rows) callback ("Error saving to errors table.");
+                            if (! result.rows) {
+                                callback ("Error saving to errors table.");
+                                return;
+                            }
 
                             // save the new occurrence of the error
                             error_data.error_id = result.rows[0].error_id;
@@ -111,10 +139,10 @@ exports.query = {
 
         this.run (
             "insert into    error_occurrences " +
-            "(              error_id, environment, message, server) " +
-            "values (       $1, $2, $3, $4) " +
+            "(              error_id, environment, message, server, user_name) " +
+            "values (       $1, $2, $3, $4, $5) " +
             "returning      error_occurrence_id",
-            [error_data.error_id, error_data.environment, error_data.message, error_data.server],
+            [error_data.error_id, error_data.environment, error_data.message, error_data.server, error_data.user_name],
             function (result) {
                 if (! result.rows) callback ("Error saving to the error_occurrences table.");
 

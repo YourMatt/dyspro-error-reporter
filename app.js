@@ -63,11 +63,11 @@ app.get ("/dashboard", function (req, res) {
 
 // process login
 app.post ("/login", function (req, res) {
-    database.query.getUserByLogin (req.body.username, req.body.password, function (user_data) {
+    database.query.getUserByLogin (req.body.email, req.body.password, function (user_data) {
 
         // user not authenticated
         if (! user_data) {
-            sessionManager.set ("error_message", "Incorrect username or password.");
+            sessionManager.set ("error_message", "Incorrect email or password.");
             res.redirect (req.headers.referer);
             return;
         }
@@ -115,13 +115,13 @@ app.get ("/filetest", function (req, res) {
 });
 
 // expose api methods
-app.all ("/api/:method", function (req, res) {
+app.all ("/api/:key/:method", function (req, res) {
 
     // authenticate all api requests
-    api.processor.authenticate (req, function (user_data) {
+    api.processor.authenticate (req.params.key, function (account_data) {
 
         // return response for unauthenticated accounts
-        if (! user_data) {
+        if (! account_data) {
             api.processor.sendResponse (res, api.processor.getErrorResponseData ("Not authenticated."));
             return;
         }
@@ -130,13 +130,17 @@ app.all ("/api/:method", function (req, res) {
         switch (req.params.method) {
             case "log":
 
+                // load values - need to either use req.query or req.body depending which is available - scenarios
+                // allow for both depending on post and whether files are attached or not
+                var queryValues = (req.query.stack_trace) ? req.query : req.body;
                 var error_data = {
-                    user_id: user_data.user_id,
-                    product: req.query.product,
-                    environment: req.query.environment,
-                    server: req.query.server,
-                    message: req.query.message,
-                    stack_trace: req.query.stack_trace
+                    account_id: account_data.account_id,
+                    product: queryValues.product,
+                    environment: queryValues.environment,
+                    server: queryValues.server,
+                    message: queryValues.message,
+                    user_name: queryValues.user_name,
+                    stack_trace: queryValues.stack_trace
                 };
 
                 api.processor.logError (req, error_data, function (error_message) {
