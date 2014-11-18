@@ -61,6 +61,21 @@ app.get ("/dashboard", function (req, res) {
     );
 });
 
+// settings page
+app.get ("/settings", function (req, res) {
+    if (! sessionManager.loggedIn ()) {
+        res.redirect ("/");
+        return;
+    }
+    res.render ("settings.ejs",
+        {
+            error_message: sessionManager.getOnce ("error_message"),
+            success_message: sessionManager.getOnce ("success_message"),
+            user_id: sessionManager.data.user_id
+        }
+    );
+});
+
 // process login
 app.post ("/login", function (req, res) {
     database.query.getUserByLogin (req.body.email, req.body.password, function (user_data) {
