@@ -11,7 +11,7 @@
 
 <br/><br/>
 <div class="container">
-    <table class="table table-striped">
+    <table id="RecentErrors" class="table table-striped hidden">
         <thead>
         <tr>
         <td>Date</td>
@@ -21,8 +21,8 @@
         </thead>
         <tbody>
         <tr ng-repeat="error in errors">
-        <td>{{error.date}}</td>
-        <td>{{error.message}}</td>
+        <td>{{error.date.format("MM/DD [at] h:mm A")}}</td>
+        <td class="line-breaks">{{error.message}}</td>
         <td class="text-right"><a class="btn btn-sm btn-primary" href="#">View</a></td>
         </tr>
         </tbody>

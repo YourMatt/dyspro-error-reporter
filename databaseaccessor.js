@@ -166,9 +166,7 @@ exports.query = {
             "order by   date desc " +
             "limit $2   offset 0",
             [account_id, limit],
-            function (result) {
-                console.log (result);
-            }
+            callback
         );
 
     },

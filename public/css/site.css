@@ -62,3 +62,7 @@
 .form-control:-ms-input-placeholder {
     color: #c00;
 }
+
+td.line-breaks {
+    white-space: pre;
+}

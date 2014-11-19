@@ -21,7 +21,7 @@ app.use (session ({secret: "dyspro-sess", resave: true, saveUninitialized: true}
 
 // initialize the library dependencies
 database.init (app.get ("dblocation"), pg);
-api.init (database);
+api.init (database, sessionManager);
 
 // set template engine
 app.set ("views", __dirname + "/views/layout");
@@ -142,46 +142,10 @@ app.get ("/filetest", function (req, res) {
 
 // expose api methods
 app.all ("/api/:key/:method", function (req, res) {
-
-    // authenticate all api requests
-    api.processor.authenticate (req.params.key, function (account_data) {
-
-        // return response for unauthenticated accounts
-        if (! account_data) {
-            api.processor.sendResponse (res, api.processor.getErrorResponseData ("Not authenticated."));
-            return;
-        }
-
-        // evaluate the method
-        switch (req.params.method) {
-            case "log":
-
-                // load values - need to either use req.query or req.body depending which is available - scenarios
-                // allow for both depending on post and whether files are attached or not
-                var queryValues = (req.query.stack_trace) ? req.query : req.body;
-                var error_data = {
-                    account_id: account_data.account_id,
-                    product: queryValues.product,
-                    environment: queryValues.environment,
-                    server: queryValues.server,
-                    message: queryValues.message,
-                    user_name: queryValues.user_name,
-                    stack_trace: queryValues.stack_trace
-                };
-
-                api.processor.logError (req, error_data, function (error_message) {
-                    if (error_message) api.processor.sendResponse (res, api.processor.getErrorResponseData (error_message));
-                    else api.processor.sendResponse (res, api.processor.getSuccessResponseData ());
-                });
-
-                break;
-            default:
-                api.processor.sendResponse (res, api.processor.getErrorResponseData ("Method not implemented."));
-                break;
-        }
-
-    });
-
+    api.processor.handleRequest (req, res);
+});
+app.all ("/api/:key/:method/:type", function (req, res) {
+    api.processor.handleRequest (req, res);
 });
 
 // start server
