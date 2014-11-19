@@ -13,6 +13,7 @@ exports.init = function (init_req) {
     if (req.session.data) {
         exports.data = req.session.data;
     }
+    else exports.data = {};
 }
 
 exports.set = function (name, value) {

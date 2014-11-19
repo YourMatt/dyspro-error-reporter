@@ -65,9 +65,11 @@ exports.processor = {
 
         // use session if provided - only works for ajax use and not across web service
         if (api_key == "session") {
-            var account_data = {};
+            var account_data;
             if (sessionManager.data.account_id) {
-                account_data.account_id = sessionManager.data.account_id;
+                account_data = {
+                    account_id: sessionManager.data.account_id
+                };
             }
             callback (account_data);
         }
