@@ -7,6 +7,8 @@ var express = require ("express"),
     sessionManager = require ("./sessionmanager.js"),
     api = require ("./apiprocessor.js"),
     database = require ("./databaseaccessor.js"),
+    attachments = require ("./attachmentmanager.js"),
+    mime = require ("mime"),
     pg = require ("pg"),
     config = require ("./config.js");
 
@@ -112,32 +114,26 @@ app.get ("/logout", function (req, res) {
     res.redirect ("/");
 });
 
-// sample endpoints
-// TODO: Convert this to real method for loading attachments
-app.get ("/filetest", function (req, res) {
+// process attachment downloads
+app.get ("/attachments/:error_occurrence_id/:file_name", function (req, res) {
+    attachments.manager.loadFile (req.params.error_occurrence_id, req.params.file_name, function (file) {
 
-    database.query.getErrorAttachment (16, "npm.png", function (file) {
-
-        if (file) {
-
-            /* // test download
-            res.writeHead (200, {"Content-Disposition": "attachment filename=" + file.file_name + ";"});
-            res.end (file.source);
-            */
-
-            // test inline
-            res.writeHead (200, {"Content-Type": "image/png"});
-            res.end (file.source);
-
+        if (! file) { // TODO: Call standard 404 handler
+            res.writeHead (404, {"Content-Type": "text/html"});
+            res.end("not found");
+            return;
         }
 
-        else {
-            res.writeHead (200, {"Content-Type": "application/json"});
-            res.end("file not found");
-        }
+        /* // TODO: Add option to prompt download
+        res.writeHead (200, {"Content-Disposition": "attachment filename=" + file.file_name + ";"});
+        res.end (file.source);
+        */
+
+        // display the file
+        res.writeHead (200, {"Content-Type": mime.lookup(file.file_type)});
+        res.end (file.source);
 
     });
-
 });
 
 // expose api methods
