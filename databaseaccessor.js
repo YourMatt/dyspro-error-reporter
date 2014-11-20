@@ -201,6 +201,20 @@ exports.query = {
      *
      ******************************************************************************************************************/
 
+    // load all attachment metadata related to an error occurrence
+    getErrorAttachments: function (error_occurrence_id, callback) {
+
+        this.run (
+            "select     error_occurrence_id, file_name, file_type " +
+            "from       error_attachments " +
+            "where      error_occurrence_id = $1 " +
+            "order by   file_name",
+            [error_occurrence_id],
+            callback
+        );
+
+    },
+
     // load an existing error by product and stack trace
     getErrorAttachment: function (error_occurrence_id, file_name, callback) {
 
@@ -221,11 +235,10 @@ exports.query = {
     },
 
     // save a file related to an error occurrence
-    numAttachmentsSaved: 0,
     logErrorAttachments: function (error_occurrence_id, files, callback) {
         var that = this;
 
-        this.numAttachmentsSaved = 0; // reset the saved attachments counter
+        var numAttachmentsSaved = 0; // reset the saved attachments counter
         for (var i = 0; i < files.length; i++) {
 
             this.run (
@@ -235,8 +248,8 @@ exports.query = {
                 [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source],
                 function (result) {
 
-                    that.numAttachmentsSaved++;
-                    if (that.numAttachmentsSaved == files.length) callback ();
+                    numAttachmentsSaved++;
+                    if (numAttachmentsSaved == files.length) callback ();
 
                 }
             );

@@ -21,6 +21,7 @@ var ErrorOccurrence = (function () {
     this.server = "";
     this.user_name = "";
     this.date = 0;
+    this.attachments = [];
 
 });
 var ErrorAttachment = (function () {
@@ -55,7 +56,7 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
 
                 $scope.errors = [];
                 for (var i = 0; i < results.data.length; i++) {
-                    var error_occurrence = new ErrorOccurrence();
+                    var error_occurrence = new ErrorOccurrence ();
                     error_occurrence.error_occurrence_id = results.data[i].error_occurrence_id;
                     error_occurrence.environment = results.data[i].environment;
                     error_occurrence.message = results.data[i].message;
@@ -66,9 +67,18 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
                     error_occurrence.error.account_id = results.data[i].account_id;
                     error_occurrence.error.product = results.data[i].product;
                     error_occurrence.error.stack_trace = results.data[i].stack_trace;
+
+                    for (var j = 0; j < results.data[i].attachments.length; j++) {
+                        var error_attachment = new ErrorAttachment ();
+                        error_attachment.file_name = results.data[i].attachments[j].file_name;
+                        error_attachment.file_type = results.data[i].attachments[j].file_type;
+                        error_occurrence.attachments.push (error_attachment);
+                    }
+
                     $scope.errors.push(error_occurrence);
                 }
 
+                // refresh the error list and show the table
                 $scope.$apply();
                 $("#RecentErrors").removeClass("hidden");
 

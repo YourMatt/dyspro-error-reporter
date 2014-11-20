@@ -1,4 +1,9 @@
 
+/* DEFAULT STYLES */
+a {
+    cursor: pointer;
+}
+
 /* TEMPLATE STYLES */
 .navbar-default {
     background-color: #c00;
@@ -63,6 +68,14 @@
     color: #c00;
 }
 
-td.line-breaks {
+.container-attachments {
+    border-top: 1px dashed #ccc;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+.newlines {
     white-space: pre;
+}
+.attachment {
+    margin: 0px 5px;
 }

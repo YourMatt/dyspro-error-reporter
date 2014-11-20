@@ -157,8 +157,33 @@ exports.processor = {
         database.query.getLatestErrorOccurrences (account_id, environment, num_errors, function (results) {
 
             // return error if no results
-            if (! results.rows.length) callback ({}, "No errors found.");
-            else callback (results.rows);
+            if (! results.rows.length) {
+                callback ({}, "No errors found.");
+                return;
+            }
+
+            // load attachments if errors found
+            var resultCounter = 0;
+            results.rows.forEach (function (result) {
+                database.query.getErrorAttachments (result.error_occurrence_id, function (attachment_results) {
+
+                    result.attachments = [];
+                    if (attachment_results.rows.length) {
+                        for (var i = 0; i < results.rows.length; i++) {
+                            if (results.rows[i].error_occurrence_id == attachment_results.rows[0].error_occurrence_id) {
+                                results.rows[i].attachments = attachment_results.rows;
+                                break;
+                            }
+                        }
+                    }
+
+                    resultCounter++;
+                    if (resultCounter == results.rows.length) {
+                        callback (results.rows);
+                    }
+
+                });
+            });
 
         });
 
