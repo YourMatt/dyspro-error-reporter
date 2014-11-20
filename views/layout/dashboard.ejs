@@ -5,7 +5,9 @@
 <ul class="container nav nav-tabs">
     <li class="navbar-text">Environment</li>
     <% for (var i = 0; i < environments.length; i++) { %>
-    <li<% if (selected_environment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>"><a href="#"><%= environments[i] %></a></li>
+    <li<% if (selected_environment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>">
+        <a href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
+    </li>
     <% } %>
 </ul>
 

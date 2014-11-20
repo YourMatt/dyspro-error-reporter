@@ -67,7 +67,7 @@ exports.query = {
             "and    password = md5($2)",
             [email, password],
             function (result) {
-                if (result.rows.length != 1) callback ();
+                if (!result.rows || result.rows.length != 1) callback ();
                 else callback (result.rows[0]);
             }
         );
@@ -156,16 +156,17 @@ exports.query = {
      ******************************************************************************************************************/
 
     // retrieve the latest errors
-    getLatestErrorOccurrences: function (account_id, limit, callback) {
+    getLatestErrorOccurrences: function (account_id, environment, limit, callback) {
 
         this.run (
             "select     eo.*, e.* " +
             "from       error_occurrences eo " +
             "inner join errors e on e.error_id = eo.error_id " +
             "where      e.account_id = $1 " +
+            "and        eo.environment = $2 " +
             "order by   date desc " +
-            "limit $2   offset 0",
-            [account_id, limit],
+            "limit $3   offset 0",
+            [account_id, environment, limit],
             callback
         );
 

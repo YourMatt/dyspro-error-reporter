@@ -46,7 +46,7 @@ exports.processor = {
                     break;
                 case "errors":
 
-                    that.getLatestErrors (account_data.account_id, 20, function (results, error_message) {
+                    that.getLatestErrors (account_data.account_id, req.params.type, 20, function (results, error_message) {
                         if (error_message) that.sendResponse (res, that.getErrorResponseData (error_message));
                         else that.sendResponse (res, that.getSuccessResponseData (results));
                     });
@@ -152,9 +152,9 @@ exports.processor = {
 
     },
 
-    getLatestErrors: function (account_id, num_errors, callback) {
+    getLatestErrors: function (account_id, environment, num_errors, callback) {
 
-        database.query.getLatestErrorOccurrences (account_id, num_errors, function (results) {
+        database.query.getLatestErrorOccurrences (account_id, environment, num_errors, function (results) {
 
             // return error if no results
             if (! results.rows.length) callback ({}, "No errors found.");
