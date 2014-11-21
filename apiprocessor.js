@@ -27,7 +27,7 @@ exports.processor = {
 
                     // load values - need to either use req.query or req.body depending which is available - scenarios
                     // allow for both depending on post and whether files are attached or not
-                    var queryValues = (req.query.stack_trace) ? req.query : req.body;
+                    var queryValues = (req.body.product) ? req.body : req.query;
                     var error_data = {
                         account_id: account_data.account_id,
                         product: queryValues.product,
@@ -38,10 +38,21 @@ exports.processor = {
                         stack_trace: queryValues.stack_trace
                     };
 
-                    that.logError (req, error_data, function (error_message) {
-                        if (error_message) that.sendResponse (res, that.getErrorResponseData (error_message));
-                        else that.sendResponse (res, that.getSuccessResponseData ());
-                    });
+                    // TODO: Add validation at this point
+                    if (! error_data.product) {
+                        that.sendResponse (res, that.getErrorResponseData ("No product."));
+                        return;
+                    }
+
+                    // save the error to the database
+                    database.query.logError (
+                        error_data,
+                        req.files,
+                        function (error_message) {
+                            if (error_message) that.sendResponse (res, that.getErrorResponseData(error_message));
+                            else that.sendResponse (res, that.getSuccessResponseData());
+                        }
+                    );
 
                     break;
                 case "errors":
@@ -78,76 +89,6 @@ exports.processor = {
         else {
             database.query.getAccountByApiKey(api_key, callback);
         }
-
-    },
-
-    logError: function (req, error_data, callback) {
-
-        this.uploadFiles (req, function (error_message) {
-
-            // return if an error loading files
-            if (error_message) {
-                callback (error_message);
-                return;
-            }
-
-            // save the base error type
-            database.query.logError (
-                error_data,
-                files,
-                callback
-            );
-
-        });
-
-    },
-
-    uploadFiles: function (req, callback) {
-        var that = this;
-        files = [];
-
-        if (req.busboy) {
-
-            // skip if query string not part of url - means post provided, but no file available
-            // this is only applicable if set for body of post to be blank and use URL variables with post
-            /* // removed because this was breaking good HTTP multipart packets
-            if (req.originalUrl.indexOf ("?") < 0) {
-                callback ();
-                return;
-            } */
-
-            // open request to accept files
-            req.pipe (req.busboy);
-
-            // save fields to request body
-            req.busboy.on ("field", function (key, value, keyTruncated, valueTruncated) {
-                req.body[key] = value;
-            });
-
-            // save files to local variable
-            req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
-
-                // load the file data
-                file.on ("data", function (data) {
-
-                    var file_data = {
-                        file_name: file_name,
-                        file_type: that.getFileType(file_name),
-                        source: data
-                    };
-
-                    files.push(file_data);
-
-                });
-
-            });
-
-            // continue when all files have completed uploading
-            req.busboy.on("finish", function () {
-                callback();
-            });
-        }
-        else callback ();
 
     },
 

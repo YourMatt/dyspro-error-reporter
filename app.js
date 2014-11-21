@@ -35,6 +35,55 @@ app.use (function (req, res, next) {
     next ();
 });
 
+// load multipart form data
+app.use (function (req, res, next) {
+    req.files = [];
+
+    // set body with query params if a get
+    if (req.method == "GET") {
+        next ();
+        return;
+    }
+
+    // skip if anything already set for body
+    if (Object.keys (req.body).length) {
+        next ();
+        return;
+    }
+
+    if (! req.busboy) {
+        next ();
+        return;
+    }
+
+    // reset request body and start load
+    req.body = {};
+    req.pipe (req.busboy);
+
+    // load field values to request body
+    req.busboy.on ("field", function (key, value, keyTruncated, valueTruncated) {
+        req.body[key] = value;
+    });
+
+    // load file data to request files
+    req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
+        file.on ("data", function (data) {
+            var file_data = {
+                file_name: file_name,
+                file_type: api.processor.getFileType (file_name),
+                source: data
+            };
+            req.files.push (file_data);
+        });
+    });
+
+    // continue
+    req.busboy.on("finish", function () {
+        next ();
+    });
+
+});
+
 // HANDLE PAGES
 
 // home page
