@@ -110,13 +110,19 @@ exports.processor = {
 
             // skip if query string not part of url - means post provided, but no file available
             // this is only applicable if set for body of post to be blank and use URL variables with post
+            /* // removed because this was breaking good HTTP multipart packets
             if (req.originalUrl.indexOf ("?") < 0) {
                 callback ();
                 return;
-            }
+            } */
 
             // open request to accept files
             req.pipe (req.busboy);
+
+            // save fields to request body
+            req.busboy.on ("field", function (key, value, keyTruncated, valueTruncated) {
+                req.body[key] = value;
+            });
 
             // save files to local variable
             req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
