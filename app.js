@@ -67,11 +67,15 @@ app.use (function (req, res, next) {
 
     // load file data to request files
     req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
+        var file_source = "";
         file.on ("data", function (data) {
+            file_source += data;
+        });
+        file.on ("end", function () {
             var file_data = {
                 file_name: file_name,
                 file_type: api.processor.getFileType (file_name),
-                source: data
+                source: file_source
             };
             req.files.push (file_data);
         });

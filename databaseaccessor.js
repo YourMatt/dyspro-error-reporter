@@ -219,14 +219,22 @@ exports.query = {
     getErrorAttachment: function (error_occurrence_id, file_name, callback) {
 
         this.run (
-            "select * " +
+            "select error_occurrence_id, file_name, file_type, source " +
             "from   error_attachments " +
             "where  error_occurrence_id = $1 " +
             "and    file_name = $2",
             [error_occurrence_id, file_name],
             function (result) {
 
-                if (result.rows.length) callback (result.rows[0]);
+                if (result.rows.length) {
+                    // following was part of attempt at fixing error when saving images
+                    // decode the source value
+                    //console.log (result.rows[0]);
+                    //result.rows[0].source = new Buffer(result.rows[0].source, 'base64').toString('utf8');
+                    //result.rows[0].source = result.rows[0].source.toString('ucs2');
+                    //console.log (result.rows[0].source);
+                    callback (result.rows[0]);
+                }
                 else callback ();
 
             }
@@ -240,12 +248,13 @@ exports.query = {
 
         var numAttachmentsSaved = 0; // reset the saved attachments counter
         for (var i = 0; i < files.length; i++) {
-
             this.run (
                 "insert into    error_attachments " +
                 "(              error_occurrence_id, file_name, file_type, source) " +
                 "values (       $1, $2, $3, $4)",
-                [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source],
+                [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source
+                    // new Buffer(files[i].source).toString('base64') // part of attempt to fix invalid byte sequence error when saving images
+                ],
                 function (result) {
 
                     numAttachmentsSaved++;
@@ -276,6 +285,8 @@ exports.query = {
                 client.query (query, fields, function (err, result) {
                     done ();
                     if (err) {
+                        console.log (query);
+                        console.log (fields);
                         console.error (err);
                         callback ({});
                     }
