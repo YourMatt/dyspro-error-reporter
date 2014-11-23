@@ -1,0 +1,94 @@
+<%- include header.ejs %>
+
+<div class="container">
+
+    <h3>Error Occurrence Details</h3>
+
+    <table class="table">
+        <tr>
+            <td class="col-sm-2">User:</td>
+            <td class="col-sm-10"><%= error_occurrence.user_name %></td>
+        </tr>
+        <tr>
+            <td>Server:</td>
+            <td><%= error_occurrence.server %> (<%= error_occurrence.environment %>)</td>
+        </tr>
+        <tr>
+            <td>Date:</td>
+            <td><%= moment(error_occurrence.date).format("MMMM Do, YYYY [at] h:mm:ss a") %></td>
+        </tr>
+        <tr>
+            <td>Attachments:</td>
+            <td><% if (! error_occurrence.attachments.length) { %>
+                None
+                <% } else { %>
+                <% for (var i = 0; i < error_occurrence.attachments.length; i++) { %>
+                <a href="/attachments/<%= error_occurrence.error_occurrence_id %>/<%= error_occurrence.attachments[i].file_name %>" target="_new">
+                    <%= error_occurrence.attachments[i].file_name %>
+                </a>
+                <% } } %>
+            </td>
+        </tr>
+    </table>
+
+    <h3>Error Details</h3>
+
+    <table class="table">
+        <tr>
+            <td class="col-sm-2">Product:</td>
+            <td class="col-sm-10"><%= error.product %></td>
+        </tr>
+        <tr>
+            <td>Stack Trace:</td>
+            <td class="newlines"><%= error.stack_trace %></td>
+        </tr>
+        <tr>
+            <td>Notes:</td>
+            <td>
+
+                <p><strong>10/17/2014 Matt Sadowski</strong>
+                    <button type="button" class="btn btn-xs btn-warning"><span class="glyphicon glyphicon-edit"></span></button>
+                    <button type="button" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-remove"></span></button>
+                    <br/>Not yet sure what's up.  Started looking and found
+                    it to not be usual.</p>
+
+                <p><strong>10/18/2014 Matt Olsen</strong>
+                    <br/>This is happening only in IE8.</p>
+
+                <textarea placeholder="New Note" class="col-sm-12"></textarea>
+
+            </td>
+        </tr>
+    </table>
+
+
+    <h3>Error History</h3>
+    <p>This error has occurred 32 times starting on 10/17/2014 with the last on 11/22/2014.</p>
+    <div class="well well-lg">Statistic graph go here.</div>
+
+        <table id="RecentErrors" class="table table-striped">
+            <thead>
+            <tr>
+                <td>Date</td>
+                <td>Error Message</td>
+                <td></td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="eo in error_occurrences">
+                <td>{{eo.date.format("MM/DD [at] h:mm A")}}</td>
+                <td><div class="newlines">{{eo.message}}</div>
+                    <div ng-if="eo.attachments.length" class="container-attachments">
+                        <span class="glyphicon glyphicon-paperclip"></span> Attachments:
+                        <a ng-repeat="attachment in error.attachments" file-type="{{attachment.file_type}}" href="/attachments/{{eo.error_occurrence_id}}/{{attachment.file_name}}" target="_new" class="attachment">{{attachment.file_name}}</a>
+                    </div>
+                </td>
+                <td class="text-right"><a class="btn btn-sm btn-primary" href="/errors/{{eo.error.error_id}}/occurrence/{{eo.error_occurrence_id}}">View</a></td>
+            </tr>
+            </tbody>
+        </table>
+
+
+</div>
+
+<%- include footer.ejs %>

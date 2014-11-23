@@ -4,6 +4,7 @@ var express = require ("express"),
     session = require ("express-session"),
     busboy = require ("connect-busboy"),
     bodyParser = require ("body-parser"),
+    moment = require ("moment"),
     sessionManager = require ("./sessionmanager.js"),
     api = require ("./apiprocessor.js"),
     database = require ("./databaseaccessor.js"),
@@ -121,6 +122,47 @@ app.get ("/dashboard", function (req, res) {
                 selected_environment: environments[0] // TODO: Pull value from settings if exists
             }
         );
+    });
+});
+
+// error detail page
+app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res) {
+    if (! sessionManager.loggedIn ()) {
+        res.redirect ("/");
+        return;
+    }
+
+    // load the error occurrence data
+    database.query.getErrorOccurrence (req.params.error_occurrence_id, function (error_occurrence) {
+        if (! error_occurrence) {
+            sessionManager.set ("error_message", "Error occurrence not found.");
+            res.redirect (req.headers.referer);
+            return;
+        }
+
+        // load the attachments for the error occurrence
+        database.query.getErrorAttachments (error_occurrence.error_occurrence_id, function (attachments) {
+            error_occurrence.attachments = attachments.rows; // TODO: have getErrorAttachments return the rows
+
+            try {
+                var stack_trace_json = JSON.parse (error_occurrence.stack_trace);
+                error_occurrence.stack_trace = JSON.stringify (stack_trace_json, null, 2);
+            }
+            catch (e) {}
+
+            res.render ("error-occurrence-detail.ejs",
+                {
+                    page: "erroroccurrencedetail",
+                    js_files: ["error-detail.js"],
+                    error_message: sessionManager.getOnce ("error_message"),
+                    success_message: sessionManager.getOnce ("success_message"),
+                    user_id: sessionManager.data.user_id,
+                    error_occurrence: error_occurrence,
+                    error: error_occurrence,
+                    moment: moment
+                }
+            );
+        });
     });
 });
 

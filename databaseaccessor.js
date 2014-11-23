@@ -155,6 +155,23 @@ exports.query = {
      *
      ******************************************************************************************************************/
 
+    // retrieve single error occurrence
+    getErrorOccurrence: function (error_occurrence_id, callback) {
+
+        this.run (
+            "select     eo.*, e.* " +
+            "from       error_occurrences eo " +
+            "inner join errors e on e.error_id = eo.error_id " +
+            "where      eo.error_occurrence_id = $1",
+            [error_occurrence_id],
+            function (result) {
+                if (result.rows && result.rows.length) callback (result.rows[0]);
+                else callback ();
+            }
+        );
+
+    },
+
     // retrieve the latest errors
     getLatestErrorOccurrences: function (account_id, environment, limit, callback) {
 
@@ -230,7 +247,7 @@ exports.query = {
                     // following was part of attempt at fixing error when saving images
                     // decode the source value
                     //console.log (result.rows[0]);
-                    //result.rows[0].source = new Buffer(result.rows[0].source, 'base64').toString('utf8');
+                    //result.rows[0].source = new Buffer(result.rows[0].source, 'utf8').toString('binary');
                     //result.rows[0].source = result.rows[0].source.toString('ucs2');
                     //console.log (result.rows[0].source);
                     callback (result.rows[0]);
@@ -248,13 +265,14 @@ exports.query = {
 
         var numAttachmentsSaved = 0; // reset the saved attachments counter
         for (var i = 0; i < files.length; i++) {
+            //console.log (files[i].source);
+            //files[i].source = String.fromCharCode(92) + "x" + files[i].source;
+            //files[i].source = files[i].source.toString("hex");
             this.run (
                 "insert into    error_attachments " +
                 "(              error_occurrence_id, file_name, file_type, source) " +
-                "values (       $1, $2, $3, $4)",
-                [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source
-                    // new Buffer(files[i].source).toString('base64') // part of attempt to fix invalid byte sequence error when saving images
-                ],
+                "values (       $1, $2, $3, $4::bytea)",
+                [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source],
                 function (result) {
 
                     numAttachmentsSaved++;

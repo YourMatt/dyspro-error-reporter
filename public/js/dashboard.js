@@ -34,16 +34,16 @@ var ErrorAttachment = (function () {
 var app = angular.module ("ErrorReporter", []);
 app.controller ("DashboardController", ["$scope", function ($scope) {
 
-    $scope.errors = [];
+    $scope.error_occurrences = [];
 
     $scope.changeEnvironmentTab = function (event) {
         current_environment = $(event.currentTarget).parent().attr ("environment");
         $(".nav-tabs li").removeClass ("active");
         $(event.currentTarget).parent().addClass ("active");
-        this.reloadErrors ();
+        this.reloadErrorOccurrences ();
     };
 
-    $scope.reloadErrors = function () {
+    $scope.reloadErrorOccurrences = function () {
         if (! current_environment) current_environment = $(".nav-tabs li.active").attr("environment"); // TODO: load this from a different method
         $.ajax("/api/session/errors/" + current_environment)
             .done(function (results) {
@@ -54,7 +54,7 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
                     return;
                 }
 
-                $scope.errors = [];
+                $scope.error_occurrences = [];
                 for (var i = 0; i < results.data.length; i++) {
                     var error_occurrence = new ErrorOccurrence ();
                     error_occurrence.error_occurrence_id = results.data[i].error_occurrence_id;
@@ -75,7 +75,7 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
                         error_occurrence.attachments.push (error_attachment);
                     }
 
-                    $scope.errors.push(error_occurrence);
+                    $scope.error_occurrences.push(error_occurrence);
                 }
 
                 // refresh the error list and show the table
@@ -85,6 +85,6 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
             });
     };
 
-    $scope.reloadErrors ();
+    $scope.reloadErrorOccurrences ();
 
 }]);
