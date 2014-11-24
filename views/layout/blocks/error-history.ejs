@@ -12,7 +12,7 @@
     </tr>
     </thead>
     <tbody>
-    <tr ng-repeat="eo in error_occurrences">
+    <tr ng-repeat="eo in errors">
         <td>{{eo.date.format("MM/DD [at] h:mm A")}}</td>
         <td><div class="newlines">{{eo.message}}</div>
             <div ng-if="eo.attachments.length" class="container-attachments">

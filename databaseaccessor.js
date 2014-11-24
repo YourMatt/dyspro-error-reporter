@@ -80,6 +80,22 @@ exports.query = {
      *
      ******************************************************************************************************************/
 
+    // retrieve single error occurrence
+    getError: function (error_id, callback) {
+
+        this.run (
+            "select     * " +
+            "from       errors " +
+            "where      error_id = $1",
+            [error_id],
+            function (result) {
+                if (result.rows && result.rows.length) callback (result.rows[0]);
+                else callback ();
+            }
+        );
+
+    },
+
     // load an existing error by product and stack trace
     getErrorByData: function (error_data, callback) {
 

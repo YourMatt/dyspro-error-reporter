@@ -125,7 +125,7 @@ app.get ("/dashboard", function (req, res) {
     });
 });
 
-// error detail page
+// error occurrence detail page
 app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res) {
     if (! sessionManager.loggedIn ()) {
         res.redirect ("/");
@@ -164,6 +164,35 @@ app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res
             );
         });
     });
+});
+
+// error detail page
+app.get ("/errors/:error_id", function (req, res) {
+    if (! sessionManager.loggedIn ()) {
+        res.redirect ("/");
+        return;
+    }
+
+    // load the error data
+    database.query.getError (req.params.error_id, function (error) {
+        if (! error) {
+            sessionManager.set ("error_message", "Error not found.");
+            res.redirect (req.headers.referer);
+            return;
+        }
+
+        res.render ("error-detail.ejs",
+            {
+                page: "errordetail",
+                js_files: ["error-detail.js"],
+                error_message: sessionManager.getOnce ("error_message"),
+                success_message: sessionManager.getOnce ("success_message"),
+                user_id: sessionManager.data.user_id,
+                error: error
+            }
+        );
+    });
+
 });
 
 // settings page
