@@ -1,0 +1,32 @@
+<h3>Error Occurrence Details</h3>
+
+<table class="table">
+    <tr>
+        <td class="col-sm-2">User:</td>
+        <td class="col-sm-10"><%= error_occurrence.user_name %></td>
+    </tr>
+    <tr>
+        <td>Server:</td>
+        <td><%= error_occurrence.server %> (<%= error_occurrence.environment %>)</td>
+    </tr>
+    <tr>
+        <td>Date:</td>
+        <td><%= moment(error_occurrence.date).format("MMMM Do, YYYY [at] h:mm:ss a") %></td>
+    </tr>
+    <tr>
+        <td>Message:</td>
+        <td><%= error_occurrence.message %></td>
+    </tr>
+    <tr>
+        <td>Attachments:</td>
+        <td><% if (! error_occurrence.attachments.length) { %>
+            None
+            <% } else { %>
+            <% for (var i = 0; i < error_occurrence.attachments.length; i++) { %>
+            <a href="/attachments/<%= error_occurrence.error_occurrence_id %>/<%= error_occurrence.attachments[i].file_name %>" target="_new">
+                <%= error_occurrence.attachments[i].file_name %>
+            </a>
+            <% } } %>
+        </td>
+    </tr>
+</table>
