@@ -3,7 +3,6 @@ var current_environment;
 $(document).ready (function () {
 });
 
-
 var Error = (function () {
 
     this.error_id = 0;

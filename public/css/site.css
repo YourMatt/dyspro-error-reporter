@@ -95,3 +95,8 @@ h3 {
     padding-top: 1px !important;
     text-align: center;
 }
+
+#RecentErrors .text-nowrap div {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}

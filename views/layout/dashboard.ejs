@@ -11,30 +11,7 @@
     <% } %>
 </ul>
 
-<br/><br/>
-<div class="container">
-    <table id="RecentErrors" class="table table-striped hidden">
-        <thead>
-        <tr>
-        <td>Date</td>
-        <td>Error Message</td>
-        <td></td>
-        </tr>
-        </thead>
-        <tbody>
-        <tr ng-repeat="eo in error_occurrences">
-        <td>{{eo.date.format("MM/DD [at] h:mm A")}}</td>
-        <td><div class="newlines">{{eo.message}}</div>
-            <div ng-if="eo.attachments.length" class="container-attachments">
-                <span class="glyphicon glyphicon-paperclip"></span> Attachments:
-                <a ng-repeat="attachment in eo.attachments" file-type="{{attachment.file_type}}" href="/attachments/{{eo.error_occurrence_id}}/{{attachment.file_name}}" target="_new" class="attachment">{{attachment.file_name}}</a>
-            </div>
-        </td>
-        <td class="text-right"><a class="btn btn-sm btn-primary" href="/errors/{{eo.error.error_id}}/occurrence/{{eo.error_occurrence_id}}">View</a></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+<%- include blocks/error-list.ejs %>
 
 </div>
 
