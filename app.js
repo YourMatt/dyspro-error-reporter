@@ -142,7 +142,7 @@ app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res
 
         // load the attachments for the error occurrence
         database.query.getErrorAttachments (error_occurrence.error_occurrence_id, function (attachments) {
-            error_occurrence.attachments = attachments.rows; // TODO: have getErrorAttachments return the rows
+            error_occurrence.attachments = attachments;
 
             try {
                 var stack_trace_json = JSON.parse (error_occurrence.stack_trace);

@@ -263,7 +263,9 @@ exports.query = {
             "where      error_occurrence_id = $1 " +
             "order by   file_name",
             [error_occurrence_id],
-            callback
+            function (result) {
+                callback (result.rows);
+            }
         );
 
     },

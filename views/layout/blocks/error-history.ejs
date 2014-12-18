@@ -1,7 +1,17 @@
 <div ng-controller="ErrorHistoryController">
 
 <h3>Error History</h3>
-<p>This error has occurred 32 times starting on 10/17/2014 with the last on 11/22/2014.</p>
+<p>This error has occurred {{error_occurrence_stats.num_occurrences}}
+    <ng-pluralize count="error_occurrence_stats.num_occurrences" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
+    <span ng-if="error_occurrence_stats.all_on_single_day">
+        <ng-pluralize count="error_occurrence_stats.num_occurrences" when="{'1': 'only', 'other': 'all'}"></ng-pluralize>
+        on {{error_occurrence_stats.date_last_occurrence.format("MM/DD/YYYY")}}.
+    </span>
+    <span ng-if="! error_occurrence_stats.all_on_single_day">
+    starting on
+    {{error_occurrence_stats.date_first_occurrence.format("MM/DD/YYYY")}} with the last on
+    {{error_occurrence_stats.date_last_occurrence.format("MM/DD/YYYY")}}.</span>
+</p>
 
 <div class="well well-lg">Statistic graph goes here.</div>
 
