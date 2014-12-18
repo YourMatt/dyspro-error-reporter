@@ -267,6 +267,9 @@ app.all ("/api/:key/:method", function (req, res) {
 app.all ("/api/:key/:method/:type", function (req, res) {
     api.processor.handleRequest (req, res);
 });
+app.all ("/api/:key/:method/:type/:id", function (req, res) {
+    api.processor.handleRequest (req, res);
+});
 
 // start server
 app.listen (app.get ("port"));

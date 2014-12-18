@@ -57,10 +57,20 @@ exports.processor = {
                     break;
                 case "errors":
 
-                    that.getLatestErrors (account_data.account_id, req.params.type, 20, function (results, error_message) {
-                        if (error_message) that.sendResponse (res, that.getErrorResponseData (error_message));
-                        else that.sendResponse (res, that.getSuccessResponseData (results));
-                    });
+                    // pull all errors associated to a specific error ID if provided
+                    if ( req.params.id ) {
+                        database.query.getErrorOccurrencesByErrorId (account_data.account_id, req.params.type, req.params.id, function (results) {
+                            that.sendResponse (res, that.getSuccessResponseData (results));
+                        });
+                    }
+
+                    // show a list of the latest errors if no ID provided
+                    else {
+                        that.getLatestErrors(account_data.account_id, req.params.type, 20, function (results, error_message) {
+                            if (error_message) that.sendResponse(res, that.getErrorResponseData(error_message));
+                            else that.sendResponse (res, that.getSuccessResponseData (results));
+                        });
+                    }
 
                     break;
                 default:
@@ -109,6 +119,9 @@ exports.processor = {
                 return;
             }
 
+            callback (results.rows);
+
+            /* // no longer including attachments on listings, so removing - leaving code in place in case proves useful enough to add back in
             // load attachments if errors found
             var resultCounter = 0;
             results.rows.forEach (function (result) {
@@ -131,6 +144,7 @@ exports.processor = {
 
                 });
             });
+            /* */
 
         });
 

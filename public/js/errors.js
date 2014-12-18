@@ -32,8 +32,20 @@ app.controller ("ErrorHistoryController", ["$scope", function ($scope) {
 
    $scope.error_occurrences = [];
 
+   // build the URI
+   var uri = "";
+   var meta_environment = $("environment", "#error-occurrence-metadata").text();
+   if (meta_environment) {
+      var meta_error_id = $("errorid", "#error-occurrence-metadata").text();
+      uri = "/api/session/errors/" + meta_environment + "/" + meta_error_id;
+   }
+   else if (typeof (current_environment) !== "undefined") uri = "/api/session/errors/" + current_environment;
+
+   if (! uri) return;
+
+   // reload the error occurrences from the service
    $scope.reloadErrorOccurrences = function () {
-      $.ajax("/api/session/errors/dev")
+      $.ajax(uri)
          .done(function (results) {
 
             if (results.error) {
@@ -56,11 +68,13 @@ app.controller ("ErrorHistoryController", ["$scope", function ($scope) {
                error_occurrence.error.product = results.data[i].product;
                error_occurrence.error.stack_trace = results.data[i].stack_trace;
 
-               for (var j = 0; j < results.data[i].attachments.length; j++) {
-                  var error_attachment = new ErrorAttachment ();
-                  error_attachment.file_name = results.data[i].attachments[j].file_name;
-                  error_attachment.file_type = results.data[i].attachments[j].file_type;
-                  error_occurrence.attachments.push (error_attachment);
+               if (results.data[i].attachments) {
+                  for (var j = 0; j < results.data[i].attachments.length; j++) {
+                     var error_attachment = new ErrorAttachment();
+                     error_attachment.file_name = results.data[i].attachments[j].file_name;
+                     error_attachment.file_type = results.data[i].attachments[j].file_type;
+                     error_occurrence.attachments.push(error_attachment);
+                  }
                }
 
                $scope.error_occurrences.push(error_occurrence);

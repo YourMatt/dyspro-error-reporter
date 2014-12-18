@@ -188,6 +188,26 @@ exports.query = {
 
     },
 
+    // retrieve error occurrences for a given ID
+    getErrorOccurrencesByErrorId: function (account_id, environment, error_id, callback) {
+
+        this.run (
+            "select     eo.*, e.* " +
+            "from       error_occurrences eo " +
+            "inner join errors e on e.error_id = eo.error_id " +
+            "where      eo.error_id = $1 " +
+            "and        e.account_id = $2 " +
+            "and        eo.environment = $3 " +
+            "order by   date desc",
+            [error_id, account_id, environment],
+            function (result) {
+                if (result.rows) callback (result.rows);
+                else callback ();
+            }
+        );
+
+    },
+
     // retrieve the latest errors
     getLatestErrorOccurrences: function (account_id, environment, limit, callback) {
 
