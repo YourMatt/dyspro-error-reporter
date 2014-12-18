@@ -3,33 +3,6 @@ var current_environment;
 $(document).ready (function () {
 });
 
-var Error = (function () {
-
-    this.error_id = 0;
-    this.account_id = 0;
-    this.product = "";
-    this.stack_trace = "";
-
-});
-var ErrorOccurrence = (function () {
-
-    this.error = new Error ();
-    this.error_occurrence_id = 0;
-    this.environment = "";
-    this.message = "";
-    this.server = "";
-    this.user_name = "";
-    this.date = 0;
-    this.attachments = [];
-
-});
-var ErrorAttachment = (function () {
-
-    this.file_name = "";
-    this.file_type = "";
-
-});
-
 var app = angular.module ("ErrorReporter", []);
 app.controller ("DashboardController", ["$scope", function ($scope) {
 

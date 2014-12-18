@@ -2,16 +2,18 @@
 
 <div ng-controller="DashboardController">
 
-<ul class="container nav nav-tabs">
-    <li class="navbar-text">Environment</li>
-    <% for (var i = 0; i < environments.length; i++) { %>
-    <li<% if (selected_environment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>">
-        <a href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
-    </li>
-    <% } %>
-</ul>
+    <ul class="container nav nav-tabs">
+        <li class="navbar-text">Environment</li>
+        <% for (var i = 0; i < environments.length; i++) { %>
+        <li<% if (selected_environment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>">
+            <a href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
+        </li>
+        <% } %>
+    </ul>
 
-<%- include blocks/error-list.ejs %>
+    <div class="container">
+    <%- include blocks/error-list.ejs %>
+    </div>
 
 </div>
 

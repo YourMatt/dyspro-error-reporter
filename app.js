@@ -114,7 +114,7 @@ app.get ("/dashboard", function (req, res) {
         res.render ("dashboard.ejs",
             {
                 page: "dashboard",
-                js_files: ["dashboard.js"],
+                js_files: ["errors.js", "dashboard.js"],
                 error_message: sessionManager.getOnce ("error_message"),
                 success_message: sessionManager.getOnce ("success_message"),
                 user_id: sessionManager.data.user_id,
@@ -153,7 +153,7 @@ app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res
             res.render ("error-occurrence-detail.ejs",
                 {
                     page: "erroroccurrencedetail",
-                    js_files: ["error-detail.js"],
+                    js_files: ["errors.js", "error-detail.js"],
                     error_message: sessionManager.getOnce ("error_message"),
                     success_message: sessionManager.getOnce ("success_message"),
                     user_id: sessionManager.data.user_id,
@@ -184,7 +184,7 @@ app.get ("/errors/:error_id", function (req, res) {
         res.render ("error-detail.ejs",
             {
                 page: "errordetail",
-                js_files: ["error-detail.js"],
+                js_files: ["errors.js", "error-detail.js"],
                 error_message: sessionManager.getOnce ("error_message"),
                 success_message: sessionManager.getOnce ("success_message"),
                 user_id: sessionManager.data.user_id,
