@@ -1,62 +1,63 @@
 
--- Holds setup queries for the PostgreSQL database.
+-- Holds setup queries for the MySQL database.
 
-CREATE TABLE    accounts
-(               account_id          SERIAL
-,               name                VARCHAR(50) NOT NULL
-,               api_key             VARCHAR(20) NOT NULL UNIQUE
-,               create_date         TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
-, CONSTRAINT    pk_account_id                   PRIMARY KEY (account_id));
+-- Accounts represent a company with a single API key for sending error information.
+CREATE TABLE  Accounts
+(             AccountId   INT NOT NULL AUTO_INCREMENT
+,             Name        VARCHAR(50) NOT NULL
+,             ApiKey      VARCHAR(20) NOT NULL
+,             CreateDate  TIMESTAMP NOT NULL
+,             PRIMARY KEY (AccountId));
 
-CREATE TABLE    users
-(               user_id             SERIAL
-,               account_id          INTEGER     NOT NULL
-,               name                VARCHAR(50) NOT NULL
-,               email               VARCHAR(50) NOT NULL UNIQUE
-,               password            VARCHAR(34) NOT NULL
-,               create_date         TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
-, CONSTRAINT    pk_user_id                      PRIMARY KEY (user_id)
-, CONSTRAINT    fk_users_accounts               FOREIGN KEY (account_id)
-  REFERENCES    accounts (account_id));
+-- Users allow access to error data and allow notification of errors.
+CREATE TABLE  Users
+(             UserId      INT NOT NULL AUTO_INCREMENT
+,             AccountId   INT NOT NULL
+,             Name        VARCHAR(50) NOT NULL
+,             Email       VARCHAR(50) NOT NULL
+,             Phone       VARCHAR(10)
+,             Password    VARCHAR(34) NOT NULL
+,             CreateDate  TIMESTAMP NOT NULL
+,             PRIMARY KEY (UserId)
+,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
 
-CREATE TABLE    errors
-(               error_id            SERIAL
-,               account_id          INTEGER     NOT NULL
-,               product             VARCHAR(50) NOT NULL
-,               stack_trace         TEXT
-, CONSTRAINT    pk_error_id                     PRIMARY KEY (error_id)
-, CONSTRAINT    fk_errors_accounts              FOREIGN KEY (account_id)
-  REFERENCES    accounts (account_id));
+-- Errors are a unique definition for a particular (possibly reoccurring) error that is only stored once.
+CREATE TABLE  Errors
+(             ErrorId     INT NOT NULL AUTO_INCREMENT
+,             AccountId   INT NOT NULL
+,             Product     VARCHAR(50) NOT NULL
+,             StackTrace  MEDIUMTEXT
+,             PRIMARY KEY (ErrorId)
+,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
 
-CREATE TABLE    error_occurrences
-(               error_occurrence_id SERIAL
-,               error_id            INTEGER     NOT NULL
-,               environment         VARCHAR(25) NOT NULL
-,               message             TEXT
-,               server              VARCHAR(50)
-,               user_name           VARCHAR(50)
-,               date                TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
-, CONSTRAINT    pk_error_occurrence_id          PRIMARY KEY (error_occurrence_id)
-, CONSTRAINT    fk_error_occurrences_errors     FOREIGN KEY (error_id)
-  REFERENCES    errors (error_id));
+-- Provides information about a single occurrence of a particular error.
+CREATE TABLE  ErrorOccurrences
+(             ErrorOccurrenceId INT NOT NULL AUTO_INCREMENT
+,             ErrorId           INT NOT NULL
+,             Environment       VARCHAR(25) NOT NULL
+,             Message           TEXT
+,             Server            VARCHAR(50)
+,             UserName          VARCHAR(50)
+,             Date              TIMESTAMP NOT NULL
+,             PRIMARY KEY (ErrorOccurrenceId)
+,             FOREIGN KEY (ErrorId) REFERENCES Errors(ErrorId) ON DELETE CASCADE);
 
-CREATE TABLE    error_attachments
-(               error_occurrence_id INTEGER     NOT NULL
-,               file_name           VARCHAR(50) NOT NULL
-,               file_type           VARCHAR(25) NOT NULL
-,               source              BYTEA
-, CONSTRAINT    pk_error_attachments            PRIMARY KEY (error_occurrence_id, file_name)
-, CONSTRAINT    fk_error_attachments_error_occurrences  FOREIGN KEY (error_occurrence_id)
-  REFERENCES    error_occurrences (error_occurrence_id));
+-- Files provided with the error package.
+CREATE TABLE  ErrorAttachments
+(             ErrorOccurrenceId INT NOT NULL
+,             FileName          VARCHAR(50) NOT NULL
+,             FileType          VARCHAR(25) NOT NULL
+,             Source            MEDIUMBLOB NOT NULL
+,             PRIMARY KEY (ErrorOccurrenceId, FileName)
+,             FOREIGN KEY (ErrorOccurrenceId) REFERENCES ErrorOccurrences(ErrorOccurrenceId) ON DELETE CASCADE);
 
-CREATE TABLE    error_notes
-(               error_note_id       SERIAL
-,               error_id            INTEGER     NOT NULL
-,               user_id             INTEGER     NOT NULL
-,               message             TEXT        NOT NULL
-,               date                TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
-, CONSTRAINT    pk_error_note_id                PRIMARY KEY (error_note_id)
-, CONSTRAINT    fk_error_notes_errors           FOREIGN KEY (error_id)
-  REFERENCES    errors (error_id)
-, CONSTRAINT    fk_error_notes_users            FOREIGN KEY (user_id)
-  REFERENCES    users (user_id));
+-- Notes by users to give detail about the error that are useful for future troubleshooting or denoting resolution.
+CREATE TABLE  ErrorNotes
+(             ErrorNoteId   INT NOT NULL AUTO_INCREMENT
+,             ErrorId       INT NOT NULL
+,             UserId        INT NOT NULL
+,             Message       TEXT NOT NULL
+,             Date          TIMESTAMP
+,             PRIMARY KEY (ErrorNoteId)
+,             FOREIGN KEY (ErrorId) REFERENCES Errors(ErrorId) ON DELETE CASCADE
+,             FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE);

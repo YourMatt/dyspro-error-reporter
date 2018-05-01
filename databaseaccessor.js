@@ -18,8 +18,8 @@ exports.query = {
 
         this.run (
             "select * " +
-            "from   accounts " +
-            "where  api_key = $1",
+            "from   Accounts " +
+            "where  ApiKey = $1",
             [api_key],
             function (result) {
                 if (result.rows.length != 1) callback ();
@@ -33,10 +33,10 @@ exports.query = {
     getAccountEnvironments: function (account_id, callback) {
 
         this.run (
-                "select     distinct eo.environment " +
-                "from       errors e " +
-                "inner join error_occurrences eo on eo.error_id = e.error_id " +
-                "where      e.account_id = $1",
+                "select     distinct eo.Environment " +
+                "from       Errors e " +
+                "inner join ErrorOccurrences eo on eo.ErrorId = e.ErrorId " +
+                "where      e.AccountId = $1",
             [account_id],
             function (result) {
                 var environments = [];
@@ -62,9 +62,9 @@ exports.query = {
 
         this.run (
             "select * " +
-            "from   users " +
-            "where  email = $1 " +
-            "and    password = md5($2)",
+            "from   Users " +
+            "where  Email = $1 " +
+            "and    Password = md5($2)",
             [email, password],
             function (result) {
                 if (!result.rows || result.rows.length != 1) callback ();
@@ -85,8 +85,8 @@ exports.query = {
 
         this.run (
             "select     * " +
-            "from       errors " +
-            "where      error_id = $1",
+            "from       Errors " +
+            "where      ErrorId = $1",
             [error_id],
             function (result) {
                 if (result.rows && result.rows.length) callback (result.rows[0]);
@@ -100,11 +100,11 @@ exports.query = {
     getErrorByData: function (error_data, callback) {
 
         this.run (
-            "select error_id " +
-            "from   errors " +
-            "where  account_id = $1 " +
-            "and    product = $2 " +
-            "and    md5(stack_trace) = md5($3)",
+            "select ErrorId " +
+            "from   Errors " +
+            "where  AccountId = $1 " +
+            "and    Product = $2 " +
+            "and    md5(StackTrace) = md5($3)",
             [error_data.account_id, error_data.product, error_data.stack_trace],
             function (result) {
 
@@ -137,10 +137,10 @@ exports.query = {
                 // create a new error and add the error occurrence if not found
                 else {
                     that.run (
-                        "insert into    errors " +
-                        "(              account_id, product, stack_trace) " +
+                        "insert into    Errors " +
+                        "(              AccountId, Product, StackTrace) " +
                         "values (       $1, $2, $3) " +
-                        "returning      error_id",
+                        "returning      ErrorId",
                         [error_data.account_id, error_data.product, error_data.stack_trace],
                         function (result) {
                             if (! result.rows) {
@@ -176,9 +176,9 @@ exports.query = {
 
         this.run (
             "select     eo.*, e.* " +
-            "from       error_occurrences eo " +
-            "inner join errors e on e.error_id = eo.error_id " +
-            "where      eo.error_occurrence_id = $1",
+            "from       ErrorOccurrences eo " +
+            "inner join Errors e on e.ErrorId = eo.ErrorId " +
+            "where      eo.ErrorOccurrenceId = $1",
             [error_occurrence_id],
             function (result) {
                 if (result.rows && result.rows.length) callback (result.rows[0]);
@@ -193,12 +193,12 @@ exports.query = {
 
         this.run (
             "select     eo.*, e.* " +
-            "from       error_occurrences eo " +
-            "inner join errors e on e.error_id = eo.error_id " +
-            "where      eo.error_id = $1 " +
-            "and        e.account_id = $2 " +
-            "and        eo.environment = $3 " +
-            "order by   date desc",
+            "from       ErrorOccurrences eo " +
+            "inner join Errors e on e.ErrorId = eo.ErrorId " +
+            "where      eo.ErrorId = $1 " +
+            "and        e.AccountId = $2 " +
+            "and        eo.Environment = $3 " +
+            "order by   Date desc",
             [error_id, account_id, environment],
             function (result) {
                 if (result.rows) callback (result.rows);
@@ -213,11 +213,11 @@ exports.query = {
 
         this.run (
             "select     eo.*, e.* " +
-            "from       error_occurrences eo " +
-            "inner join errors e on e.error_id = eo.error_id " +
-            "where      e.account_id = $1 " +
-            "and        eo.environment = $2 " +
-            "order by   date desc " +
+            "from       ErrorOccurrences eo " +
+            "inner join Errors e on e.ErrorId = eo.ErrorId " +
+            "where      e.AccountId = $1 " +
+            "and        eo.Environment = $2 " +
+            "order by   Date desc " +
             "limit $3   offset 0",
             [account_id, environment, limit],
             callback
@@ -230,10 +230,10 @@ exports.query = {
         var that = this;
 
         this.run (
-            "insert into    error_occurrences " +
-            "(              error_id, environment, message, server, user_name) " +
+            "insert into    ErrorOccurrences " +
+            "(              ErrorId, Environment, Message, Server, UserName) " +
             "values (       $1, $2, $3, $4, $5) " +
-            "returning      error_occurrence_id",
+            "returning      ErrorOccurrenceId",
             [error_data.error_id, error_data.environment, error_data.message, error_data.server, error_data.user_name],
             function (result) {
                 if (! result.rows) callback ("Error saving to the error_occurrences table.");
@@ -258,10 +258,10 @@ exports.query = {
     getErrorAttachments: function (error_occurrence_id, callback) {
 
         this.run (
-            "select     error_occurrence_id, file_name, file_type " +
-            "from       error_attachments " +
-            "where      error_occurrence_id = $1 " +
-            "order by   file_name",
+            "select     ErrorOccurrenceId, FileName, FileType " +
+            "from       ErrorAttachments " +
+            "where      ErrorOccurrenceId = $1 " +
+            "order by   FileName",
             [error_occurrence_id],
             function (result) {
                 callback (result.rows);
@@ -274,10 +274,10 @@ exports.query = {
     getErrorAttachment: function (error_occurrence_id, file_name, callback) {
 
         this.run (
-            "select error_occurrence_id, file_name, file_type, source " +
-            "from   error_attachments " +
-            "where  error_occurrence_id = $1 " +
-            "and    file_name = $2",
+            "select ErrorOccurrenceId, FileName, FileType, Source " +
+            "from   ErrorAttachments " +
+            "where  ErrorOccurrenceId = $1 " +
+            "and    FileName = $2",
             [error_occurrence_id, file_name],
             function (result) {
 
@@ -307,8 +307,8 @@ exports.query = {
             //files[i].source = String.fromCharCode(92) + "x" + files[i].source;
             //files[i].source = files[i].source.toString("hex");
             this.run (
-                "insert into    error_attachments " +
-                "(              error_occurrence_id, file_name, file_type, source) " +
+                "insert into    ErrorAttachments " +
+                "(              ErrorOccurrenceId, FileName, FileType, Source) " +
                 "values (       $1, $2, $3, $4::bytea)",
                 [error_occurrence_id, files[i].file_name, files[i].file_type, files[i].source],
                 function (result) {
