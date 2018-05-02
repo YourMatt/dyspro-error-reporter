@@ -3,28 +3,28 @@
 <table class="table">
     <tr>
         <td class="col-sm-2">User:</td>
-        <td class="col-sm-10"><%= error_occurrence.user_name %></td>
+        <td class="col-sm-10"><%= errorOccurrence.userName %></td>
     </tr>
     <tr>
         <td>Server:</td>
-        <td><%= error_occurrence.server %> (<%= error_occurrence.environment %>)</td>
+        <td><%= errorOccurrence.server %> (<%= errorOccurrence.environment %>)</td>
     </tr>
     <tr>
         <td>Date:</td>
-        <td><%= moment(error_occurrence.date).format("MMMM Do, YYYY [at] h:mm:ss a") %></td>
+        <td><%= moment(errorOccurrence.date).format("MMMM Do, YYYY [at] h:mm:ss a") %></td>
     </tr>
     <tr>
         <td>Message:</td>
-        <td><%= error_occurrence.message %></td>
+        <td><%= errorOccurrence.message %></td>
     </tr>
     <tr>
         <td>Attachments:</td>
-        <td><% if (! error_occurrence.attachments.length) { %>
+        <td><% if (! errorOccurrence.attachments.length) { %>
             None
             <% } else { %>
-            <% for (var i = 0; i < error_occurrence.attachments.length; i++) { %>
-            <a href="/attachments/<%= error_occurrence.error_occurrence_id %>/<%= error_occurrence.attachments[i].file_name %>" target="_new">
-                <%= error_occurrence.attachments[i].file_name %>
+            <% for (var i = 0; i < errorOccurrence.attachments.length; i++) { %>
+            <a href="/attachments/<%= errorOccurrence.errorOccurrenceId %>/<%= errorOccurrence.attachments[i].fileName %>" target="_new">
+                <%= errorOccurrence.attachments[i].fileName %>
             </a>
             <% } } %>
         </td>

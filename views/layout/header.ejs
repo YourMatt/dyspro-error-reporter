@@ -7,8 +7,8 @@
             <script src="/js/angular.min.js"></script>
             <script src="/js/bootstrap.min.js"></script>
             <script src="/js/moment.js"></script>
-            <% for (var i = 0; i < js_files.length; i++) { %>
-            <script src="/js/<%= js_files[i] %>"></script>
+            <% for (var i = 0; i < jsFiles.length; i++) { %>
+            <script src="/js/<%= jsFiles[i] %>"></script>
             <% } %>
 
             <link rel="stylesheet" href="/css/bootstrap.min.css"/>
@@ -23,7 +23,7 @@
                         <a class="navbar-brand" href="/">Dyspro</a>
                         <span class="navbar-text">/ Error Reporter</span>
                     </div>
-                    <% if (! user_id) { %>
+                    <% if (! userId) { %>
                     <form class="navbar-form navbar-right col-md-3" role="form" method="post" action="/login">
                         <div class="form-group">
                             <input type="text" placeholder="Email" class="form-control" name="email" required/>
@@ -47,16 +47,16 @@
                 </div>
             </nav>
 
-            <% if (error_message) { %>
+            <% if (errorMessage) { %>
             <div class="container alert alert-danger alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <%= error_message %>
+                <%= errorMessage %>
             </div>
             <% } %>
 
-            <% if (success_message) { %>
+            <% if (successMessage) { %>
             <div class="container alert alert-success alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <%= success_message %>
+                <%= successMessage %>
             </div>
             <% } %>

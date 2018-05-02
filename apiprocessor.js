@@ -2,9 +2,9 @@ var database;
 var sessionManager;
 var files = [];
 
-exports.init = function (init_database, init_session_manager) {
-    database = init_database;
-    sessionManager = init_session_manager;
+exports.init = function (initDatabase, initSessionManager) {
+    database = initDatabase;
+    sessionManager = initSessionManager;
 };
 
 exports.processor = {
@@ -13,10 +13,10 @@ exports.processor = {
         var that = this;
 
         // authenticate all api requests
-        this.authenticate (req.params.key, function (account_data) {
+        this.authenticate (req.params.key, function (accountData) {
 
             // return response for unauthenticated accounts
-            if (! account_data) {
+            if (! accountData) {
                 that.sendResponse (res, that.getErrorResponseData ("Not authenticated."));
                 return;
             }
@@ -28,28 +28,28 @@ exports.processor = {
                     // load values - need to either use req.query or req.body depending which is available - scenarios
                     // allow for both depending on post and whether files are attached or not
                     var queryValues = (req.body.product) ? req.body : req.query;
-                    var error_data = {
-                        account_id: account_data.account_id,
+                    var errorData = {
+                        accountId: accountData.accountId,
                         product: queryValues.product,
                         environment: queryValues.environment,
                         server: queryValues.server,
                         message: queryValues.message,
-                        user_name: queryValues.user_name,
-                        stack_trace: queryValues.stack_trace
+                        userName: queryValues.userName,
+                        stackTrace: queryValues.stackTrace
                     };
 
                     // TODO: Add validation at this point
-                    if (! error_data.product) {
+                    if (! errorData.product) {
                         that.sendResponse (res, that.getErrorResponseData ("No product."));
                         return;
                     }
 
                     // save the error to the database
                     database.query.logError (
-                        error_data,
+                        errorData,
                         req.files,
-                        function (error_message) {
-                            if (error_message) that.sendResponse (res, that.getErrorResponseData(error_message));
+                        function (errorMessage) {
+                            if (errorMessage) that.sendResponse (res, that.getErrorResponseData(errorMessage));
                             else that.sendResponse (res, that.getSuccessResponseData());
                         }
                     );
@@ -59,15 +59,15 @@ exports.processor = {
 
                     // pull all errors associated to a specific error ID if provided
                     if ( req.params.id ) {
-                        database.query.getErrorOccurrencesByErrorId (account_data.account_id, req.params.type, req.params.id, function (results) {
+                        database.query.getErrorOccurrencesByErrorId (accountData.accountId, req.params.type, req.params.id, function (results) {
                             that.sendResponse (res, that.getSuccessResponseData (results));
                         });
                     }
 
                     // show a list of the latest errors if no ID provided
                     else {
-                        that.getLatestErrors(account_data.account_id, req.params.type, 20, function (results, error_message) {
-                            if (error_message) that.sendResponse(res, that.getErrorResponseData(error_message));
+                        that.getLatestErrors(accountData.accountId, req.params.type, 20, function (results, errorMessage) {
+                            if (errorMessage) that.sendResponse(res, that.getErrorResponseData(errorMessage));
                             else that.sendResponse (res, that.getSuccessResponseData (results));
                         });
                     }
@@ -82,44 +82,44 @@ exports.processor = {
 
     },
 
-    authenticate: function (api_key, callback) {
+    authenticate: function (apiKey, callback) {
 
         // use session if provided - only works for ajax use and not across web service
-        if (api_key == "session") {
-            var account_data;
-            if (sessionManager.data.account_id) {
-                account_data = {
-                    account_id: sessionManager.data.account_id
+        if (apiKey == "session") {
+            var accountData;
+            if (sessionManager.data.accountId) {
+                accountData = {
+                    accountId: sessionManager.data.accountId
                 };
             }
-            callback (account_data);
+            callback (accountData);
         }
 
         // check for the key association to the account within the database
         else {
-            database.query.getAccountByApiKey(api_key, callback);
+            database.query.getAccountByApiKey(apiKey, callback);
         }
 
     },
 
-    getFileType: function (file_name) {
+    getFileType: function (fileName) {
 
-        var file_name_parts = file_name.split (".");
-        return file_name_parts[file_name_parts.length - 1].toLowerCase ();
+        var fileNameParts = fileName.split (".");
+        return fileNameParts[fileNameParts.length - 1].toLowerCase ();
 
     },
 
-    getLatestErrors: function (account_id, environment, num_errors, callback) {
+    getLatestErrors: function (accountId, environment, numErrors, callback) {
 
-        database.query.getLatestErrorOccurrences (account_id, environment, num_errors, function (results) {
+        database.query.getLatestErrorOccurrences (accountId, environment, numErrors, function (results) {
 
             // return error if no results
-            if (! results.rows.length) {
+            if (! results.length) {
                 callback ({}, "No errors found.");
                 return;
             }
 
-            callback (results.rows);
+            callback (results);
 
             /* // no longer including attachments on listings, so removing - leaving code in place in case proves useful enough to add back in
             // load attachments if errors found
@@ -150,10 +150,10 @@ exports.processor = {
 
     },
 
-    getErrorResponseData: function (error_message) {
+    getErrorResponseData: function (errorMessage) {
 
         var error = {
-            error: error_message
+            error: errorMessage
         };
 
         return error;
@@ -171,11 +171,11 @@ exports.processor = {
 
     },
 
-    sendResponse: function (res, return_data) {
+    sendResponse: function (res, returnData) {
 
         res.writeHead (200, {"Content-Type": "application/json"});
-        res.end (JSON.stringify (return_data));
+        res.end (JSON.stringify (returnData));
 
     }
 
-}
+};

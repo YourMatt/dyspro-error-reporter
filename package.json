@@ -1,14 +1,23 @@
 {
-    "name": "dyspro-error-reporter",
-    "version": "0.0.1",
-    "dependencies": {
-        "express": "~4.9.x",
-        "express-session": "^1.7.6",
-        "body-parser": "^1.7.0",
-        "ejs": "~1.0.x",
-        "pg": "2.x",
-        "connect-busboy": "0.0.2",
-        "mime": "1.2.11",
-        "moment": "2.8.4"
-    }
+  "name": "dyspro-error-reporter",
+  "version": "0.1.0",
+  "description": "System monitor and error reporting system.",
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YourMatt/dyspro-error-reporter.git"
+  },
+  "author": "Matt Sadowski",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "compression": "^1.7.2",
+    "connect-busboy": "^0.0.2",
+    "dotenv": "^5.0.1",
+    "ejs": "^2.5.9",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "mime": "^2.3.1",
+    "moment": "^2.22.1",
+    "mysql": "^2.15.0"
+  }
 }

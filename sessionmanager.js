@@ -1,9 +1,9 @@
 exports.data = {
 
-    account_id: 0,
-    user_id: 0,
-    error_message: "",
-    success_message: ""
+    accountId: 0,
+    userId: 0,
+    errorMessage: "",
+    successMessage: ""
 
 };
 
@@ -14,7 +14,7 @@ exports.init = function (init_req) {
         exports.data = req.session.data;
     }
     else exports.data = {};
-}
+};
 
 exports.set = function (name, value) {
 
@@ -29,8 +29,8 @@ exports.getOnce = function (name) {
     eval ("exports.data." + name + " = '';");
     return value;
 
-}
+};
 
 exports.loggedIn = function () {
-    return (exports.data.user_id > 0);
-}
+    return (exports.data.userId > 0);
+};

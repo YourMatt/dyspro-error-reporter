@@ -1,11 +1,13 @@
 <%- include header.ejs %>
 
+<% if (environments.length) { %>
+
 <div ng-controller="DashboardController">
 
     <ul class="container nav nav-tabs">
         <li class="navbar-text">Environment</li>
         <% for (var i = 0; i < environments.length; i++) { %>
-        <li<% if (selected_environment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>">
+        <li<% if (selectedEnvironment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>">
             <a href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
         </li>
         <% } %>
@@ -16,5 +18,16 @@
     </div>
 
 </div>
+
+<% } else { %>
+
+<div class="container" role="main">
+    <div class="jumbotron">
+        <h1>Dashboard</h1>
+        <p>You have not logged any errors.</p>
+    </div>
+</div>
+
+<% } %>
 
 <%- include footer.ejs %>

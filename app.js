@@ -1,34 +1,34 @@
 
+// load configuration values
+require ("dotenv").config();
+
 // include libraries
-var express = require ("express"),
-    session = require ("express-session"),
-    busboy = require ("connect-busboy"),
-    bodyParser = require ("body-parser"),
-    moment = require ("moment"),
-    sessionManager = require ("./sessionmanager.js"),
-    api = require ("./apiprocessor.js"),
-    database = require ("./databaseaccessor.js"),
-    attachments = require ("./attachmentmanager.js"),
-    mime = require ("mime"),
-    pg = require ("pg"),
-    config = require ("./config.js");
+var express = require ("express")
+,   session = require ("express-session")
+,   busboy = require ("connect-busboy")
+,   bodyParser = require ("body-parser")
+,   ejs = require ("ejs")
+,   compression = require ("compression")
+,   moment = require ("moment")
+,   sessionManager = require ("./sessionmanager.js")
+,   api = require ("./apiprocessor.js")
+,   database = require ("./databaseaccessor.js")
+,   attachments = require ("./attachmentmanager.js")
+,   mime = require ("mime");
 
 // initialize express
 var app = express ();
-app.set ("port", (process.env.PORT || 80));
-app.set ("dblocation", (process.env.DATABASE_URL || config.default_database));
+app.set ("port", (process.env.RUNTIME_PORT || 80));
+app.set ("views", __dirname + "/views/layout");
+app.engine ("ejs", ejs.renderFile);
+app.use (bodyParser.urlencoded ({extended: false}));
+app.use (compression({level: 1, threshold: 0})); // use fastest compression
 app.use (express.static (__dirname + "/public"));
 app.use (busboy ()); // allow file uploads
-app.use (bodyParser.urlencoded ({extended: false}));
 app.use (session ({secret: "dyspro-sess", resave: true, saveUninitialized: true}));
 
 // initialize the library dependencies
-database.init (app.get ("dblocation"), pg);
 api.init (database, sessionManager);
-
-// set template engine
-app.set ("views", __dirname + "/views/layout");
-app.engine ("ejs", require ("ejs").renderFile);
 
 // load the session
 app.use (function (req, res, next) {
@@ -67,18 +67,18 @@ app.use (function (req, res, next) {
     });
 
     // load file data to request files
-    req.busboy.on ("file", function (field_name, file, file_name, encoding, mime_type) {
-        var file_source = "";
+    req.busboy.on ("file", function (fieldName, file, fileName, encoding, mimeType) {
+        var fileSource = "";
         file.on ("data", function (data) {
-            file_source += data;
+            fileSource += data;
         });
         file.on ("end", function () {
-            var file_data = {
-                file_name: file_name,
-                file_type: api.processor.getFileType (file_name),
-                source: file_source
+            var fileData = {
+                fileName: fileName,
+                fileType: api.processor.getFileType (fileName),
+                source: fileSource
             };
-            req.files.push (file_data);
+            req.files.push (fileData);
         });
     });
 
@@ -96,10 +96,10 @@ app.get ("/", function (req, res) {
     res.render ("home.ejs",
         {
             page: "home",
-            js_files: [],
-            error_message: sessionManager.getOnce ("error_message"),
-            success_message: sessionManager.getOnce ("success_message"),
-            user_id: sessionManager.data.user_id
+            jsFiles: [],
+            errorMessage: sessionManager.getOnce ("errorMessage"),
+            successMessage: sessionManager.getOnce ("successMessage"),
+            userId: sessionManager.data.userId
         }
     );
 });
@@ -114,51 +114,51 @@ app.get ("/dashboard", function (req, res) {
         res.render ("dashboard.ejs",
             {
                 page: "dashboard",
-                js_files: ["errors.js", "dashboard.js"],
-                error_message: sessionManager.getOnce ("error_message"),
-                success_message: sessionManager.getOnce ("success_message"),
-                user_id: sessionManager.data.user_id,
+                jsFiles: ["errors.js", "dashboard.js"],
+                errorMessage: sessionManager.getOnce ("errorMessage"),
+                successMessage: sessionManager.getOnce ("successMessage"),
+                userId: sessionManager.data.userId,
                 environments: environments,
-                selected_environment: environments[0] // TODO: Pull value from settings if exists
+                selectedEnvironment: environments[0] // TODO: Pull value from settings if exists
             }
         );
     });
 });
 
 // error occurrence detail page
-app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res) {
+app.get ("/errors/:errorId/occurrence/:errorOccurrenceId", function (req, res) {
     if (! sessionManager.loggedIn ()) {
         res.redirect ("/");
         return;
     }
 
     // load the error occurrence data
-    database.query.getErrorOccurrence (req.params.error_occurrence_id, function (error_occurrence) {
-        if (! error_occurrence) {
-            sessionManager.set ("error_message", "Error occurrence not found.");
+    database.query.getErrorOccurrence (req.params.errorOccurrenceId, function (errorOccurrence) {
+        if (! errorOccurrence) {
+            sessionManager.set ("errorMessage", "Error occurrence not found.");
             res.redirect (req.headers.referer);
             return;
         }
 
         // load the attachments for the error occurrence
-        database.query.getErrorAttachments (error_occurrence.error_occurrence_id, function (attachments) {
-            error_occurrence.attachments = attachments;
+        database.query.getErrorAttachments (errorOccurrence.errorOccurrenceId, function (attachments) {
+            errorOccurrence.attachments = attachments;
 
             try {
-                var stack_trace_json = JSON.parse (error_occurrence.stack_trace);
-                error_occurrence.stack_trace = JSON.stringify (stack_trace_json, null, 2);
+                var stackTraceJson = JSON.parse (errorOccurrence.stackTrace);
+                errorOccurrence.stackTrace = JSON.stringify (stackTraceJson, null, 2);
             }
             catch (e) {}
 
             res.render ("error-occurrence-detail.ejs",
                 {
                     page: "erroroccurrencedetail",
-                    js_files: ["errors.js", "error-detail.js"],
-                    error_message: sessionManager.getOnce ("error_message"),
-                    success_message: sessionManager.getOnce ("success_message"),
-                    user_id: sessionManager.data.user_id,
-                    error_occurrence: error_occurrence,
-                    error: error_occurrence,
+                    jsFiles: ["errors.js", "error-detail.js"],
+                    errorMessage: sessionManager.getOnce ("errorMessage"),
+                    successMessage: sessionManager.getOnce ("successMessage"),
+                    userId: sessionManager.data.userId,
+                    errorOccurrence: errorOccurrence,
+                    error: errorOccurrence,
                     moment: moment
                 }
             );
@@ -167,16 +167,16 @@ app.get ("/errors/:error_id/occurrence/:error_occurrence_id", function (req, res
 });
 
 // error detail page
-app.get ("/errors/:error_id", function (req, res) {
+app.get ("/errors/:errorId", function (req, res) {
     if (! sessionManager.loggedIn ()) {
         res.redirect ("/");
         return;
     }
 
     // load the error data
-    database.query.getError (req.params.error_id, function (error) {
+    database.query.getError (req.params.errorId, function (error) {
         if (! error) {
-            sessionManager.set ("error_message", "Error not found.");
+            sessionManager.set ("errorMessage", "Error not found.");
             res.redirect (req.headers.referer);
             return;
         }
@@ -184,10 +184,10 @@ app.get ("/errors/:error_id", function (req, res) {
         res.render ("error-detail.ejs",
             {
                 page: "errordetail",
-                js_files: ["errors.js", "error-detail.js"],
-                error_message: sessionManager.getOnce ("error_message"),
-                success_message: sessionManager.getOnce ("success_message"),
-                user_id: sessionManager.data.user_id,
+                jsFiles: ["errors.js", "error-detail.js"],
+                errorMessage: sessionManager.getOnce ("errorMessage"),
+                successMessage: sessionManager.getOnce ("successMessage"),
+                userId: sessionManager.data.userId,
                 error: error
             }
         );
@@ -204,28 +204,28 @@ app.get ("/settings", function (req, res) {
     res.render ("settings.ejs",
         {
             page: "settings",
-            js_files: [],
-            error_message: sessionManager.getOnce ("error_message"),
-            success_message: sessionManager.getOnce ("success_message"),
-            user_id: sessionManager.data.user_id
+            jsFiles: [],
+            errorMessage: sessionManager.getOnce ("errorMessage"),
+            successMessage: sessionManager.getOnce ("successMessage"),
+            userId: sessionManager.data.userId
         }
     );
 });
 
 // process login
 app.post ("/login", function (req, res) {
-    database.query.getUserByLogin (req.body.email, req.body.password, function (user_data) {
+    database.query.getUserByLogin (req.body.email, req.body.password, function (userData) {
 
         // user not authenticated
-        if (! user_data) {
-            sessionManager.set ("error_message", "Incorrect email or password.");
+        if (! userData) {
+            sessionManager.set ("errorMessage", "Incorrect email or password.");
             res.redirect (req.headers.referer);
             return;
         }
 
         // save user to session and forward to the dashboard
-        sessionManager.set ("user_id", user_data.user_id);
-        sessionManager.set ("account_id", user_data.account_id);
+        sessionManager.set ("userId", userData.UserId);
+        sessionManager.set ("accountId", userData.AccountId);
         res.redirect ("/dashboard");
 
     });
@@ -233,14 +233,14 @@ app.post ("/login", function (req, res) {
 
 // process logout
 app.get ("/logout", function (req, res) {
-    sessionManager.set ("user_id", "");
-    sessionManager.set ("success_message", "You have successfully logged out.");
+    sessionManager.set ("userId", "");
+    sessionManager.set ("successMessage", "You have successfully logged out.");
     res.redirect ("/");
 });
 
 // process attachment downloads
-app.get ("/attachments/:error_occurrence_id/:file_name", function (req, res) {
-    attachments.manager.loadFile (req.params.error_occurrence_id, req.params.file_name, function (file) {
+app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
+    attachments.manager.loadFile (req.params.errorOccurrenceId, req.params.fileName, function (file) {
 
         if (! file) { // TODO: Call standard 404 handler
             res.writeHead (404, {"Content-Type": "text/html"});
@@ -254,7 +254,7 @@ app.get ("/attachments/:error_occurrence_id/:file_name", function (req, res) {
         */
 
         // display the file
-        res.writeHead (200, {"Content-Type": mime.lookup(file.file_type)});
+        res.writeHead (200, {"Content-Type": mime.lookup(file.fileType)});
         res.end (file.source);
 
     });
