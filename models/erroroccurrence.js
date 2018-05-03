@@ -21,7 +21,8 @@ self.prototype = {
     message: "",
     server: "",
     userName: "",
-    date: {}
+    date: {},
+    attachments: []
 };
 
 module.exports = self;

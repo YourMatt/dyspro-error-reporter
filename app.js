@@ -27,9 +27,6 @@ app.use (express.static (__dirname + "/public"));
 app.use (busboy ()); // allow file uploads
 app.use (session ({secret: "dyspro-sess", resave: true, saveUninitialized: true}));
 
-// initialize the library dependencies
-api.init (database, sessionManager);
-
 // load the session
 app.use (function (req, res, next) {
     sessionManager.init (req);
@@ -68,17 +65,17 @@ app.use (function (req, res, next) {
 
     // load file data to request files
     req.busboy.on ("file", function (fieldName, file, fileName, encoding, mimeType) {
-        var fileSource = "";
+        var fileSource = Buffer("", "binary");
         file.on ("data", function (data) {
-            fileSource += data;
+            fileSource = Buffer.concat([fileSource, Buffer.from(data, "binary")]);
         });
         file.on ("end", function () {
             var fileData = {
                 fileName: fileName,
-                fileType: api.processor.getFileType (fileName),
+                fileType: api.processor.getFileType(fileName),
                 source: fileSource
             };
-            req.files.push (fileData);
+            req.files.push(fileData);
         });
     });
 
@@ -150,18 +147,23 @@ app.get ("/errors/:errorId/occurrence/:errorOccurrenceId", function (req, res) {
             }
             catch (e) {}
 
-            res.render ("error-occurrence-detail.ejs",
-                {
-                    page: "erroroccurrencedetail",
-                    jsFiles: ["errors.js", "error-detail.js"],
-                    errorMessage: sessionManager.getOnce ("errorMessage"),
-                    successMessage: sessionManager.getOnce ("successMessage"),
-                    userId: sessionManager.data.user.userId,
-                    errorOccurrence: errorOccurrence,
-                    error: errorOccurrence,
-                    moment: moment
-                }
-            );
+            // load the error details
+            database.query.getError(errorOccurrence.errorId, function(errorData) {
+
+                res.render ("error-occurrence-detail.ejs",
+                    {
+                        page: "erroroccurrencedetail",
+                        jsFiles: ["errors.js", "error-detail.js"],
+                        errorMessage: sessionManager.getOnce ("errorMessage"),
+                        successMessage: sessionManager.getOnce ("successMessage"),
+                        userId: sessionManager.data.user.userId,
+                        errorOccurrence: errorOccurrence,
+                        error: errorData,
+                        moment: moment
+                    }
+                );
+
+            });
         });
     });
 });
@@ -253,21 +255,15 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
         */
 
         // display the file
-        res.writeHead (200, {"Content-Type": mime.lookup(file.fileType)});
+        res.writeHead (200, {"Content-Type": mime.getType(file.fileType), "Content-Length": file.source.length});
         res.end (file.source);
 
     });
 });
 
 // expose api methods
-app.all ("/api/:method", function (req, res) {
-    api.processor.handleRequest (req, res);
-});
-app.all ("/api/:method/:type", function (req, res) {
-    api.processor.handleRequest (req, res);
-});
-app.all ("/api/:method/:type/:id", function (req, res) {
-    api.processor.handleRequest (req, res);
+app.all ("/api/:method/:type?/:id?", function (req, res) {
+    api.processor.handleRequest (req, res, sessionManager);
 });
 
 // start server

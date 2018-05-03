@@ -45,9 +45,9 @@ app.controller ("ErrorHistoryController", ["$scope", function ($scope) {
    var meta_environment = $("environment", "#error-occurrence-metadata").text();
    if (meta_environment) {
       var meta_error_id = $("errorid", "#error-occurrence-metadata").text();
-      uri = "/api/session/errors/" + meta_environment + "/" + meta_error_id;
+      uri = "/api/errors/" + meta_environment + "/" + meta_error_id;
    }
-   else if (typeof (current_environment) !== "undefined") uri = "/api/session/errors/" + current_environment;
+   else if (typeof (current_environment) !== "undefined") uri = "/api/errors/" + current_environment;
 
    if (! uri) return;
 
@@ -67,25 +67,16 @@ app.controller ("ErrorHistoryController", ["$scope", function ($scope) {
 
             for (var i = 0; i < results.data.length; i++) {
                var error_occurrence = new ErrorOccurrence ();
-               error_occurrence.error_occurrence_id = results.data[i].error_occurrence_id;
-               error_occurrence.environment = results.data[i].environment;
-               error_occurrence.message = results.data[i].message;
-               error_occurrence.server = results.data[i].server;
-               error_occurrence.user_name = results.data[i].user_name;
-               error_occurrence.date = moment (results.data[i].date);
-               error_occurrence.error.error_id = results.data[i].error_id;
-               error_occurrence.error.account_id = results.data[i].account_id;
-               error_occurrence.error.product = results.data[i].product;
-               error_occurrence.error.stack_trace = results.data[i].stack_trace;
-
-               if (results.data[i].attachments) {
-                  for (var j = 0; j < results.data[i].attachments.length; j++) {
-                     var error_attachment = new ErrorAttachment();
-                     error_attachment.file_name = results.data[i].attachments[j].file_name;
-                     error_attachment.file_type = results.data[i].attachments[j].file_type;
-                     error_occurrence.attachments.push(error_attachment);
-                  }
-               }
+               error_occurrence.error_occurrence_id = results.data[i].ErrorOccurrenceId;
+               error_occurrence.environment = results.data[i].Environment;
+               error_occurrence.message = results.data[i].Message;
+               error_occurrence.server = results.data[i].Server;
+               error_occurrence.user_name = results.data[i].UserName;
+               error_occurrence.date = moment (results.data[i].Date);
+               error_occurrence.error.error_id = results.data[i].ErrorId;
+               error_occurrence.error.account_id = results.data[i].AccountId;
+               error_occurrence.error.product = results.data[i].Product;
+               error_occurrence.error.stack_trace = results.data[i].StackTrace;
 
                $scope.error_occurrences.push(error_occurrence);
 

@@ -48,10 +48,8 @@ exports.query = {
         },
         function(result) {
             var environments = [];
-            if (result.rows) {
-                for (var i = 0; i < result.rows.length; i++) {
-                    environments.push (result.rows[i].Environment);
-                }
+            for (var i = 0; i < result.length; i++) {
+                environments.push (result[i].Environment);
             }
             callback (environments);
         });
@@ -100,7 +98,7 @@ exports.query = {
      ******************************************************************************************************************/
 
     // retrieve single error occurrence
-    // callback(object: Error data)
+    // callback(models.Error: Error data)
     getError: function (errorId, callback) {
 
         exports.access.selectSingle({
@@ -109,7 +107,18 @@ exports.query = {
                     "where      ErrorId = ? ",
             values: [errorId]
         },
-        callback);
+        function (e) {
+            if (!e) return callback();
+
+            var error = new models.Error(
+                e.AccountId,
+                e.Product,
+                e.StackTrace,
+                e.ErrorId
+            );
+            callback(error);
+
+        });
 
     },
 
@@ -126,7 +135,7 @@ exports.query = {
             values: [errorData.accountId, errorData.product, errorData.stackTrace]
         },
         function(result) {
-            callback(result.ErrorId);
+            callback((result) ? result.ErrorId : 0);
         });
 
     },
@@ -142,7 +151,7 @@ exports.query = {
                 // add a new occurrence to the existing error if found
                 if (errorId) {
                     errorData.errorId = errorId;
-                    exports.access.logErrorOccurrence(
+                    exports.query.logErrorOccurrence(
                         errorData,
                         files,
                         callback
@@ -162,7 +171,7 @@ exports.query = {
                         if (!errorId) return callback("Error saving to the errors table.");
 
                         errorData.errorId = errorId;
-                        exports.access.logErrorOccurrence(
+                        exports.query.logErrorOccurrence(
                             errorData,
                             files,
                             callback
@@ -184,7 +193,7 @@ exports.query = {
      ******************************************************************************************************************/
 
     // retrieve single error occurrence
-    // callback(object: Error occurrence data)
+    // callback(models.ErrorOccurrence: Error occurrence data)
     getErrorOccurrence: function (errorOccurrenceId, callback) {
 
         exports.access.selectSingle({
@@ -194,7 +203,21 @@ exports.query = {
                     "where      eo.ErrorOccurrenceId = ? ",
             values: [errorOccurrenceId]
         },
-        callback);
+        function (eo) {
+            if (!eo) return callback();
+
+            var errorOccurrence = new models.ErrorOccurrence(
+                eo.ErrorId,
+                eo.Environment,
+                eo.Message,
+                eo.Server,
+                eo.UserName,
+                eo.Date,
+                eo.ErrorOccurrenceId
+            );
+            callback(errorOccurrence);
+
+        });
 
     },
 
@@ -272,12 +295,25 @@ exports.query = {
                     "order by   FileName ",
             values: [errorOccurrenceId]
         },
-        callback);
+        function (ea) {
+            if (!ea) return callback();
+
+            var errorAttachments = [];
+            for (var i = 0; i < ea.length; i++) {
+                errorAttachments.push(new models.ErrorAttachment(
+                    ea[i].ErrorOccurrenceId,
+                    ea[i].FileName,
+                    ea[i].FileType
+                ));
+            }
+            callback(errorAttachments);
+
+        });
 
     },
 
     // load an existing error by product and stack trace
-    // callback(object: Error attachment data)
+    // callback(model.ErrorAttachment: Error attachment data)
     getErrorAttachment: function (errorOccurrenceId, fileName, callback) {
 
         exports.access.selectSingle({
@@ -287,7 +323,18 @@ exports.query = {
                     "and    FileName = ? ",
             values: [errorOccurrenceId, fileName]
         },
-        callback);
+        function (ea) {
+            if (!ea) return callback();
+
+            var errorAttachment = new models.ErrorAttachment(
+                ea.ErrorOccurrenceId,
+                ea.FileName,
+                ea.FileType,
+                ea.Source
+            );
+            callback(errorAttachment);
+
+        });
 
     },
 
@@ -371,7 +418,10 @@ exports.access = {
         this.db.query(query, function (error, rows) {
 
             // report error and return if error state
-            if (error) return exports.access.handleError (query, error);
+            if (error) {
+                exports.access.handleError (query, error);
+                return callback();
+            }
 
             // call the callback with data
             if (returnSingle) callback(rows[0]);
@@ -393,7 +443,10 @@ exports.access = {
         this.db.query(query, function (error, result) {
 
             // report error and return
-            if (error) return exports.access.handleError (query, error);
+            if (error) {
+                exports.access.handleError (query, error);
+                return callback();
+            }
 
             // call the callback with the insert ID
             callback (result.insertId);

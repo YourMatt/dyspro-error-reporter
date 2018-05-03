@@ -1,16 +1,10 @@
-var database;
-var sessionManager;
-var files = []
+var database = require ("./databaseaccessor")
+,   files = []
 ,   models = require("./models/all.js");
-
-exports.init = function (initDatabase, initSessionManager) {
-    database = initDatabase;
-    sessionManager = initSessionManager;
-};
 
 exports.processor = {
 
-    handleRequest: function (req, res) {
+    handleRequest: function (req, res, sessionManager) {
         var that = this;
 
         // load authentication data
@@ -22,7 +16,7 @@ exports.processor = {
         ,   password = parts[1];
 
         // authenticate all api requests
-        this.authenticate (userName, password, function (accountData) {
+        this.authenticate (userName, password, sessionManager, function (accountData) {
 
             // return response for unauthenticated accounts
             if (! accountData) {
@@ -91,7 +85,7 @@ exports.processor = {
 
     },
 
-    authenticate: function (userName, apiKey, callback) {
+    authenticate: function (userName, apiKey, sessionManager, callback) {
 
         // use auth token if provided
         if (userName && apiKey) {
