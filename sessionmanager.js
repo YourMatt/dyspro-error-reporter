@@ -1,11 +1,6 @@
-exports.data = {
+var models = require("./models/all");
 
-    accountId: 0,
-    userId: 0,
-    errorMessage: "",
-    successMessage: ""
-
-};
+exports.data = new models.Session();
 
 var req;
 exports.init = function (init_req) {
@@ -13,7 +8,7 @@ exports.init = function (init_req) {
     if (req.session.data) {
         exports.data = req.session.data;
     }
-    else exports.data = {};
+    else exports.data = new models.Session();
 };
 
 exports.set = function (name, value) {
@@ -32,5 +27,5 @@ exports.getOnce = function (name) {
 };
 
 exports.loggedIn = function () {
-    return (exports.data.userId > 0);
+    return (exports.data.user.userId);
 };

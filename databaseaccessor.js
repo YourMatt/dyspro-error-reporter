@@ -1,4 +1,5 @@
-var mysql = require("mysql");
+var mysql = require("mysql")
+,   models = require("./models/all.js");
 
 exports.query = {
 
@@ -9,16 +10,28 @@ exports.query = {
      ******************************************************************************************************************/
 
     // load account by api key
-    // callback(object: Account data)
-    getAccountByApiKey: function (apiKey, callback) {
+    // callback(models.Account: Account data)
+    getAccountByApiKey: function (userName, apiKey, callback) {
 
         exports.access.selectSingle ({
             sql:    "select * " +
                     "from   Accounts " +
-                    "where  ApiKey = ? ",
-            values: [apiKey]
+                    "where  Name = ? " +
+                    "and    ApiKey = ? ",
+            values: [userName, apiKey]
         },
-        callback);
+        function (a) {
+            if (!a) return callback();
+
+            var account = new models.Account(
+                a.Name,
+                a.ApiKey,
+                a.CreateDate,
+                a.AccountId
+            );
+            callback(account);
+
+        });
 
     },
 
@@ -52,7 +65,7 @@ exports.query = {
      ******************************************************************************************************************/
 
     // authenticate the user
-    // callback(object: User data)
+    // callback(models.User: User data)
     getUserByLogin: function (email, password, callback) {
 
         exports.access.selectSingle({
@@ -62,7 +75,21 @@ exports.query = {
                     "and    Password = md5(?) ",
             values: [email, password]
         },
-        callback);
+        function (u) {
+            if (!u) return callback();
+
+            var user = new models.User(
+                u.AccountId,
+                u.Name,
+                u.Email,
+                u.Phone,
+                u.Password,
+                u.CreateDate,
+                u.UserId
+            );
+            callback(user);
+
+        });
 
     },
 

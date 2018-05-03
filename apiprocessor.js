@@ -1,6 +1,7 @@
 var database;
 var sessionManager;
-var files = [];
+var files = []
+,   models = require("./models/all.js");
 
 exports.init = function (initDatabase, initSessionManager) {
     database = initDatabase;
@@ -12,8 +13,16 @@ exports.processor = {
     handleRequest: function (req, res) {
         var that = this;
 
+        // load authentication data
+        var header = req.headers["authorization"] || ""
+        ,   token = header.split(/\s+/).pop() || ""
+        ,   auth = new Buffer(token, "base64").toString()
+        ,   parts = auth.split(/:/)
+        ,   userName = parts[0]
+        ,   password = parts[1];
+
         // authenticate all api requests
-        this.authenticate (req.params.key, function (accountData) {
+        this.authenticate (userName, password, function (accountData) {
 
             // return response for unauthenticated accounts
             if (! accountData) {
@@ -82,23 +91,22 @@ exports.processor = {
 
     },
 
-    authenticate: function (apiKey, callback) {
+    authenticate: function (userName, apiKey, callback) {
 
-        // use session if provided - only works for ajax use and not across web service
-        if (apiKey == "session") {
-            var accountData;
-            if (sessionManager.data.accountId) {
-                accountData = {
-                    accountId: sessionManager.data.accountId
-                };
-            }
-            callback (accountData);
+        // use auth token if provided
+        if (userName && apiKey) {
+            database.query.getAccountByApiKey(userName, apiKey, callback);
         }
 
-        // check for the key association to the account within the database
-        else {
-            database.query.getAccountByApiKey(apiKey, callback);
+        // use session if no auth token, and user logged into the session
+        else if (sessionManager.data.user.accountId) {
+            var account = new models.Account(); // skipping query from DB because account ID is only needed
+            account.accountId = sessionManager.data.user.accountId;
+            callback(account);
         }
+
+        // return if not authenticated
+        else callback();
 
     },
 

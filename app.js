@@ -10,10 +10,10 @@ var express = require ("express")
 ,   ejs = require ("ejs")
 ,   compression = require ("compression")
 ,   moment = require ("moment")
-,   sessionManager = require ("./sessionmanager.js")
-,   api = require ("./apiprocessor.js")
-,   database = require ("./databaseaccessor.js")
-,   attachments = require ("./attachmentmanager.js")
+,   sessionManager = require ("./sessionmanager")
+,   api = require ("./apiprocessor")
+,   database = require ("./databaseaccessor")
+,   attachments = require ("./attachmentmanager")
 ,   mime = require ("mime");
 
 // initialize express
@@ -99,7 +99,7 @@ app.get ("/", function (req, res) {
             jsFiles: [],
             errorMessage: sessionManager.getOnce ("errorMessage"),
             successMessage: sessionManager.getOnce ("successMessage"),
-            userId: sessionManager.data.userId
+            userId: sessionManager.data.user.userId
         }
     );
 });
@@ -110,14 +110,14 @@ app.get ("/dashboard", function (req, res) {
         res.redirect ("/");
         return;
     }
-    database.query.getAccountEnvironments (sessionManager.data.account_id, function (environments) {
+    database.query.getAccountEnvironments (sessionManager.data.user.accountId, function (environments) {
         res.render ("dashboard.ejs",
             {
                 page: "dashboard",
                 jsFiles: ["errors.js", "dashboard.js"],
                 errorMessage: sessionManager.getOnce ("errorMessage"),
                 successMessage: sessionManager.getOnce ("successMessage"),
-                userId: sessionManager.data.userId,
+                userId: sessionManager.data.user.userId,
                 environments: environments,
                 selectedEnvironment: environments[0] // TODO: Pull value from settings if exists
             }
@@ -156,7 +156,7 @@ app.get ("/errors/:errorId/occurrence/:errorOccurrenceId", function (req, res) {
                     jsFiles: ["errors.js", "error-detail.js"],
                     errorMessage: sessionManager.getOnce ("errorMessage"),
                     successMessage: sessionManager.getOnce ("successMessage"),
-                    userId: sessionManager.data.userId,
+                    userId: sessionManager.data.user.userId,
                     errorOccurrence: errorOccurrence,
                     error: errorOccurrence,
                     moment: moment
@@ -187,7 +187,7 @@ app.get ("/errors/:errorId", function (req, res) {
                 jsFiles: ["errors.js", "error-detail.js"],
                 errorMessage: sessionManager.getOnce ("errorMessage"),
                 successMessage: sessionManager.getOnce ("successMessage"),
-                userId: sessionManager.data.userId,
+                userId: sessionManager.data.user.userId,
                 error: error
             }
         );
@@ -207,7 +207,7 @@ app.get ("/settings", function (req, res) {
             jsFiles: [],
             errorMessage: sessionManager.getOnce ("errorMessage"),
             successMessage: sessionManager.getOnce ("successMessage"),
-            userId: sessionManager.data.userId
+            userId: sessionManager.data.user.userId
         }
     );
 });
@@ -224,8 +224,7 @@ app.post ("/login", function (req, res) {
         }
 
         // save user to session and forward to the dashboard
-        sessionManager.set ("userId", userData.UserId);
-        sessionManager.set ("accountId", userData.AccountId);
+        sessionManager.set ("user", userData);
         res.redirect ("/dashboard");
 
     });
@@ -233,7 +232,7 @@ app.post ("/login", function (req, res) {
 
 // process logout
 app.get ("/logout", function (req, res) {
-    sessionManager.set ("userId", "");
+    sessionManager.set ("user", {});
     sessionManager.set ("successMessage", "You have successfully logged out.");
     res.redirect ("/");
 });
@@ -261,13 +260,13 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
 });
 
 // expose api methods
-app.all ("/api/:key/:method", function (req, res) {
+app.all ("/api/:method", function (req, res) {
     api.processor.handleRequest (req, res);
 });
-app.all ("/api/:key/:method/:type", function (req, res) {
+app.all ("/api/:method/:type", function (req, res) {
     api.processor.handleRequest (req, res);
 });
-app.all ("/api/:key/:method/:type/:id", function (req, res) {
+app.all ("/api/:method/:type/:id", function (req, res) {
     api.processor.handleRequest (req, res);
 });
 
