@@ -5,6 +5,9 @@
  **********************************************************************************************************************/
 
 var self = function () {
+    this.user = {};
+    this.errorMessage = "";
+    this.successMessage = "";
 };
 
 self.prototype = {

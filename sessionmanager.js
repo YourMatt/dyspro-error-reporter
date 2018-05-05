@@ -1,14 +1,14 @@
 var models = require("./models/all");
 
-exports.data = new models.Session();
-
 var req;
 exports.init = function (init_req) {
     req = init_req;
     if (req.session.data) {
         exports.data = req.session.data;
     }
-    else exports.data = new models.Session();
+    else {
+        exports.data = new models.Session();
+    }
 };
 
 exports.set = function (name, value) {

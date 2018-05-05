@@ -1,5 +1,5 @@
 var mysql = require("mysql")
-,   models = require("./models/all.js");
+,   models = require("./models/all");
 
 exports.query = {
 

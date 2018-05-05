@@ -1,6 +1,6 @@
 var database = require ("./databaseaccessor")
 ,   files = []
-,   models = require("./models/all.js");
+,   models = require("./models/all");
 
 exports.processor = {
 

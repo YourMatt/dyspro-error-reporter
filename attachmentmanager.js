@@ -1,4 +1,4 @@
-var database = require ("./databaseaccessor.js");
+var database = require ("./databaseaccessor");
 
 exports.manager = {
 
