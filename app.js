@@ -40,10 +40,11 @@ app.use (function (req, res, next) {
         api.processor.authenticate(function (accountData) {
 
             // return response for unauthenticated accounts
-            if (!accountData) {
-                api.processor.sendResponse(401, api.processor.getErrorResponseData("Not authenticated."));
-            }
-            else next();
+            if (!accountData)
+                return api.processor.sendResponse(401, api.processor.getErrorResponseData("Not authenticated."));
+
+            api.accountId = accountData.accountId;
+            next();
 
         });
     }
@@ -282,8 +283,8 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
 /*app.all ("/api/:method/:type?/:id?", function (req, res) {
     api.processor.handleRequest (req, res, sessionManager);
 });*/
-app.get     ("/api/monitor/:accountId", api.processor.handleRequest.monitor.getAllByAccountId);
-app.get     ("/api/monitor/:accountId/:monitorId", api.processor.handleRequest.monitor.getSingle);
+app.get     ("/api/monitor", api.processor.handleRequest.monitor.getAllInAccount);
+app.get     ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.getSingle);
 app.post    ("/api/monitor", api.processor.handleRequest.monitor.create);
 app.put     ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.update);
 app.delete  ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.delete);

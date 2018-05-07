@@ -6,6 +6,8 @@ var database = require ("./databaseaccessor")
 ,   res = {}
 ,   sessionManager = {};
 
+exports.accountId = 0; // set after authenticated
+
 exports.init = function (initReq, initRes, initSessionManager) {
     req = initReq;
     res = initRes;
@@ -16,8 +18,6 @@ exports.processor = {
 
     handleRequestOLD: function (req, res, sessionManager) {
         var that = this;
-
-
 
         // authenticate all api requests
         this.authenticate (userName, password, sessionManager, function (accountData) {
@@ -95,8 +95,8 @@ exports.processor = {
 
             getSingle: function () {
 
-                if (utils.toInt(req.params.accountId) === 0 || utils.toInt(req.params.monitorId) === 0)
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing account ID or monitor ID."));
+                if (utils.toInt(req.params.monitorId) === 0)
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
 
                 database.query.monitors.get(req.params.monitorId, function(monitor) {
 
@@ -106,12 +106,9 @@ exports.processor = {
 
             },
 
-            getAllByAccountId: function () {
+            getAllInAccount: function () {
 
-                if (utils.toInt(req.params.accountId) === 0)
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing account ID."));
-
-                database.query.monitors.getAllByAccountId(req.params.accountId, function(monitors) {
+                database.query.monitors.getAllByAccountId(exports.accountId, function(monitors) {
 
                     exports.processor.sendResponse(200, monitors);
 
@@ -122,7 +119,7 @@ exports.processor = {
             create: function () {
 
                 var monitor = new models.Monitor(
-                    req.body.accountId,
+                    exports.accountId,
                     req.body.product,
                     req.body.environment,
                     req.body.endpointUri,
@@ -148,7 +145,7 @@ exports.processor = {
                 if (utils.toInt(req.params.monitorId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
 
                 var monitor = new models.Monitor(
-                    req.body.accountId,
+                    exports.accountId,
                     req.body.product,
                     req.body.environment,
                     req.body.endpointUri,

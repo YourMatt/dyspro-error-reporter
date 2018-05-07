@@ -10,10 +10,4 @@ var self = function () {
     this.successMessage = "";
 };
 
-self.prototype = {
-    user: {},
-    errorMessage: "",
-    successMessage: ""
-};
-
 module.exports = self;

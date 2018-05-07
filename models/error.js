@@ -3,19 +3,34 @@
  * ERROR MODEL
  *
  **********************************************************************************************************************/
+var utils = require("../utilities");
 
 var self = function (accountId, product, stackTrace, errorId) {
-    this.accountId = accountId;
+    this.accountId = utils.toInt(accountId);
     this.product = product;
     this.stackTrace = stackTrace;
-    if (errorId) this.errorId = errorId;
-};
+    this.errorId = utils.toInt(errorId);
 
-self.prototype = {
-    errorId: 0,
-    accountId: 0,
-    product: "",
-    stackTrace: ""
+    this.errorMessage = "";
+
+    this.isValid = function () {
+
+        var missingFields = [];
+        var maxLengthExceededFields = [];
+        var outOfBoundsFields = [];
+
+        if (!accountId) missingFields.push("accountId");
+
+        if (!product) missingFields.push("product");
+        else if (product.length > 50) maxLengthExceededFields.push("product");
+
+        if (stackTrace.length > 16000000) maxLengthExceededFields.push("stackTrace");
+
+        this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
+        return (this.errorMessage === "");
+
+    }
+
 };
 
 module.exports = self;

@@ -3,7 +3,7 @@
  * MONITOR MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities")
+var utils = require("../utilities");
 
 var self = function (accountId, product, environment, endpointUri, intervalSeconds, monitorId) {
     this.accountId = utils.toInt(accountId);
@@ -36,7 +36,6 @@ var self = function (accountId, product, environment, endpointUri, intervalSecon
         else if (intervalSeconds < 1 || intervalSeconds >= (60 * 60 * 24)) outOfBoundsFields.push("intervalSeconds");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
-
         return (this.errorMessage === "");
 
     }
