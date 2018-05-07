@@ -33,6 +33,23 @@ app.use (function (req, res, next) {
     next ();
 });
 
+// initialize the api processor if an api page
+app.use (function (req, res, next) {
+    if (req.url.indexOf("/api/") === 0) {
+        api.init(req, res, sessionManager);
+        api.processor.authenticate(function (accountData) {
+
+            // return response for unauthenticated accounts
+            if (!accountData) {
+                api.processor.sendResponse(401, api.processor.getErrorResponseData("Not authenticated."));
+            }
+            else next();
+
+        });
+    }
+    else next();
+});
+
 // load multipart form data
 app.use (function (req, res, next) {
     req.files = [];
@@ -262,9 +279,14 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
 });
 
 // expose api methods
-app.all ("/api/:method/:type?/:id?", function (req, res) {
+/*app.all ("/api/:method/:type?/:id?", function (req, res) {
     api.processor.handleRequest (req, res, sessionManager);
-});
+});*/
+app.get     ("/api/monitor/:accountId", api.processor.handleRequest.monitor.getAllByAccountId);
+app.get     ("/api/monitor/:accountId/:monitorId", api.processor.handleRequest.monitor.getSingle);
+app.post    ("/api/monitor", api.processor.handleRequest.monitor.create);
+app.put     ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.update);
+app.delete  ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.delete);
 
 // start server
 app.listen (app.get ("port"));

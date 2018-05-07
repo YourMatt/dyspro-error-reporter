@@ -61,3 +61,25 @@ CREATE TABLE  ErrorNotes
 ,             PRIMARY KEY (ErrorNoteId)
 ,             FOREIGN KEY (ErrorId) REFERENCES Errors(ErrorId) ON DELETE CASCADE
 ,             FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE);
+
+-- Monitoring definitions.
+CREATE TABLE  Monitors
+(             MonitorId       INT NOT NULL AUTO_INCREMENT
+,             AccountId       INT NOT NULL
+,             Product         VARCHAR(50) NOT NULL
+,             Environment     VARCHAR(25) NOT NULL
+,             EndpointUri     VARCHAR(500) NOT NULL
+,             IntervalSeconds INT NOT NULL
+,             PRIMARY KEY (MonitorId)
+,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
+
+-- Monitoring results.
+CREATE TABLE  MonitorResults
+(             MonitorId                     INT NOT NULL
+,             Metric                        VARCHAR(50) NOT NULL
+,             Day                           CHAR(8) NOT NULL
+,             RawData                       MEDIUMTEXT
+,             AveragesPer15MinuteIntervals  VARCHAR(1000)
+,             AverageForDay                 VARCHAR(25)
+,             PRIMARY KEY (MonitorId, Metric, Day)
+,             FOREIGN KEY (MonitorId) REFERENCES Monitors(MonitorId) ON DELETE CASCADE);

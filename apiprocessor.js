@@ -1,19 +1,23 @@
 var database = require ("./databaseaccessor")
-,   files = []
-,   models = require("./models/all");
+,   models = require("./models/all")
+,   utils = require("./utilities")
+// following are set by init
+,   req = {}
+,   res = {}
+,   sessionManager = {};
+
+exports.init = function (initReq, initRes, initSessionManager) {
+    req = initReq;
+    res = initRes;
+    sessionManager = initSessionManager;
+};
 
 exports.processor = {
 
-    handleRequest: function (req, res, sessionManager) {
+    handleRequestOLD: function (req, res, sessionManager) {
         var that = this;
 
-        // load authentication data
-        var header = req.headers["authorization"] || ""
-        ,   token = header.split(/\s+/).pop() || ""
-        ,   auth = new Buffer(token, "base64").toString()
-        ,   parts = auth.split(/:/)
-        ,   userName = parts[0]
-        ,   password = parts[1];
+
 
         // authenticate all api requests
         this.authenticate (userName, password, sessionManager, function (accountData) {
@@ -85,7 +89,114 @@ exports.processor = {
 
     },
 
-    authenticate: function (userName, apiKey, sessionManager, callback) {
+    handleRequest: {
+
+        monitor: {
+
+            getSingle: function () {
+
+                if (utils.toInt(req.params.accountId) === 0 || utils.toInt(req.params.monitorId) === 0)
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing account ID or monitor ID."));
+
+                database.query.monitors.get(req.params.monitorId, function(monitor) {
+
+                    exports.processor.sendResponse(200, monitor);
+
+                });
+
+            },
+
+            getAllByAccountId: function () {
+
+                if (utils.toInt(req.params.accountId) === 0)
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing account ID."));
+
+                database.query.monitors.getAllByAccountId(req.params.accountId, function(monitors) {
+
+                    exports.processor.sendResponse(200, monitors);
+
+                });
+
+            },
+
+            create: function () {
+
+                var monitor = new models.Monitor(
+                    req.body.accountId,
+                    req.body.product,
+                    req.body.environment,
+                    req.body.endpointUri,
+                    req.body.intervalSeconds
+                );
+
+                if (!monitor.isValid()) {
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(monitor.errorMessage));
+                }
+
+                database.query.monitors.create(monitor, function(monitorId) {
+
+                    if (!monitorId) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving monitor to database."));
+
+                    exports.processor.sendResponse(201, {monitorId: monitorId});
+
+                });
+
+            },
+
+            update: function () {
+
+                if (utils.toInt(req.params.monitorId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
+
+                var monitor = new models.Monitor(
+                    req.body.accountId,
+                    req.body.product,
+                    req.body.environment,
+                    req.body.endpointUri,
+                    req.body.intervalSeconds,
+                    req.params.monitorId
+                );
+
+                if (!monitor.isValid()) {
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(monitor.errorMessage));
+                }
+
+                database.query.monitors.update(monitor, function(numUpdated) {
+
+                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving monitor to database."));
+
+                    exports.processor.sendResponse(201);
+
+                });
+
+            },
+
+            delete: function () {
+
+                if (utils.toInt(req.params.monitorId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
+
+                database.query.monitors.delete(req.params.monitorId, function(numUpdated) {
+
+                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error deleting from database."));
+
+                    exports.processor.sendResponse(200);
+
+                });
+
+            }
+
+        }
+
+    },
+
+    authenticate: function (callback) {
+
+        // load authentication data
+        var header = req.headers["authorization"] || ""
+        ,   token = header.split(/\s+/).pop() || ""
+        ,   auth = new Buffer(token, "base64").toString()
+        ,   parts = auth.split(/:/)
+        ,   userName = parts[0]
+        ,   apiKey = parts[1];
 
         // use auth token if provided
         if (userName && apiKey) {
@@ -173,10 +284,10 @@ exports.processor = {
 
     },
 
-    sendResponse: function (res, returnData) {
+    sendResponse: function (statusCode, returnData) {
 
-        res.writeHead (200, {"Content-Type": "application/json"});
-        res.end (JSON.stringify (returnData));
+        res.writeHead (statusCode, {"Content-Type": "application/json"});
+        res.end ((returnData) ? JSON.stringify (returnData) : "");
 
     }
 

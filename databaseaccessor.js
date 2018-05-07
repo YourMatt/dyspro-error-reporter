@@ -357,6 +357,115 @@ exports.query = {
 
         }
 
+    },
+
+    /*******************************************************************************************************************
+     *
+     * INTERACTION WITH MONITORS TABLE
+     *
+     ******************************************************************************************************************/
+
+    monitors: {
+
+        // Loads a single monitor.
+        // callback(models.Monitor: Monitor details)
+        get: function(monitorId, callback) {
+
+            exports.access.selectSingle({
+                sql:    "select     MonitorId, AccountId, Product, Environment, EndpointUri, IntervalSeconds " +
+                        "from       Monitors " +
+                        "where      MonitorId = ? ",
+                values: [monitorId]
+            },
+            function (m) {
+                if (!m) return callback();
+
+                var monitor = new models.Monitor(
+                    m.AccountId,
+                    m.Product,
+                    m.Environment,
+                    m.EndpointUri,
+                    m.IntervalSeconds,
+                    m.MonitorId
+                );
+                callback(monitor);
+
+            });
+
+        },
+
+        // Loads all for an account.
+        // callback(array: List of model.Monitor)
+        getAllByAccountId: function(accountId, callback) {
+
+            exports.access.selectMultiple({
+                sql:    "select     MonitorId, AccountId, Product, Environment, EndpointUri, IntervalSeconds " +
+                        "from       Monitors " +
+                        "where      AccountId = ? " +
+                        "order by   Product asc ",
+                values: [accountId]
+            },
+            function (m) {
+                if (!m) return callback();
+
+                var monitors = [];
+                for (var i = 0; i < m.length; i++) {
+                    monitors.push(new models.Monitor(
+                        m[i].AccountId,
+                        m[i].Product,
+                        m[i].Environment,
+                        m[i].EndpointUri,
+                        m[i].IntervalSeconds,
+                        m[i].MonitorId
+                    ));
+                }
+                callback(monitors);
+
+            });
+
+        },
+
+        // Creates a new record.
+        // callback(int: Monitor ID)
+        create: function(monitor, callback) {
+
+            exports.access.insert({
+                sql:    "insert into    Monitors " +
+                        "(              AccountId, Product, Environment, EndpointUri, IntervalSeconds) " +
+                        "values (       ?, ?, ?, ?, ?) ",
+                values: [monitor.accountId, monitor.product, monitor.environment, monitor.endpointUri, monitor.intervalSeconds]
+            },
+            callback);
+
+        },
+
+        // Updates a record.
+        // callback(int: Number of affected rows)
+        update: function(monitor, callback) {
+
+            exports.access.update({
+                sql:    "update Monitors " +
+                        "set    AccountId = ?, Product = ?, Environment = ?, EndpointUri = ?, IntervalSeconds = ? " +
+                        "where  MonitorId = ? ",
+                values: [monitor.accountId, monitor.product, monitor.environment, monitor.endpointUri, monitor.intervalSeconds, monitor.monitorId]
+            },
+            callback);
+
+        },
+
+        // Deletes a record.
+        // callback(int: Number of affected rows)
+        delete: function(monitorId, callback) {
+
+            exports.access.delete({
+                sql:    "delete from    Monitors " +
+                        "where          MonitorId = ? ",
+                values: [monitorId]
+            },
+            callback);
+
+        }
+
     }
 
 };
@@ -444,16 +553,65 @@ exports.access = {
 
             // report error and return
             if (error) {
-                exports.access.handleError (query, error);
-                return callback();
+                exports.access.handleError(query, error);
+                return callback(0);
             }
 
+            // close the connection
+            exports.access.close();
+
             // call the callback with the insert ID
-            callback (result.insertId);
+            callback(result.insertId);
 
         });
 
-        this.close();
+    },
+
+    // updates a record
+    // callback(int: Number of affected rows)
+    update: function (query, callback) {
+
+        this.init();
+
+        // run the update
+        this.db.query(query, function(error, result) {
+
+            if (error) {
+                exports.access.handleError(query, error);
+                return callback(0);
+            }
+
+            // close the connection
+            exports.access.close();
+
+            // call the callback
+            callback(result.affectedRows);
+
+        });
+
+    },
+
+    // deletes a record
+    // callback(int: Number of affected rows)
+    delete: function (query, callback) {
+
+        this.init();
+
+        // run the update
+        this.db.query(query, function(error, result) {
+
+            if (error) {
+                exports.access.handleError(query, error);
+                return callback(0);
+            }
+
+            // close the connection
+            exports.access.close();
+
+            // call the callback
+            callback(result.affectedRows);
+
+        });
 
     }
 

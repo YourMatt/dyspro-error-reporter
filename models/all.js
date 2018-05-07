@@ -10,6 +10,8 @@ module.exports = {
     ErrorAttachment: require("./errorattachment"),
     ErrorNote: require("./errornote"),
     ErrorOccurrence: require("./erroroccurrence"),
-    User: require("./user"),
-    Session: require("./session")
+    Monitor: require("./monitor"),
+    MonitorResult: require("./monitorresult"),
+    Session: require("./session"),
+    User: require("./user")
 };
