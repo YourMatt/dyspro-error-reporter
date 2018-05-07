@@ -359,6 +359,132 @@ exports.query = {
 
     },
 
+
+    /*******************************************************************************************************************
+     *
+     * INTERACTION WITH USERS TABLE
+     *
+     ******************************************************************************************************************/
+
+    users: {
+
+        // Loads a single user.
+        // callback(models.User: User details)
+        get: function(userId, callback) {
+
+            exports.access.selectSingle({
+                sql:    "select     UserId, AccountId, Name, Email, Phone, CreateDate " +
+                        "from       Users " +
+                        "where      UserId = ? ",
+                values: [userId]
+            },
+            function (u) {
+                if (!u) return callback();
+
+                var user = new models.User(
+                    u.AccountId,
+                    u.Name,
+                    u.Email,
+                    u.Phone,
+                    "",
+                    u.CreateDate,
+                    u.UserId
+                );
+                callback(user);
+
+            });
+
+        },
+
+        // Loads all for an account.
+        // callback(array: List of model.User)
+        getAllByAccountId: function(accountId, callback) {
+
+            exports.access.selectMultiple({
+                sql:    "select     UserId, AccountId, Name, Email, Phone, CreateDate " +
+                        "from       Users " +
+                        "where      AccountId = ? " +
+                        "order by   Name asc ",
+                values: [accountId]
+            },
+            function (u) {
+                if (!u) return callback();
+
+                var users = [];
+                for (var i = 0; i < u.length; i++) {
+                    users.push(new models.User(
+                        u[i].AccountId,
+                        u[i].Name,
+                        u[i].Email,
+                        u[i].Phone,
+                        "",
+                        u[i].CreateDate,
+                        u[i].UserId
+                    ));
+                }
+                callback(users);
+
+            });
+
+        },
+
+        // Creates a new record.
+        // callback(int: User ID)
+        create: function(user, callback) {
+
+            exports.access.insert({
+                sql:    "insert into    Users " +
+                        "(              AccountId, Name, Email, Phone, Password, CreateDate) " +
+                        "values (       ?, ?, ?, ?, MD5(?), NOW()) ",
+                values: [user.accountId, user.name, user.email, user.phone, user.password]
+            },
+            callback);
+
+        },
+
+        // Updates a record.
+        // callback(int: Number of affected rows)
+        update: function(user, callback) {
+
+            exports.access.update({
+                sql:    "update Users " +
+                        "set    AccountId = ?, Name = ?, Email = ?, Phone = ? " +
+                        "where  UserId = ? ",
+                values: [user.accountId, user.name, user.email, user.phone, user.userId]
+            },
+            function(numUpdated) {
+                if (!numUpdated) return callback();
+
+                // return if a password update is not requested
+                if (!user.password) return callback(numUpdated);
+
+                exports.access.update({
+                    sql:    "update Users " +
+                            "set    Password = MD5(?) " +
+                            "where  UserId = ? ",
+                    values: [user.password, user.userId]
+                },
+                callback);
+
+            });
+
+        },
+
+        // Deletes a record.
+        // callback(int: Number of affected rows)
+        delete: function(userId, callback) {
+
+            exports.access.delete({
+                sql:    "delete from    Users " +
+                        "where          UserId = ? ",
+                values: [userId]
+            },
+            callback);
+
+        }
+
+    },
+
     /*******************************************************************************************************************
      *
      * INTERACTION WITH MONITORS TABLE

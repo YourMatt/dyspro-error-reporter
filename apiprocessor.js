@@ -91,6 +91,99 @@ exports.processor = {
 
     handleRequest: {
 
+        user: {
+
+            getSingle: function () {
+
+                if (utils.toInt(req.params.userId) === 0)
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
+
+                database.query.users.get(req.params.userId, function(user) {
+
+                    exports.processor.sendResponse(200, user);
+
+                });
+
+            },
+
+            getAllInAccount: function () {
+
+                database.query.users.getAllByAccountId(exports.accountId, function(users) {
+
+                    exports.processor.sendResponse(200, users);
+
+                });
+
+            },
+
+            create: function () {
+
+                var user = new models.User(
+                    exports.accountId,
+                    req.body.name,
+                    req.body.email,
+                    req.body.phone,
+                    req.body.password
+                );
+
+                if (!user.isValid()) {
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(user.errorMessage));
+                }
+
+                database.query.users.create(user, function(userId) {
+
+                    if (!userId) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving user to database."));
+
+                    exports.processor.sendResponse(201, {userId: userId});
+
+                });
+
+            },
+
+            update: function () {
+
+                if (utils.toInt(req.params.userId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
+
+                var user = new models.User(
+                    exports.accountId,
+                    req.body.name,
+                    req.body.email,
+                    req.body.phone,
+                    req.body.password,
+                    0,
+                    req.params.userId
+                );
+
+                if (!user.isValid()) {
+                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(user.errorMessage));
+                }
+
+                database.query.users.update(user, function(numUpdated) {
+
+                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving user to database."));
+
+                    exports.processor.sendResponse(201);
+
+                });
+
+            },
+
+            delete: function () {
+
+                if (utils.toInt(req.params.userId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
+
+                database.query.users.delete(req.params.userId, function(numUpdated) {
+
+                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error deleting from database."));
+
+                    exports.processor.sendResponse(200);
+
+                });
+
+            }
+
+        },
+
         monitor: {
 
             getSingle: function () {

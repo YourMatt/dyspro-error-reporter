@@ -283,6 +283,13 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
 /*app.all ("/api/:method/:type?/:id?", function (req, res) {
     api.processor.handleRequest (req, res, sessionManager);
 });*/
+
+app.get     ("/api/user", api.processor.handleRequest.user.getAllInAccount);
+app.get     ("/api/user/:userId", api.processor.handleRequest.user.getSingle);
+app.post    ("/api/user", api.processor.handleRequest.user.create);
+app.put     ("/api/user/:userId", api.processor.handleRequest.user.update);
+app.delete  ("/api/user/:userId", api.processor.handleRequest.user.delete);
+
 app.get     ("/api/monitor", api.processor.handleRequest.monitor.getAllInAccount);
 app.get     ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.getSingle);
 app.post    ("/api/monitor", api.processor.handleRequest.monitor.create);

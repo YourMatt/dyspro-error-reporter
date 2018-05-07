@@ -32,8 +32,6 @@ var self = function (accountId, name, email, phone, password, createDate, userId
 
         if (phone.length !== 10) outOfBoundsFields.push("phone");
 
-        if (!password) missingFields.push("password");
-
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");
 
