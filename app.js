@@ -12,8 +12,7 @@ var express = require ("express")
 ,   moment = require ("moment")
 ,   sessionManager = require ("./sessionmanager")
 ,   api = require ("./apiprocessor")
-,   database = require ("./databaseaccessor")
-,   attachments = require ("./attachmentmanager")
+,   queries = require("./queries/all")
 ,   mime = require ("mime");
 
 // initialize express
@@ -125,7 +124,7 @@ app.get ("/dashboard", function (req, res) {
         res.redirect ("/");
         return;
     }
-    database.query.getAccountEnvironments (sessionManager.data.user.accountId, function (environments) {
+    queries.accounts.getEnvironments (sessionManager.data.user.accountId, function (environments) {
         res.render ("dashboard.ejs",
             {
                 page: "dashboard",
@@ -142,71 +141,75 @@ app.get ("/dashboard", function (req, res) {
 
 // error occurrence detail page
 app.get ("/errors/:errorId/occurrence/:errorOccurrenceId", function (req, res) {
-    if (! sessionManager.loggedIn ()) {
-        res.redirect ("/");
+    if (!sessionManager.loggedIn()) {
+        res.redirect("/");
         return;
     }
 
     // load the error occurrence data
-    database.query.getErrorOccurrence (req.params.errorOccurrenceId, function (errorOccurrence) {
-        if (! errorOccurrence) {
-            sessionManager.set ("errorMessage", "Error occurrence not found.");
-            res.redirect (req.headers.referer);
+    queries.errorOccurrences.get(req.params.errorOccurrenceId, function (errorOccurrence) {
+        if (!errorOccurrence) {
+            sessionManager.set("errorMessage", "Error occurrence not found.");
+            res.redirect(req.headers.referer);
             return;
         }
 
         // load the attachments for the error occurrence
-        database.query.getErrorAttachments (errorOccurrence.errorOccurrenceId, function (attachments) {
-            errorOccurrence.attachments = attachments;
+        queries.errorAttachments.getAllByErrorOccurrence(
+            errorOccurrence.errorOccurrenceId,
+            function (attachments) {
+                errorOccurrence.attachments = attachments;
 
-            try {
-                var stackTraceJson = JSON.parse (errorOccurrence.stackTrace);
-                errorOccurrence.stackTrace = JSON.stringify (stackTraceJson, null, 2);
+                try {
+                    var stackTraceJson = JSON.parse(errorOccurrence.stackTrace);
+                    errorOccurrence.stackTrace = JSON.stringify(stackTraceJson, null, 2);
+                }
+                catch (e) {
+                }
+
+                // load the error details
+                queries.errors.get(errorOccurrence.errorId, function (errorData) {
+
+                    res.render("error-occurrence-detail.ejs",
+                        {
+                            page: "erroroccurrencedetail",
+                            jsFiles: ["errors.js", "error-detail.js"],
+                            errorMessage: sessionManager.getOnce("errorMessage"),
+                            successMessage: sessionManager.getOnce("successMessage"),
+                            userId: sessionManager.data.user.userId,
+                            errorOccurrence: errorOccurrence,
+                            error: errorData,
+                            moment: moment
+                        }
+                    );
+
+                });
             }
-            catch (e) {}
-
-            // load the error details
-            database.query.getError(errorOccurrence.errorId, function(errorData) {
-
-                res.render ("error-occurrence-detail.ejs",
-                    {
-                        page: "erroroccurrencedetail",
-                        jsFiles: ["errors.js", "error-detail.js"],
-                        errorMessage: sessionManager.getOnce ("errorMessage"),
-                        successMessage: sessionManager.getOnce ("successMessage"),
-                        userId: sessionManager.data.user.userId,
-                        errorOccurrence: errorOccurrence,
-                        error: errorData,
-                        moment: moment
-                    }
-                );
-
-            });
-        });
+        );
     });
 });
 
 // error detail page
 app.get ("/errors/:errorId", function (req, res) {
-    if (! sessionManager.loggedIn ()) {
-        res.redirect ("/");
+    if (!sessionManager.loggedIn()) {
+        res.redirect("/");
         return;
     }
 
     // load the error data
-    database.query.getError (req.params.errorId, function (error) {
-        if (! error) {
-            sessionManager.set ("errorMessage", "Error not found.");
-            res.redirect (req.headers.referer);
+    queries.get(req.params.errorId, function (error) {
+        if (!error) {
+            sessionManager.set("errorMessage", "Error not found.");
+            res.redirect(req.headers.referer);
             return;
         }
 
-        res.render ("error-detail.ejs",
+        res.render("error-detail.ejs",
             {
                 page: "errordetail",
                 jsFiles: ["errors.js", "error-detail.js"],
-                errorMessage: sessionManager.getOnce ("errorMessage"),
-                successMessage: sessionManager.getOnce ("successMessage"),
+                errorMessage: sessionManager.getOnce("errorMessage"),
+                successMessage: sessionManager.getOnce("successMessage"),
                 userId: sessionManager.data.user.userId,
                 error: error
             }
@@ -234,18 +237,18 @@ app.get ("/settings", function (req, res) {
 
 // process login
 app.post ("/login", function (req, res) {
-    database.query.getUserByLogin (req.body.email, req.body.password, function (userData) {
+    queries.users.getByLogin(req.body.email, req.body.password, function (userData) {
 
         // user not authenticated
-        if (! userData) {
-            sessionManager.set ("errorMessage", "Incorrect email or password.");
-            res.redirect (req.headers.referer);
+        if (!userData) {
+            sessionManager.set("errorMessage", "Incorrect email or password.");
+            res.redirect(req.headers.referer);
             return;
         }
 
         // save user to session and forward to the dashboard
-        sessionManager.set ("user", userData);
-        res.redirect ("/dashboard");
+        sessionManager.set("user", userData);
+        res.redirect("/dashboard");
 
     });
 });
@@ -259,24 +262,28 @@ app.get ("/logout", function (req, res) {
 
 // process attachment downloads
 app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
-    attachments.manager.loadFile (req.params.errorOccurrenceId, req.params.fileName, function (file) {
+    queries.errorAttachments.get(
+        req.params.errorOccurrenceId,
+        req.params.fileName,
+        function (file) {
 
-        if (! file) { // TODO: Call standard 404 handler
-            res.writeHead (404, {"Content-Type": "text/html"});
-            res.end("not found");
-            return;
+            if (!file) { // TODO: Call standard 404 handler
+                res.writeHead(404, {"Content-Type": "text/html"});
+                res.end("not found");
+                return;
+            }
+
+            /* // TODO: Add option to prompt download
+            res.writeHead (200, {"Content-Disposition": "attachment filename=" + file.file_name + ";"});
+            res.end (file.source);
+            */
+
+            // display the file
+            res.writeHead(200, {"Content-Type": mime.getType(file.fileType), "Content-Length": file.source.length});
+            res.end(file.source);
+
         }
-
-        /* // TODO: Add option to prompt download
-        res.writeHead (200, {"Content-Disposition": "attachment filename=" + file.file_name + ";"});
-        res.end (file.source);
-        */
-
-        // display the file
-        res.writeHead (200, {"Content-Type": mime.getType(file.fileType), "Content-Length": file.source.length});
-        res.end (file.source);
-
-    });
+    );
 });
 
 // expose api methods

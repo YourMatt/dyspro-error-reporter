@@ -1,609 +1,16 @@
-var mysql = require("mysql")
-,   models = require("./models/all");
+const mysql = require("mysql");
 
-exports.query = {
+// Handles all interaction with the database object.
+const connection = {
 
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH ACCOUNTS TABLE
-     *
-     ******************************************************************************************************************/
+    db: {}, // database connection - will be set on open
 
-    // load account by api key
-    // callback(models.Account: Account data)
-    getAccountByApiKey: function (userName, apiKey, callback) {
-
-        exports.access.selectSingle ({
-            sql:    "select * " +
-                    "from   Accounts " +
-                    "where  Name = ? " +
-                    "and    ApiKey = ? ",
-            values: [userName, apiKey]
-        },
-        function (a) {
-            if (!a) return callback();
-
-            var account = new models.Account(
-                a.Name,
-                a.ApiKey,
-                a.CreateDate,
-                a.AccountId
-            );
-            callback(account);
-
-        });
-
-    },
-
-    // get all environments
-    // callback(array: List of environment strings)
-    getAccountEnvironments: function (accountId, callback) {
-
-        exports.access.selectMultiple({
-            sql:    "select     distinct eo.Environment " +
-                    "from       Errors e " +
-                    "inner join ErrorOccurrences eo on eo.ErrorId = e.ErrorId " +
-                    "where      e.AccountId = ? ",
-            values: [accountId]
-        },
-        function(result) {
-            var environments = [];
-            for (var i = 0; i < result.length; i++) {
-                environments.push (result[i].Environment);
-            }
-            callback (environments);
-        });
-
-    },
-
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH USERS TABLE
-     *
-     ******************************************************************************************************************/
-
-    // authenticate the user
-    // callback(models.User: User data)
-    getUserByLogin: function (email, password, callback) {
-
-        exports.access.selectSingle({
-            sql:    "select * " +
-                    "from   Users " +
-                    "where  Email = ? " +
-                    "and    Password = md5(?) ",
-            values: [email, password]
-        },
-        function (u) {
-            if (!u) return callback();
-
-            var user = new models.User(
-                u.AccountId,
-                u.Name,
-                u.Email,
-                u.Phone,
-                u.Password,
-                u.CreateDate,
-                u.UserId
-            );
-            callback(user);
-
-        });
-
-    },
-
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH ERRORS TABLE
-     *
-     ******************************************************************************************************************/
-
-    // retrieve single error occurrence
-    // callback(models.Error: Error data)
-    getError: function (errorId, callback) {
-
-        exports.access.selectSingle({
-            sql:    "select     * " +
-                    "from       Errors " +
-                    "where      ErrorId = ? ",
-            values: [errorId]
-        },
-        function (e) {
-            if (!e) return callback();
-
-            var error = new models.Error(
-                e.AccountId,
-                e.Product,
-                e.StackTrace,
-                e.ErrorId
-            );
-            callback(error);
-
-        });
-
-    },
-
-    // load an existing error by product and stack trace
-    // callback(int: Error ID)
-    getErrorByData: function (errorData, callback) {
-
-        exports.access.selectSingle({
-            sql:    "select ErrorId " +
-                    "from   Errors " +
-                    "where  AccountId = ? " +
-                    "and    Product = ? " +
-                    "and    md5(StackTrace) = md5(?) ",
-            values: [errorData.accountId, errorData.product, errorData.stackTrace]
-        },
-        function(result) {
-            callback((result) ? result.ErrorId : 0);
-        });
-
-    },
-
-    // save a new error type
-    // callback(string: Error message)
-    logError: function (errorData, files, callback) {
-
-        exports.query.getErrorByData(
-            errorData,
-            function(errorId) {
-
-                // add a new occurrence to the existing error if found
-                if (errorId) {
-                    errorData.errorId = errorId;
-                    exports.query.logErrorOccurrence(
-                        errorData,
-                        files,
-                        callback
-                    );
-                }
-
-                // add a new error if not found
-                else {
-
-                    exports.access.insert({
-                        sql:    "insert into    Errors " +
-                                "(              AccountId, Product, StackTrace) " +
-                                "values (       ?, ?, ?) ",
-                        values: [errorData.accountId, errorData.product, errorData.stackTrace]
-                    },
-                    function (errorId) {
-                        if (!errorId) return callback("Error saving to the errors table.");
-
-                        errorData.errorId = errorId;
-                        exports.query.logErrorOccurrence(
-                            errorData,
-                            files,
-                            callback
-                        );
-
-                    });
-
-                }
-
-            }
-        );
-
-    },
-
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH ERROROCCURRENCES TABLE
-     *
-     ******************************************************************************************************************/
-
-    // retrieve single error occurrence
-    // callback(models.ErrorOccurrence: Error occurrence data)
-    getErrorOccurrence: function (errorOccurrenceId, callback) {
-
-        exports.access.selectSingle({
-            sql:    "select     eo.*, e.* " +
-                    "from       ErrorOccurrences eo " +
-                    "inner join Errors e on e.ErrorId = eo.ErrorId " +
-                    "where      eo.ErrorOccurrenceId = ? ",
-            values: [errorOccurrenceId]
-        },
-        function (eo) {
-            if (!eo) return callback();
-
-            var errorOccurrence = new models.ErrorOccurrence(
-                eo.ErrorId,
-                eo.Environment,
-                eo.Message,
-                eo.Server,
-                eo.UserName,
-                eo.Date,
-                eo.ErrorOccurrenceId
-            );
-            callback(errorOccurrence);
-
-        });
-
-    },
-
-    // retrieve error occurrences for a given ID
-    // callback(array: List of error occurrences)
-    getErrorOccurrencesByErrorId: function (accountId, environment, errorId, callback) {
-
-        exports.access.selectMultiple({
-            sql:    "select     eo.*, e.* " +
-                    "from       ErrorOccurrences eo " +
-                    "inner join Errors e on e.ErrorId = eo.ErrorId " +
-                    "where      eo.ErrorId = ? " +
-                    "and        e.AccountId = ? " +
-                    "and        eo.Environment = ? " +
-                    "order by   Date desc ",
-            values: [errorId, accountId, environment]
-        },
-        callback);
-
-    },
-
-    // retrieve the latest errors
-    // callback(array: List of error occurrences)
-    getLatestErrorOccurrences: function (accountId, environment, limit, callback) {
-
-        exports.access.selectMultiple({
-            sql:    "select     eo.*, e.* " +
-                    "from       ErrorOccurrences eo " +
-                    "inner join Errors e on e.ErrorId = eo.ErrorId " +
-                    "where      e.AccountId = ? " +
-                    "and        eo.Environment = ? " +
-                    "order by   Date desc " +
-                    "limit ?    offset 0 ",
-            values: [accountId, environment, limit]
-        },
-        callback);
-
-    },
-
-    // save a new occurrence of an existing error
-    // callback(string: Error message)
-    logErrorOccurrence: function (errorData, files, callback) {
-
-        exports.access.insert({
-            sql:    "insert into    ErrorOccurrences " +
-                    "(              ErrorId, Environment, Message, Server, UserName) " +
-                    "values (       ?, ?, ?, ?, ?) ",
-            values: [errorData.errorId, errorData.environment, errorData.message, errorData.server, errorData.userName]
-        },
-        function (errorOccurrenceId) {
-            if (!errorOccurrenceId) return callback ("Error saving to the ErrorOccurrences table.");
-
-            // save the attachments provided with the error
-            if (files.length) exports.query.logErrorAttachments(errorOccurrenceId, files, callback);
-            else callback();
-
-        });
-
-    },
-
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH ERRORATTACHMENTS TABLE
-     *
-     ******************************************************************************************************************/
-
-    // load all attachment metadata related to an error occurrence
-    // callback(array: List of attachment data)
-    getErrorAttachments: function (errorOccurrenceId, callback) {
-
-        exports.access.selectMultiple({
-            sql:    "select     ErrorOccurrenceId, FileName, FileType " +
-                    "from       ErrorAttachments " +
-                    "where      ErrorOccurrenceId = ? " +
-                    "order by   FileName ",
-            values: [errorOccurrenceId]
-        },
-        function (ea) {
-            if (!ea) return callback();
-
-            var errorAttachments = [];
-            for (var i = 0; i < ea.length; i++) {
-                errorAttachments.push(new models.ErrorAttachment(
-                    ea[i].ErrorOccurrenceId,
-                    ea[i].FileName,
-                    ea[i].FileType
-                ));
-            }
-            callback(errorAttachments);
-
-        });
-
-    },
-
-    // load an existing error by product and stack trace
-    // callback(model.ErrorAttachment: Error attachment data)
-    getErrorAttachment: function (errorOccurrenceId, fileName, callback) {
-
-        exports.access.selectSingle({
-            sql:    "select ErrorOccurrenceId, FileName, FileType, Source " +
-                    "from   ErrorAttachments " +
-                    "where  ErrorOccurrenceId = ? " +
-                    "and    FileName = ? ",
-            values: [errorOccurrenceId, fileName]
-        },
-        function (ea) {
-            if (!ea) return callback();
-
-            var errorAttachment = new models.ErrorAttachment(
-                ea.ErrorOccurrenceId,
-                ea.FileName,
-                ea.FileType,
-                ea.Source
-            );
-            callback(errorAttachment);
-
-        });
-
-    },
-
-    // save a file related to an error occurrence
-    // callback(string: Error message)
-    logErrorAttachments: function (errorOccurrenceId, files, callback) {
-
-        var numAttachmentsSaved = 0; // reset the saved attachments counter
-        for (var i = 0; i < files.length; i++) {
-            exports.access.insert({
-                sql:    "insert into    ErrorAttachments " +
-                        "(              ErrorOccurrenceId, FileName, FileType, Source) " +
-                        "values (       ?, ?, ?, ?) ",
-                values: [errorOccurrenceId, files[i].fileName, files[i].fileType, files[i].source]
-            },
-            function() {
-                numAttachmentsSaved++;
-                if (numAttachmentsSaved == files.length) callback();
-            });
-
-        }
-
-    },
-
-
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH USERS TABLE
-     *
-     ******************************************************************************************************************/
-
-    users: {
-
-        // Loads a single user.
-        // callback(models.User: User details)
-        get: function(userId, callback) {
-
-            exports.access.selectSingle({
-                sql:    "select     UserId, AccountId, Name, Email, Phone, CreateDate " +
-                        "from       Users " +
-                        "where      UserId = ? ",
-                values: [userId]
-            },
-            function (u) {
-                if (!u) return callback();
-
-                var user = new models.User(
-                    u.AccountId,
-                    u.Name,
-                    u.Email,
-                    u.Phone,
-                    "",
-                    u.CreateDate,
-                    u.UserId
-                );
-                callback(user);
-
-            });
-
-        },
-
-        // Loads all for an account.
-        // callback(array: List of model.User)
-        getAllByAccountId: function(accountId, callback) {
-
-            exports.access.selectMultiple({
-                sql:    "select     UserId, AccountId, Name, Email, Phone, CreateDate " +
-                        "from       Users " +
-                        "where      AccountId = ? " +
-                        "order by   Name asc ",
-                values: [accountId]
-            },
-            function (u) {
-                if (!u) return callback();
-
-                var users = [];
-                for (var i = 0; i < u.length; i++) {
-                    users.push(new models.User(
-                        u[i].AccountId,
-                        u[i].Name,
-                        u[i].Email,
-                        u[i].Phone,
-                        "",
-                        u[i].CreateDate,
-                        u[i].UserId
-                    ));
-                }
-                callback(users);
-
-            });
-
-        },
-
-        // Creates a new record.
-        // callback(int: User ID)
-        create: function(user, callback) {
-
-            exports.access.insert({
-                sql:    "insert into    Users " +
-                        "(              AccountId, Name, Email, Phone, Password, CreateDate) " +
-                        "values (       ?, ?, ?, ?, MD5(?), NOW()) ",
-                values: [user.accountId, user.name, user.email, user.phone, user.password]
-            },
-            callback);
-
-        },
-
-        // Updates a record.
-        // callback(int: Number of affected rows)
-        update: function(user, callback) {
-
-            exports.access.update({
-                sql:    "update Users " +
-                        "set    AccountId = ?, Name = ?, Email = ?, Phone = ? " +
-                        "where  UserId = ? ",
-                values: [user.accountId, user.name, user.email, user.phone, user.userId]
-            },
-            function(numUpdated) {
-                if (!numUpdated) return callback();
-
-                // return if a password update is not requested
-                if (!user.password) return callback(numUpdated);
-
-                exports.access.update({
-                    sql:    "update Users " +
-                            "set    Password = MD5(?) " +
-                            "where  UserId = ? ",
-                    values: [user.password, user.userId]
-                },
-                callback);
-
-            });
-
-        },
-
-        // Deletes a record.
-        // callback(int: Number of affected rows)
-        delete: function(userId, callback) {
-
-            exports.access.delete({
-                sql:    "delete from    Users " +
-                        "where          UserId = ? ",
-                values: [userId]
-            },
-            callback);
-
-        }
-
-    },
-
-    /*******************************************************************************************************************
-     *
-     * INTERACTION WITH MONITORS TABLE
-     *
-     ******************************************************************************************************************/
-
-    monitors: {
-
-        // Loads a single monitor.
-        // callback(models.Monitor: Monitor details)
-        get: function(monitorId, callback) {
-
-            exports.access.selectSingle({
-                sql:    "select     MonitorId, AccountId, Product, Environment, EndpointUri, IntervalSeconds " +
-                        "from       Monitors " +
-                        "where      MonitorId = ? ",
-                values: [monitorId]
-            },
-            function (m) {
-                if (!m) return callback();
-
-                var monitor = new models.Monitor(
-                    m.AccountId,
-                    m.Product,
-                    m.Environment,
-                    m.EndpointUri,
-                    m.IntervalSeconds,
-                    m.MonitorId
-                );
-                callback(monitor);
-
-            });
-
-        },
-
-        // Loads all for an account.
-        // callback(array: List of model.Monitor)
-        getAllByAccountId: function(accountId, callback) {
-
-            exports.access.selectMultiple({
-                sql:    "select     MonitorId, AccountId, Product, Environment, EndpointUri, IntervalSeconds " +
-                        "from       Monitors " +
-                        "where      AccountId = ? " +
-                        "order by   Product asc ",
-                values: [accountId]
-            },
-            function (m) {
-                if (!m) return callback();
-
-                var monitors = [];
-                for (var i = 0; i < m.length; i++) {
-                    monitors.push(new models.Monitor(
-                        m[i].AccountId,
-                        m[i].Product,
-                        m[i].Environment,
-                        m[i].EndpointUri,
-                        m[i].IntervalSeconds,
-                        m[i].MonitorId
-                    ));
-                }
-                callback(monitors);
-
-            });
-
-        },
-
-        // Creates a new record.
-        // callback(int: Monitor ID)
-        create: function(monitor, callback) {
-
-            exports.access.insert({
-                sql:    "insert into    Monitors " +
-                        "(              AccountId, Product, Environment, EndpointUri, IntervalSeconds) " +
-                        "values (       ?, ?, ?, ?, ?) ",
-                values: [monitor.accountId, monitor.product, monitor.environment, monitor.endpointUri, monitor.intervalSeconds]
-            },
-            callback);
-
-        },
-
-        // Updates a record.
-        // callback(int: Number of affected rows)
-        update: function(monitor, callback) {
-
-            exports.access.update({
-                sql:    "update Monitors " +
-                        "set    AccountId = ?, Product = ?, Environment = ?, EndpointUri = ?, IntervalSeconds = ? " +
-                        "where  MonitorId = ? ",
-                values: [monitor.accountId, monitor.product, monitor.environment, monitor.endpointUri, monitor.intervalSeconds, monitor.monitorId]
-            },
-            callback);
-
-        },
-
-        // Deletes a record.
-        // callback(int: Number of affected rows)
-        delete: function(monitorId, callback) {
-
-            exports.access.delete({
-                sql:    "delete from    Monitors " +
-                        "where          MonitorId = ? ",
-                values: [monitorId]
-            },
-            callback);
-
-        }
-
-    }
-
-};
-
-exports.access = {
-
-    db: null,
-
-    init: function () {
+    // Creates the connection to the database.
+    // callback(bool: True if success)
+    open: function (callback) {
 
         // create the db connection
-        this.db = mysql.createConnection ({
+        connection.db = mysql.createConnection({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
@@ -611,134 +18,152 @@ exports.access = {
         });
 
         // connect to the database
-        this.db.connect (function (error) {
+        connection.db.connect(function (error) {
             if (error) {
                 // TODO: write error data to logs
-                console.log('Error connecting to Db: ' + error);
+                console.log("Error connecting to Db: " + error);
+                return callback(false);
             }
+
+            callback(true);
+
         });
 
     },
 
-    close: function () {
+    // Runs a query against the database.
+    // callback(string: Error, object: Results)
+    query: function (query, callback) {
 
-        // close the database connection
-        this.db.end ();
+        connection.db.query(query, callback);
 
     },
 
+    // Closes the database connection.
+    close: function () {
+
+        connection.db.end();
+
+    },
+
+    // Logs a database error.
     handleError: function (query, error) {
 
         // TODO: write error data to logs
-        console.log ("Error running query: " + error);
-        console.log (query);
+        console.log("Error running query: " + error);
+        console.log(query);
 
-    },
+    }
 
-    // runs a select query returning the first returned row
-    // callback(object: Results)
-    selectSingle: function (query, callback) {
+};
 
-        this.selectMultiple (query, callback, true);
+// Returns a single record from the database. If multiple records found, returns the first row.
+// callback(object: Results)
+exports.selectSingle = function (query, callback) {
 
-    },
+    exports.selectMultiple(query, callback, true);
 
-    // run a select query returning multiple rows
-    // callback(array: List of returned objects)
-    selectMultiple: function (query, callback, returnSingle) {
+};
 
-        this.init();
+// Returns rows from the database.
+// callback(array: List of objects)
+exports.selectMultiple = function (query, callback, returnSingle) {
+
+    connection.open(function (success) {
+        if (!success) return callback();
 
         // run the query
-        this.db.query(query, function (error, rows) {
+        connection.query(query, function (error, rows) {
+            connection.close();
 
             // report error and return if error state
             if (error) {
-                exports.access.handleError (query, error);
+                connection.handleError(query, error);
                 return callback();
             }
 
             // call the callback with data
             if (returnSingle) callback(rows[0]);
-            else callback (rows);
+            else callback(rows);
 
         });
 
-        this.close();
+    });
 
-    },
+};
 
-    // insert record
-    // callback(int: Insert ID)
-    insert: function (query, callback) {
+// Runs an insert against the database.
+// callback(int: Insert ID)
+exports.insert = function (query, callback) {
 
-        this.init();
+    connection.open(function (success) {
+        if (!success) return callback();
 
         // run the insert
-        this.db.query(query, function (error, result) {
+        connection.query(query, function (error, result) {
+            connection.close();
 
             // report error and return
             if (error) {
-                exports.access.handleError(query, error);
+                connection.handleError(query, error);
                 return callback(0);
             }
-
-            // close the connection
-            exports.access.close();
 
             // call the callback with the insert ID
             callback(result.insertId);
 
         });
 
-    },
+    });
 
-    // updates a record
-    // callback(int: Number of affected rows)
-    update: function (query, callback) {
+};
 
-        this.init();
+// Runs an update against the database.
+// callback(int: Number of updated rows)
+exports.update = function (query, callback) {
+
+    connection.open(function (success) {
+        if (!success) return callback();
 
         // run the update
-        this.db.query(query, function(error, result) {
+        connection.query(query, function (error, result) {
+            connection.close();
 
             if (error) {
-                exports.access.handleError(query, error);
+                connection.handleError(query, error);
                 return callback(0);
             }
-
-            // close the connection
-            exports.access.close();
 
             // call the callback
             callback(result.affectedRows);
 
         });
 
-    },
+    });
 
-    // deletes a record
-    // callback(int: Number of affected rows)
-    delete: function (query, callback) {
+};
 
-        this.init();
+// Runs a delete against the database.
+// callback(int: Number of deleted rows)
+exports.delete = function (query, callback) {
 
-        // run the update
-        this.db.query(query, function(error, result) {
+    connection.open(function (success) {
+        if (!success) return callback();
+
+        // run the delete
+        connection.query(query, function (error, result) {
+            connection.close();
 
             if (error) {
-                exports.access.handleError(query, error);
+                connection.handleError(query, error);
                 return callback(0);
             }
-
-            // close the connection
-            exports.access.close();
 
             // call the callback
             callback(result.affectedRows);
 
         });
 
-    }
+    });
 
 };

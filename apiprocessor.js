@@ -1,5 +1,6 @@
 var database = require ("./databaseaccessor")
 ,   models = require("./models/all")
+,   queries = require("./queries/all")
 ,   utils = require("./utilities")
 // following are set by init
 ,   req = {}
@@ -66,9 +67,13 @@ exports.processor = {
 
                     // pull all errors associated to a specific error ID if provided
                     if ( req.params.id ) {
-                        database.query.getErrorOccurrencesByErrorId (accountData.accountId, req.params.type, req.params.id, function (results) {
-                            that.sendResponse (res, that.getSuccessResponseData (results));
-                        });
+                        queries.errorOccurrences.getAllByErrorAndEnvironment(
+                            req.params.id,
+                            req.params.type,
+                            function (results) {
+                                that.sendResponse(res, that.getSuccessResponseData(results));
+                            }
+                        );
                     }
 
                     // show a list of the latest errors if no ID provided
@@ -98,20 +103,16 @@ exports.processor = {
                 if (utils.toInt(req.params.userId) === 0)
                     return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
 
-                database.query.users.get(req.params.userId, function(user) {
-
-                    exports.processor.sendResponse(200, user);
-
+                queries.users.get(req.params.userId, function(user) {
+                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(user));
                 });
 
             },
 
             getAllInAccount: function () {
 
-                database.query.users.getAllByAccountId(exports.accountId, function(users) {
-
-                    exports.processor.sendResponse(200, users);
-
+                queries.users.getAllByAccountId(exports.accountId, function(users) {
+                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(users));
                 });
 
             },
@@ -130,8 +131,7 @@ exports.processor = {
                     return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(user.errorMessage));
                 }
 
-                database.query.users.create(user, function(userId) {
-
+                queries.users.create(user, function(userId) {
                     if (!userId) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving user to database."));
 
                     exports.processor.sendResponse(201, {userId: userId});
@@ -158,8 +158,7 @@ exports.processor = {
                     return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(user.errorMessage));
                 }
 
-                database.query.users.update(user, function(numUpdated) {
-
+                queries.users.update(user, function(numUpdated) {
                     if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving user to database."));
 
                     exports.processor.sendResponse(201);
@@ -172,8 +171,7 @@ exports.processor = {
 
                 if (utils.toInt(req.params.userId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
 
-                database.query.users.delete(req.params.userId, function(numUpdated) {
-
+                queries.users.delete(req.params.userId, function(numUpdated) {
                     if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error deleting from database."));
 
                     exports.processor.sendResponse(200);
@@ -191,20 +189,16 @@ exports.processor = {
                 if (utils.toInt(req.params.monitorId) === 0)
                     return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
 
-                database.query.monitors.get(req.params.monitorId, function(monitor) {
-
-                    exports.processor.sendResponse(200, monitor);
-
+                queries.monitors.get(req.params.monitorId, function(monitor) {
+                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(monitor));
                 });
 
             },
 
             getAllInAccount: function () {
 
-                database.query.monitors.getAllByAccountId(exports.accountId, function(monitors) {
-
-                    exports.processor.sendResponse(200, monitors);
-
+                queries.monitors.getAllByAccountId(exports.accountId, function(monitors) {
+                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(monitors));
                 });
 
             },
@@ -223,8 +217,7 @@ exports.processor = {
                     return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(monitor.errorMessage));
                 }
 
-                database.query.monitors.create(monitor, function(monitorId) {
-
+                queries.monitors.create(monitor, function(monitorId) {
                     if (!monitorId) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving monitor to database."));
 
                     exports.processor.sendResponse(201, {monitorId: monitorId});
@@ -250,8 +243,7 @@ exports.processor = {
                     return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(monitor.errorMessage));
                 }
 
-                database.query.monitors.update(monitor, function(numUpdated) {
-
+                queries.monitors.update(monitor, function(numUpdated) {
                     if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving monitor to database."));
 
                     exports.processor.sendResponse(201);
@@ -264,8 +256,7 @@ exports.processor = {
 
                 if (utils.toInt(req.params.monitorId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
 
-                database.query.monitors.delete(req.params.monitorId, function(numUpdated) {
-
+                queries.monitors.delete(req.params.monitorId, function(numUpdated) {
                     if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error deleting from database."));
 
                     exports.processor.sendResponse(200);
@@ -290,7 +281,7 @@ exports.processor = {
 
         // use auth token if provided
         if (userName && apiKey) {
-            database.query.getAccountByApiKey(userName, apiKey, callback);
+            queries.accounts.getByApiKey(userName, apiKey, callback);
         }
 
         // use session if no auth token, and user logged into the session
@@ -314,42 +305,22 @@ exports.processor = {
 
     getLatestErrors: function (accountId, environment, numErrors, callback) {
 
-        database.query.getLatestErrorOccurrences (accountId, environment, numErrors, function (results) {
+        queries.errorOccurrences.getLatestByAccountAndEnvironment(
+            accountId,
+            environment,
+            numErrors,
+            function (results) {
 
-            // return error if no results
-            if (! results.length) {
-                callback ({}, "No errors found.");
-                return;
+                // return error if no results
+                if (!results.length) {
+                    callback({}, "No errors found.");
+                    return;
+                }
+
+                callback(results);
+
             }
-
-            callback (results);
-
-            /* // no longer including attachments on listings, so removing - leaving code in place in case proves useful enough to add back in
-            // load attachments if errors found
-            var resultCounter = 0;
-            results.rows.forEach (function (result) {
-                database.query.getErrorAttachments (result.error_occurrence_id, function (attachment_results) {
-
-                    result.attachments = [];
-                    if (attachment_results.rows.length) {
-                        for (var i = 0; i < results.rows.length; i++) {
-                            if (results.rows[i].error_occurrence_id == attachment_results.rows[0].error_occurrence_id) {
-                                results.rows[i].attachments = attachment_results.rows;
-                                break;
-                            }
-                        }
-                    }
-
-                    resultCounter++;
-                    if (resultCounter == results.rows.length) {
-                        callback (results.rows);
-                    }
-
-                });
-            });
-            /* */
-
-        });
+        );
 
     },
 
@@ -378,6 +349,23 @@ exports.processor = {
 
         res.writeHead (statusCode, {"Content-Type": "application/json"});
         res.end ((returnData) ? JSON.stringify (returnData) : "");
+
+    },
+
+    stripReturnObjectProperties: function(object) {
+
+        if (Array.isArray(object)) {
+            for (var i = 0; i < object.length; i++) {
+                delete object[i].accountId;
+                delete object[i].errorMessage;
+            }
+        }
+        else {
+            delete object.accountId;
+            delete object.errorMessage;
+        }
+
+        return object;
 
     }
 
