@@ -36,11 +36,7 @@ app.use (function (req, res, next) {
 app.use (function (req, res, next) {
     if (req.url.indexOf("/api/") === 0) {
         api.init(req, res, sessionManager);
-        api.processor.authenticate(function (accountData) {
-
-            // return response for unauthenticated accounts
-            if (!accountData)
-                return api.processor.sendResponse(401, api.processor.getErrorResponseData("Not authenticated."));
+        api.authenticate(function (accountData) {
 
             api.accountId = accountData.accountId;
             next();
@@ -87,9 +83,13 @@ app.use (function (req, res, next) {
             fileSource = Buffer.concat([fileSource, Buffer.from(data, "binary")]);
         });
         file.on ("end", function () {
+
+            let fileNameParts = fileName.split (".");
+            let fileType = fileNameParts[fileNameParts.length - 1].toLowerCase ();
+
             var fileData = {
                 fileName: fileName,
-                fileType: api.processor.getFileType(fileName),
+                fileType: fileType,
                 source: fileSource
             };
             req.files.push(fileData);
@@ -287,21 +287,24 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
 });
 
 // expose api methods
-/*app.all ("/api/:method/:type?/:id?", function (req, res) {
-    api.processor.handleRequest (req, res, sessionManager);
-});*/
 
-app.get     ("/api/user", api.processor.handleRequest.user.getAllInAccount);
-app.get     ("/api/user/:userId", api.processor.handleRequest.user.getSingle);
-app.post    ("/api/user", api.processor.handleRequest.user.create);
-app.put     ("/api/user/:userId", api.processor.handleRequest.user.update);
-app.delete  ("/api/user/:userId", api.processor.handleRequest.user.delete);
+app.get     ("/api/errors/:errorId", api.error.getSingle);
+app.get     ("/api/errors/:environment/:count", api.error.getLatestForEnvironment);
+app.post    ("/api/errors", api.error.create);
 
-app.get     ("/api/monitor", api.processor.handleRequest.monitor.getAllInAccount);
-app.get     ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.getSingle);
-app.post    ("/api/monitor", api.processor.handleRequest.monitor.create);
-app.put     ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.update);
-app.delete  ("/api/monitor/:monitorId", api.processor.handleRequest.monitor.delete);
+app.get     ("/api/monitor", api.monitor.getAllInAccount);
+app.get     ("/api/monitor/:monitorId", api.monitor.getSingle);
+app.post    ("/api/monitor", api.monitor.create);
+app.put     ("/api/monitor/:monitorId", api.monitor.update);
+app.delete  ("/api/monitor/:monitorId", api.monitor.delete);
+
+app.get     ("/api/user", api.user.getAllInAccount);
+app.get     ("/api/user/:userId", api.user.getSingle);
+app.post    ("/api/user", api.user.create);
+app.put     ("/api/user/:userId", api.user.update);
+app.delete  ("/api/user/:userId", api.user.delete);
+
+
 
 // start server
 app.listen (app.get ("port"));

@@ -65,30 +65,30 @@ app.controller ("ErrorHistoryController", ["$scope", function ($scope) {
             $scope.error_occurrences = [];
             var error_occurrence_stats = new ErrorOccurrenceStats ();
 
-            for (var i = 0; i < results.data.length; i++) {
+            for (var i = 0; i < results.length; i++) {
                var error_occurrence = new ErrorOccurrence ();
-               error_occurrence.error_occurrence_id = results.data[i].ErrorOccurrenceId;
-               error_occurrence.environment = results.data[i].Environment;
-               error_occurrence.message = results.data[i].Message;
-               error_occurrence.server = results.data[i].Server;
-               error_occurrence.user_name = results.data[i].UserName;
-               error_occurrence.date = moment (results.data[i].Date);
-               error_occurrence.error.error_id = results.data[i].ErrorId;
-               error_occurrence.error.account_id = results.data[i].AccountId;
-               error_occurrence.error.product = results.data[i].Product;
-               error_occurrence.error.stack_trace = results.data[i].StackTrace;
+               error_occurrence.error_occurrence_id = results[i].ErrorOccurrenceId;
+               error_occurrence.environment = results[i].Environment;
+               error_occurrence.message = results[i].Message;
+               error_occurrence.server = results[i].Server;
+               error_occurrence.user_name = results[i].UserName;
+               error_occurrence.date = moment (results[i].Date);
+               error_occurrence.error.error_id = results[i].ErrorId;
+               error_occurrence.error.account_id = results[i].AccountId;
+               error_occurrence.error.product = results[i].Product;
+               error_occurrence.error.stack_trace = results[i].StackTrace;
 
                $scope.error_occurrences.push(error_occurrence);
 
                // check to change stats // TODO: Move stat calculations into different method
                error_occurrence_stats.num_occurrences++;
-               if (! error_occurrence_stats.date_first_occurrence || moment (results.data[i].date) < error_occurrence_stats.date_first_occurrence)
-                  error_occurrence_stats.date_first_occurrence = moment (results.data[i].date);
-               if (moment (results.data[i].date) > error_occurrence_stats.date_last_occurrence)
-                  error_occurrence_stats.date_last_occurrence = moment (results.data[i].date);
+               if (! error_occurrence_stats.date_first_occurrence || moment (results[i].Date) < error_occurrence_stats.date_first_occurrence)
+                  error_occurrence_stats.date_first_occurrence = moment (results[i].Date);
+               if (moment (results[i].Date) > error_occurrence_stats.date_last_occurrence)
+                  error_occurrence_stats.date_last_occurrence = moment (results[i].Date);
 
             }
-            
+
             if (error_occurrence_stats.date_first_occurrence.format ("MMDDYYYY") == error_occurrence_stats.date_last_occurrence.format ("MMDDYYYY"))
                error_occurrence_stats.all_on_single_day = true;
             $scope.error_occurrence_stats = error_occurrence_stats;

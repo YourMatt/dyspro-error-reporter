@@ -64,53 +64,35 @@ exports.getIdByProductAndStackTrace = function (errorData, callback) {
 
 // Creates a new record.
 // callback(int: Error ID)
-exports.create = function (errorData, files, callback) {
+exports.create = function (error, callback) {
 
     exports.getIdByProductAndStackTrace(
-        errorData,
+        error,
         function (errorId) {
 
-            // add a new occurrence to the existing error if found
-            if (errorId) {
-
-                errorData.errorId = errorId;
-                queries.errorOccurrences.create(
-                    errorData,
-                    files,
-                    callback
-                );
-
-            }
+            // return the error ID if already exists
+            if (errorId) return callback(errorId);
 
             // add a new error if not found
-            else {
+            db.insert(
+                {
+                    sql:
+                    "INSERT INTO    Errors " +
+                    "(              AccountId, Product, StackTrace) " +
+                    "VALUES (       ?, ?, ?) ",
+                    values: [
+                        error.accountId,
+                        error.product,
+                        error.stackTrace
+                    ]
+                },
+                function (errorId) {
+                    if (!errorId) return callback(0);
 
-                db.insert(
-                    {
-                        sql:
-                        "INSERT INTO    Errors " +
-                        "(              AccountId, Product, StackTrace) " +
-                        "VALUES (       ?, ?, ?) ",
-                        values: [
-                            errorData.accountId,
-                            errorData.product,
-                            errorData.stackTrace
-                        ]
-                    },
-                    function (errorId) {
-                        if (!errorId) return callback(0);
+                    callback(errorId);
 
-                        errorData.errorId = errorId;
-                        queries.errorOccurrences.create(
-                            errorData,
-                            files,
-                            callback
-                        );
-
-                    }
-                );
-
-            }
+                }
+            );
 
         }
     );

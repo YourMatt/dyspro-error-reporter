@@ -1,11 +1,11 @@
-var database = require ("./databaseaccessor")
-,   models = require("./models/all")
-,   queries = require("./queries/all")
-,   utils = require("./utilities")
+const database = require ("./databaseaccessor"),
+    models = require("./models/all"),
+    queries = require("./queries/all"),
+    utils = require("./utilities")
 // following are set by init
-,   req = {}
-,   res = {}
-,   sessionManager = {};
+let req = {},
+    res = {},
+    sessionManager = {};
 
 exports.accountId = 0; // set after authenticated
 
@@ -15,344 +15,323 @@ exports.init = function (initReq, initRes, initSessionManager) {
     sessionManager = initSessionManager;
 };
 
-exports.processor = {
-
-    handleRequestOLD: function (req, res, sessionManager) {
-        var that = this;
-
-        // authenticate all api requests
-        this.authenticate (userName, password, sessionManager, function (accountData) {
-
-            // return response for unauthenticated accounts
-            if (! accountData) {
-                that.sendResponse (res, that.getErrorResponseData ("Not authenticated."));
-                return;
-            }
-
-            // evaluate the method
-            switch (req.params.method) {
-                case "log":
-
-                    // load values - need to either use req.query or req.body depending which is available - scenarios
-                    // allow for both depending on post and whether files are attached or not
-                    var queryValues = (req.body.product) ? req.body : req.query;
-                    var errorData = {
-                        accountId: accountData.accountId,
-                        product: queryValues.product,
-                        environment: queryValues.environment,
-                        server: queryValues.server,
-                        message: queryValues.message,
-                        userName: queryValues.userName,
-                        stackTrace: queryValues.stackTrace
-                    };
-
-                    // TODO: Add validation at this point
-                    if (! errorData.product) {
-                        that.sendResponse (res, that.getErrorResponseData ("No product."));
-                        return;
-                    }
-
-                    // save the error to the database
-                    database.query.logError (
-                        errorData,
-                        req.files,
-                        function (errorMessage) {
-                            if (errorMessage) that.sendResponse (res, that.getErrorResponseData(errorMessage));
-                            else that.sendResponse (res, that.getSuccessResponseData());
-                        }
-                    );
-
-                    break;
-                case "errors":
-
-                    // pull all errors associated to a specific error ID if provided
-                    if ( req.params.id ) {
-                        queries.errorOccurrences.getAllByErrorAndEnvironment(
-                            req.params.id,
-                            req.params.type,
-                            function (results) {
-                                that.sendResponse(res, that.getSuccessResponseData(results));
-                            }
-                        );
-                    }
-
-                    // show a list of the latest errors if no ID provided
-                    else {
-                        that.getLatestErrors(accountData.accountId, req.params.type, 20, function (results, errorMessage) {
-                            if (errorMessage) that.sendResponse(res, that.getErrorResponseData(errorMessage));
-                            else that.sendResponse (res, that.getSuccessResponseData (results));
-                        });
-                    }
-
-                    break;
-                default:
-                    that.sendResponse (res, that.getErrorResponseData ("Method not implemented."));
-                    break;
-            }
-
-        });
-
-    },
-
-    handleRequest: {
-
-        user: {
-
-            getSingle: function () {
-
-                if (utils.toInt(req.params.userId) === 0)
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
-
-                queries.users.get(req.params.userId, function(user) {
-                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(user));
-                });
-
-            },
-
-            getAllInAccount: function () {
-
-                queries.users.getAllByAccountId(exports.accountId, function(users) {
-                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(users));
-                });
-
-            },
-
-            create: function () {
-
-                var user = new models.User(
-                    exports.accountId,
-                    req.body.name,
-                    req.body.email,
-                    req.body.phone,
-                    req.body.password
-                );
-
-                if (!user.isValid()) {
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(user.errorMessage));
-                }
-
-                queries.users.create(user, function(userId) {
-                    if (!userId) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving user to database."));
-
-                    exports.processor.sendResponse(201, {userId: userId});
-
-                });
-
-            },
-
-            update: function () {
-
-                if (utils.toInt(req.params.userId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
-
-                var user = new models.User(
-                    exports.accountId,
-                    req.body.name,
-                    req.body.email,
-                    req.body.phone,
-                    req.body.password,
-                    0,
-                    req.params.userId
-                );
-
-                if (!user.isValid()) {
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(user.errorMessage));
-                }
-
-                queries.users.update(user, function(numUpdated) {
-                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving user to database."));
-
-                    exports.processor.sendResponse(201);
-
-                });
-
-            },
-
-            delete: function () {
-
-                if (utils.toInt(req.params.userId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing user ID."));
-
-                queries.users.delete(req.params.userId, function(numUpdated) {
-                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error deleting from database."));
-
-                    exports.processor.sendResponse(200);
-
-                });
-
-            }
-
-        },
-
-        monitor: {
-
-            getSingle: function () {
-
-                if (utils.toInt(req.params.monitorId) === 0)
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
-
-                queries.monitors.get(req.params.monitorId, function(monitor) {
-                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(monitor));
-                });
-
-            },
-
-            getAllInAccount: function () {
-
-                queries.monitors.getAllByAccountId(exports.accountId, function(monitors) {
-                    exports.processor.sendResponse(200, exports.processor.stripReturnObjectProperties(monitors));
-                });
-
-            },
-
-            create: function () {
-
-                var monitor = new models.Monitor(
-                    exports.accountId,
-                    req.body.product,
-                    req.body.environment,
-                    req.body.endpointUri,
-                    req.body.intervalSeconds
-                );
-
-                if (!monitor.isValid()) {
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(monitor.errorMessage));
-                }
-
-                queries.monitors.create(monitor, function(monitorId) {
-                    if (!monitorId) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving monitor to database."));
-
-                    exports.processor.sendResponse(201, {monitorId: monitorId});
-
-                });
-
-            },
-
-            update: function () {
-
-                if (utils.toInt(req.params.monitorId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
-
-                var monitor = new models.Monitor(
-                    exports.accountId,
-                    req.body.product,
-                    req.body.environment,
-                    req.body.endpointUri,
-                    req.body.intervalSeconds,
-                    req.params.monitorId
-                );
-
-                if (!monitor.isValid()) {
-                    return exports.processor.sendResponse(400, exports.processor.getErrorResponseData(monitor.errorMessage));
-                }
-
-                queries.monitors.update(monitor, function(numUpdated) {
-                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error saving monitor to database."));
-
-                    exports.processor.sendResponse(201);
-
-                });
-
-            },
-
-            delete: function () {
-
-                if (utils.toInt(req.params.monitorId) === 0) return exports.processor.sendResponse(400, exports.processor.getErrorResponseData("Missing monitor ID."));
-
-                queries.monitors.delete(req.params.monitorId, function(numUpdated) {
-                    if (!numUpdated) return exports.processor.sendResponse(500, exports.processor.getErrorResponseData("Error deleting from database."));
-
-                    exports.processor.sendResponse(200);
-
-                });
-
-            }
-
-        }
-
-    },
-
-    authenticate: function (callback) {
-
-        // load authentication data
-        var header = req.headers["authorization"] || ""
-        ,   token = header.split(/\s+/).pop() || ""
-        ,   auth = new Buffer(token, "base64").toString()
-        ,   parts = auth.split(/:/)
-        ,   userName = parts[0]
-        ,   apiKey = parts[1];
-
-        // use auth token if provided
-        if (userName && apiKey) {
-            queries.accounts.getByApiKey(userName, apiKey, callback);
-        }
-
-        // use session if no auth token, and user logged into the session
-        else if (sessionManager.data.user.accountId) {
-            var account = new models.Account(); // skipping query from DB because account ID is only needed
-            account.accountId = sessionManager.data.user.accountId;
-            callback(account);
-        }
-
-        // return if not authenticated
-        else callback();
-
-    },
-
-    getFileType: function (fileName) {
-
-        var fileNameParts = fileName.split (".");
-        return fileNameParts[fileNameParts.length - 1].toLowerCase ();
-
-    },
-
-    getLatestErrors: function (accountId, environment, numErrors, callback) {
-
-        queries.errorOccurrences.getLatestByAccountAndEnvironment(
-            accountId,
-            environment,
-            numErrors,
-            function (results) {
-
-                // return error if no results
-                if (!results.length) {
-                    callback({}, "No errors found.");
-                    return;
-                }
-
-                callback(results);
-
+exports.authenticate = function (callback) {
+
+    // load authentication data
+    let header = req.headers["authorization"] || "",
+        token = header.split(/\s+/).pop() || "",
+        auth = new Buffer(token, "base64").toString(),
+        parts = auth.split(/:/),
+        userName = parts[0],
+        apiKey = parts[1];
+
+    // use auth token if provided
+    if (userName && apiKey) {
+        queries.accounts.getByApiKey(userName, apiKey, callback);
+    }
+
+    // use session if no auth token, and user logged into the session
+    else if (sessionManager.data.user.accountId) {
+        let account = new models.Account(); // skipping query from DB because account ID is only needed
+        account.accountId = sessionManager.data.user.accountId;
+        callback(account);
+    }
+
+    // return if not authenticated
+    else apiUtils.sendResponse(401, "Could not authenticate. Check your API Key.");
+
+};
+
+exports.error = {
+
+    getSingle: function () {
+
+        queries.errors.get(
+            req.params.errorId,
+            function (error) {
+                apiUtils.sendResponse(200, error);
             }
         );
 
     },
 
-    getErrorResponseData: function (errorMessage) {
+    getLatestForEnvironment: function () {
 
-        var error = {
-            error: errorMessage
-        };
+        queries.errorOccurrences.getLatestByAccountAndEnvironment(
+            exports.accountId,
+            req.params.environment,
+            utils.toInt(req.params.count),
+            function (errors) {
+                apiUtils.sendResponse(200, errors);
+            }
+        )
 
-        return error;
+    },
+
+    create: function () {
+
+        let error = new models.Error(
+            exports.accountId,
+            req.body.product,
+            req.body.stackTrace
+        );
+
+        if (!error.isValid()) {
+            return apiUtils.sendResponse(400, error.errorMessage);
+        }
+
+        queries.errors.create(
+            error,
+            function (errorId) {
+                if (!errorId) return apiUtils.sendResponse(500, "Error saving the error to the database.");
+
+                let errorOccurrence = new models.ErrorOccurrence(
+                    errorId,
+                    req.body.environment,
+                    req.body.message,
+                    req.body.server,
+                    req.body.userName
+                );
+
+                if (!errorOccurrence.isValid()) {
+                    return apiUtils.sendResponse(400, error.errorMessage);
+                }
+
+                queries.errorOccurrences.create(
+                    errorOccurrence,
+                    function (errorOccurrenceId) {
+                        if (!errorOccurrenceId) return apiUtils.sendResponse(500, "Error saving error occurrence to database. The error definition was saved.");
+
+                        // return if no files to attach to the error occurrence
+                        if (!req.files.length) {
+                            return apiUtils.sendResponse(201, {
+                                errorId: errorId,
+                                errorOccurrenceId: errorOccurrenceId
+                            });
+                        }
+
+                        let numAttachmentsSaved = 0;
+                        for (let i = 0; i < req.files.length; i++) {
+                            queries.errorAttachments.create(
+                                errorOccurrenceId,
+                                req.files[i],
+                                function (success) {
+                                    // TODO: Handle attachment save error - currently success is always true
+
+                                    numAttachmentsSaved++;
+                                    if (numAttachmentsSaved === req.files.length) {
+                                        apiUtils.sendResponse(201, {
+                                            errorId: errorId,
+                                            errorOccurrenceId: errorOccurrenceId
+                                        });
+                                    }
+
+                                }
+                            )
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    }
+
+};
+
+exports.user = {
+
+    getSingle: function () {
+
+        if (utils.toInt(req.params.userId) === 0)
+            return apiUtils.sendResponse(400, "Missing user ID.");
+
+        queries.users.get(req.params.userId, function(user) {
+            apiUtils.sendResponse(200, user);
+        });
 
     },
 
-    getSuccessResponseData: function (data) {
+    getAllInAccount: function () {
 
-        var success = {
-            status: "success",
-            data: data
-        };
-
-        return success;
+        queries.users.getAllByAccountId(exports.accountId, function(users) {
+            apiUtils.sendResponse(200, users);
+        });
 
     },
+
+    create: function () {
+
+        let user = new models.User(
+            exports.accountId,
+            req.body.name,
+            req.body.email,
+            req.body.phone,
+            req.body.password
+        );
+
+        if (!user.isValid()) {
+            return apiUtils.sendResponse(400, user.errorMessage);
+        }
+
+        queries.users.create(user, function(userId) {
+            if (!userId) return apiUtils.sendResponse(500, "Error saving user to database.");
+
+            apiUtils.sendResponse(201, {userId: userId});
+
+        });
+
+    },
+
+    update: function () {
+
+        if (utils.toInt(req.params.userId) === 0) return apiUtils.sendResponse(400, "Missing user ID.");
+
+        let user = new models.User(
+            exports.accountId,
+            req.body.name,
+            req.body.email,
+            req.body.phone,
+            req.body.password,
+            0,
+            req.params.userId
+        );
+
+        if (!user.isValid()) {
+            return apiUtils.sendResponse(400, user.errorMessage);
+        }
+
+        queries.users.update(user, function(numUpdated) {
+            if (!numUpdated) return apiUtils.sendResponse(500, "Error saving user to database.");
+
+            apiUtils.sendResponse(201);
+
+        });
+
+    },
+
+    delete: function () {
+
+        if (utils.toInt(req.params.userId) === 0) return apiUtils.sendResponse(400, "Missing user ID.");
+
+        queries.users.delete(req.params.userId, function(numUpdated) {
+            if (!numUpdated) return apiUtils.sendResponse(500, "Error deleting from database.");
+
+            apiUtils.sendResponse(200);
+
+        });
+
+    }
+
+};
+
+exports.monitor = {
+
+    getSingle: function () {
+
+        if (utils.toInt(req.params.monitorId) === 0)
+            return apiUtils.sendResponse(400, "Missing monitor ID.");
+
+        queries.monitors.get(req.params.monitorId, function(monitor) {
+            apiUtils.sendResponse(200, monitor);
+        });
+
+    },
+
+    getAllInAccount: function () {
+
+        queries.monitors.getAllByAccountId(exports.accountId, function(monitors) {
+            apiUtils.sendResponse(200, monitors);
+        });
+
+    },
+
+    create: function () {
+
+        var monitor = new models.Monitor(
+            exports.accountId,
+            req.body.product,
+            req.body.environment,
+            req.body.endpointUri,
+            req.body.intervalSeconds
+        );
+
+        if (!monitor.isValid()) {
+            return apiUtils.sendResponse(400, monitor.errorMessage);
+        }
+
+        queries.monitors.create(monitor, function(monitorId) {
+            if (!monitorId) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+
+            apiUtils.sendResponse(201, {monitorId: monitorId});
+
+        });
+
+    },
+
+    update: function () {
+
+        if (utils.toInt(req.params.monitorId) === 0) return apiUtils.sendResponse(400, "Missing monitor ID.");
+
+        var monitor = new models.Monitor(
+            exports.accountId,
+            req.body.product,
+            req.body.environment,
+            req.body.endpointUri,
+            req.body.intervalSeconds,
+            req.params.monitorId
+        );
+
+        if (!monitor.isValid()) {
+            return apiUtils.sendResponse(400, monitor.errorMessage);
+        }
+
+        queries.monitors.update(monitor, function(numUpdated) {
+            if (!numUpdated) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+
+            apiUtils.sendResponse(201);
+
+        });
+
+    },
+
+    delete: function () {
+
+        if (utils.toInt(req.params.monitorId) === 0) return apiUtils.sendResponse(400, "Missing monitor ID.");
+
+        queries.monitors.delete(req.params.monitorId, function(numUpdated) {
+            if (!numUpdated) return apiUtils.sendResponse(500, "Error deleting from database.");
+
+            apiUtils.sendResponse(200);
+
+        });
+
+    }
+
+};
+
+const apiUtils = {
 
     sendResponse: function (statusCode, returnData) {
 
         res.writeHead (statusCode, {"Content-Type": "application/json"});
-        res.end ((returnData) ? JSON.stringify (returnData) : "");
+
+        // return if no data to send
+        if (!returnData) res.end();
+
+        // if return data is a string, assume an error message
+        else if (typeof returnData === "string") res.end(JSON.stringify({error: returnData}));
+
+        // for all others, return the provided object, stripping out any unwanted parameters
+        else res.end(JSON.stringify(apiUtils.stripReturnObjectProperties(returnData)));
 
     },
 
+    // Removes object properties that should never be available in API responses.
     stripReturnObjectProperties: function(object) {
+
+        if (!object) return object;
 
         if (Array.isArray(object)) {
             for (var i = 0; i < object.length; i++) {

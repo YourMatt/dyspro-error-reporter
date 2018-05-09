@@ -14,7 +14,7 @@ exports.get = function (errorOccurrenceId, callback) {
         {
             sql:
             "SELECT     eo.ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.AccountId, e.Product, e.StackTrace " +
+            ",          e.ErrorId, e.AccountId, e.Product, e.StackTrace " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "WHERE      eo.ErrorOccurrenceId = ? ",
@@ -49,7 +49,7 @@ exports.getAllByErrorAndEnvironment = function (errorId, environment, callback) 
         {
             sql:
             "SELECT     eo.ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.AccountId, e.Product, e.StackTrace " +
+            ",          e.ErrorId, e.AccountId, e.Product, e.StackTrace " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "WHERE      eo.ErrorId = ? " +
@@ -72,8 +72,8 @@ exports.getLatestByAccountAndEnvironment = function (accountId, environment, lim
     db.selectMultiple(
         {
             sql:
-            "SELECT     eo..ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.AccountId, e.Product, e.StackTrace " +
+            "SELECT     eo.ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
+            ",          e.ErrorId, e.AccountId, e.Product, e.StackTrace " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "WHERE      e.AccountId = ? " +
@@ -93,7 +93,7 @@ exports.getLatestByAccountAndEnvironment = function (accountId, environment, lim
 
 // Creates a new record.
 // callback(int: Error occurrence ID)
-create = function (errorData, files, callback) {
+exports.create = function (errorOccurrence, callback) {
 
     db.insert(
         {
@@ -102,35 +102,17 @@ create = function (errorData, files, callback) {
             "(              ErrorId, Environment, Message, Server, UserName) " +
             "VALUES (       ?, ?, ?, ?, ?) ",
             values: [
-                errorData.errorId,
-                errorData.environment,
-                errorData.message,
-                errorData.server,
-                errorData.userName
+                errorOccurrence.errorId,
+                errorOccurrence.environment,
+                errorOccurrence.message,
+                errorOccurrence.server,
+                errorOccurrence.userName
             ]
         },
         function (errorOccurrenceId) {
             if (!errorOccurrenceId) return callback(0);
 
-            // return if no attachments to save
-            if (!files.length) return callback(errorOccurrenceId);
-
-            // save the attachments provided with the error
-            let numAttachmentsSaved = 0;
-            for (let i = 0; i < files.length; i++) {
-                queries.errorAttachments.create(
-                    errorOccurrenceId,
-                    files[i],
-                    function (success) {
-                        // TODO: Handle attachment save error - currently success is always true
-
-                        numAttachmentsSaved++;
-                        if (numAttachmentsSaved === files.length)
-                            callback(errorOccurrenceId);
-
-                    }
-                )
-            }
+            return callback(errorOccurrenceId);
 
         }
     );

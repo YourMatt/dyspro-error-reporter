@@ -17,7 +17,7 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
 
     $scope.reloadErrorOccurrences = function () {
         if (! current_environment) current_environment = $(".nav-tabs li.active").attr("environment"); // TODO: load this from a different method
-        $.ajax("/api/errors/" + current_environment)
+        $.ajax("/api/errors/" + current_environment + "/20")
             .done(function (results) {
 
                 if (results.error) {
@@ -27,18 +27,18 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
                 }
 
                 $scope.error_occurrences = [];
-                for (var i = 0; i < results.data.length; i++) {
+                for (var i = 0; i < results.length; i++) {
                     var error_occurrence = new ErrorOccurrence ();
-                    error_occurrence.error_occurrence_id = results.data[i].ErrorOccurrenceId;
-                    error_occurrence.environment = results.data[i].Environment;
-                    error_occurrence.message = results.data[i].Message;
-                    error_occurrence.server = results.data[i].Server;
-                    error_occurrence.user_name = results.data[i].UserName;
-                    error_occurrence.date = moment(results.data[i].Date);
-                    error_occurrence.error.error_id = results.data[i].ErrorId;
-                    error_occurrence.error.account_id = results.data[i].AccountId;
-                    error_occurrence.error.product = results.data[i].Product;
-                    error_occurrence.error.stack_trace = results.data[i].StackTrace;
+                    error_occurrence.error_occurrence_id = results[i].ErrorOccurrenceId;
+                    error_occurrence.environment = results[i].Environment;
+                    error_occurrence.message = results[i].Message;
+                    error_occurrence.server = results[i].Server;
+                    error_occurrence.user_name = results[i].UserName;
+                    error_occurrence.date = moment(results[i].Date);
+                    error_occurrence.error.error_id = results[i].ErrorId;
+                    error_occurrence.error.account_id = results[i].AccountId;
+                    error_occurrence.error.product = results[i].Product;
+                    error_occurrence.error.stack_trace = results[i].StackTrace;
 
                     $scope.error_occurrences.push(error_occurrence);
 
