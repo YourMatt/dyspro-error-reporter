@@ -21,12 +21,14 @@ let req = {},
 
 exports.accountId = 0; // set after authenticated
 
+// Initializes local variables.
 exports.init = function (initReq, initRes, initSessionManager) {
     req = initReq;
     res = initRes;
     sessionManager = initSessionManager;
 };
 
+// Processes authentication requests.
 exports.authenticate = function (callback) {
 
     // load authentication data
@@ -54,6 +56,7 @@ exports.authenticate = function (callback) {
 
 };
 
+// Processes error requests.
 exports.error = {
 
     getSingle: function () {
@@ -149,6 +152,7 @@ exports.error = {
 
 };
 
+// Processes error note requests.
 exports.errorNotes = {
 
     getSingle: function () {
@@ -271,6 +275,7 @@ exports.errorNotes = {
 
 };
 
+// Processes user requests.
 exports.user = {
 
     getSingle: function () {
@@ -366,6 +371,7 @@ exports.user = {
 
 };
 
+// Processes monitor requests.
 exports.monitor = {
 
     getSingle: function () {
@@ -460,6 +466,7 @@ exports.monitor = {
 
 };
 
+// Common methods to this module.
 const apiUtils = {
 
     sendResponse: function (statusCode, returnData) {
