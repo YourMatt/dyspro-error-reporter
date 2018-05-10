@@ -5,9 +5,11 @@
  **********************************************************************************************************************/
 var utils = require("../utilities");
 
-var self = function (errorId, userId, message, date, errorNoteId) {
+var self = function (accountId, errorId, message, userId, userName, date, errorNoteId) {
+    this.accountId = utils.toInt(accountId);
     this.errorId = utils.toInt(errorId);
-    this.userId = userId;
+    this.userId = utils.toInt(userId);
+    this.userName = userName;
     this.message = message;
     this.date = date;
     this.errorNoteId = utils.toInt(errorNoteId);

@@ -21,7 +21,7 @@ exports.get = function(accountId, callback) {
             ]
         },
         function (a) {
-            if (!a) return callback();
+            if (!a) return callback(new models.Account());
 
             let account = new models.Account(
                 a.Name,
@@ -53,7 +53,7 @@ exports.getByApiKey = function (userName, apiKey, callback) {
             ]
         },
         function (a) {
-            if (!a) return callback();
+            if (!a) return callback(new models.Account());
 
             let account = new models.Account(
                 a.Name,
@@ -80,7 +80,7 @@ exports.getAll = function(callback) {
             "ORDER BY   Name ASC "
         },
         function (a) {
-            if (!a) return callback();
+            if (!a) return callback([]);
 
             let accounts = [];
             for (let i = 0; i < a.length; i++) {

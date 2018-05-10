@@ -288,23 +288,27 @@ app.get ("/attachments/:errorOccurrenceId/:fileName", function (req, res) {
 
 // expose api methods
 
-app.get     ("/api/errors/:errorId", api.error.getSingle);
-app.get     ("/api/errors/:environment/:count", api.error.getLatestForEnvironment);
-app.post    ("/api/errors", api.error.create);
+app.get     ("/api/error/:errorId", api.error.getSingle);
+app.get     ("/api/errors/:environment/:count?", api.error.getLatestForEnvironment);
+app.post    ("/api/error", api.error.create);
 
-app.get     ("/api/monitor", api.monitor.getAllInAccount);
+app.get     ("/api/errornote/:errorNoteId", api.errorNotes.getSingle);
+app.get     ("/api/errornotes/:errorId", api.errorNotes.getAllForError);
+app.post    ("/api/errornote", api.errorNotes.create);
+app.put     ("/api/errornote/:errorNoteId", api.errorNotes.update);
+app.delete  ("/api/errornote/:errorNoteId", api.errorNotes.delete);
+
 app.get     ("/api/monitor/:monitorId", api.monitor.getSingle);
+app.get     ("/api/monitors", api.monitor.getAllInAccount);
 app.post    ("/api/monitor", api.monitor.create);
 app.put     ("/api/monitor/:monitorId", api.monitor.update);
 app.delete  ("/api/monitor/:monitorId", api.monitor.delete);
 
-app.get     ("/api/user", api.user.getAllInAccount);
 app.get     ("/api/user/:userId", api.user.getSingle);
+app.get     ("/api/users", api.user.getAllInAccount);
 app.post    ("/api/user", api.user.create);
 app.put     ("/api/user/:userId", api.user.update);
 app.delete  ("/api/user/:userId", api.user.delete);
-
-
 
 // start server
 app.listen (app.get ("port"));

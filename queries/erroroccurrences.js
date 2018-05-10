@@ -23,7 +23,7 @@ exports.get = function (errorOccurrenceId, callback) {
             ]
         },
         function (eo) {
-            if (!eo) return callback();
+            if (!eo) return callback(new models.ErrorOccurrence());
 
             let errorOccurrence = new models.ErrorOccurrence(
                 eo.ErrorId,
@@ -109,12 +109,7 @@ exports.create = function (errorOccurrence, callback) {
                 errorOccurrence.userName
             ]
         },
-        function (errorOccurrenceId) {
-            if (!errorOccurrenceId) return callback(0);
-
-            return callback(errorOccurrenceId);
-
-        }
+        callback
     );
 
 };

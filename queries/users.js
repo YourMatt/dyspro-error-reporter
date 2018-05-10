@@ -21,7 +21,7 @@ exports.get = function(userId, callback) {
             ]
         },
         function (u) {
-            if (!u) return callback();
+            if (!u) return callback(new models.User());
 
             let user = new models.User(
                 u.AccountId,
@@ -56,7 +56,7 @@ exports.getByLogin = function (email, password, callback) {
             ]
         },
         function (u) {
-            if (!u) return callback();
+            if (!u) return callback(new models.User());
 
             let user = new models.User(
                 u.AccountId,
@@ -90,7 +90,7 @@ exports.getAllByAccountId = function(accountId, callback) {
             ]
         },
         function (u) {
-            if (!u) return callback();
+            if (!u) return callback([]);
 
             let users = [];
             for (let i = 0; i < u.length; i++) {

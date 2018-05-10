@@ -20,7 +20,7 @@ exports.get = function (errorId, callback) {
             ]
         },
         function (e) {
-            if (!e) return callback();
+            if (!e) return callback(new models.Error());
 
             let error = new models.Error(
                 e.AccountId,
@@ -86,12 +86,7 @@ exports.create = function (error, callback) {
                         error.stackTrace
                     ]
                 },
-                function (errorId) {
-                    if (!errorId) return callback(0);
-
-                    callback(errorId);
-
-                }
+                callback
             );
 
         }

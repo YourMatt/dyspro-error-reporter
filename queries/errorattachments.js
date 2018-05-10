@@ -23,7 +23,7 @@ exports.get = function (errorOccurrenceId, fileName, callback) {
             ]
         },
         function (ea) {
-            if (!ea) return callback();
+            if (!ea) return callback(new models.ErrorAttachment());
 
             let errorAttachment = new models.ErrorAttachment(
                 ea.ErrorOccurrenceId,
@@ -54,7 +54,7 @@ exports.getAllByErrorOccurrence = function (errorOccurrenceId, callback) {
             ]
         },
         function (ea) {
-            if (!ea) return callback();
+            if (!ea) return callback([]);
 
             let errorAttachments = [];
             for (let i = 0; i < ea.length; i++) {

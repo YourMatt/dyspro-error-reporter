@@ -21,7 +21,7 @@ exports.get = function(monitorId, callback) {
             ]
         },
         function (m) {
-            if (!m) return callback();
+            if (!m) return callback(new models.Monitor);
 
             let monitor = new models.Monitor(
                 m.AccountId,
@@ -54,7 +54,7 @@ exports.getAllByAccountId = function(accountId, callback) {
             ]
         },
         function (m) {
-            if (!m) return callback();
+            if (!m) return callback([]);
 
             let monitors = [];
             for (let i = 0; i < m.length; i++) {
