@@ -11,8 +11,7 @@
  * 500 - System issue
  *
  **********************************************************************************************************************/
-const database = require ("./databaseaccessor"),
-    models = require("./models/all"),
+const models = require("./models/all"),
     queries = require("./queries/all"),
     utils = require("./utilities");
 // following are set by init

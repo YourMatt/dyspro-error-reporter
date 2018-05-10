@@ -1,5 +1,16 @@
 const mysql = require("mysql");
 
+// Creates a connection to the database.
+// callback(bool: True if successful)
+exports.init = function (callback) {
+    connection.open(callback);
+};
+
+// Closes a connection to the database.
+exports.close = function () {
+    connection.close();
+};
+
 // Returns a single record from the database. If multiple records found, returns the first row.
 // callback(object: Results)
 exports.selectSingle = function (query, callback) {
@@ -12,24 +23,17 @@ exports.selectSingle = function (query, callback) {
 // callback(array: List of objects)
 exports.selectMultiple = function (query, callback, returnSingle) {
 
-    connection.open(function (success) {
-        if (!success) return callback();
+    connection.query(query, function (error, rows) {
 
-        // run the query
-        connection.query(query, function (error, rows) {
-            connection.close();
+        // report error and return if error state
+        if (error) {
+            connection.handleError(query, error);
+            return callback();
+        }
 
-            // report error and return if error state
-            if (error) {
-                connection.handleError(query, error);
-                return callback();
-            }
-
-            // call the callback with data
-            if (returnSingle) callback(rows[0]);
-            else callback(rows);
-
-        });
+        // call the callback with data
+        if (returnSingle) callback(rows[0]);
+        else callback(rows);
 
     });
 
@@ -39,23 +43,16 @@ exports.selectMultiple = function (query, callback, returnSingle) {
 // callback(int: Insert ID)
 exports.insert = function (query, callback) {
 
-    connection.open(function (success) {
-        if (!success) return callback();
+    connection.query(query, function (error, result) {
 
-        // run the insert
-        connection.query(query, function (error, result) {
-            connection.close();
+        // report error and return
+        if (error) {
+            connection.handleError(query, error);
+            return callback(0);
+        }
 
-            // report error and return
-            if (error) {
-                connection.handleError(query, error);
-                return callback(0);
-            }
-
-            // call the callback with the insert ID
-            callback(result.insertId);
-
-        });
+        // call the callback with the insert ID
+        callback(result.insertId);
 
     });
 
@@ -65,22 +62,16 @@ exports.insert = function (query, callback) {
 // callback(int: Number of updated rows)
 exports.update = function (query, callback) {
 
-    connection.open(function (success) {
-        if (!success) return callback();
+    // run the update
+    connection.query(query, function (error, result) {
 
-        // run the update
-        connection.query(query, function (error, result) {
-            connection.close();
+        if (error) {
+            connection.handleError(query, error);
+            return callback(0);
+        }
 
-            if (error) {
-                connection.handleError(query, error);
-                return callback(0);
-            }
-
-            // call the callback
-            callback(result.affectedRows);
-
-        });
+        // call the callback
+        callback(result.affectedRows);
 
     });
 
@@ -90,22 +81,15 @@ exports.update = function (query, callback) {
 // callback(int: Number of deleted rows)
 exports.delete = function (query, callback) {
 
-    connection.open(function (success) {
-        if (!success) return callback();
+    connection.query(query, function (error, result) {
 
-        // run the delete
-        connection.query(query, function (error, result) {
-            connection.close();
+        if (error) {
+            connection.handleError(query, error);
+            return callback(0);
+        }
 
-            if (error) {
-                connection.handleError(query, error);
-                return callback(0);
-            }
-
-            // call the callback
-            callback(result.affectedRows);
-
-        });
+        // call the callback
+        callback(result.affectedRows);
 
     });
 

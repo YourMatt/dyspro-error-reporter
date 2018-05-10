@@ -2,21 +2,24 @@
 // load configuration values
 require ("dotenv").config();
 
-// include libraries
-var express = require ("express")
-,   session = require ("express-session")
-,   busboy = require ("connect-busboy")
-,   bodyParser = require ("body-parser")
-,   ejs = require ("ejs")
-,   compression = require ("compression")
-,   moment = require ("moment")
-,   sessionManager = require ("./sessionmanager")
-,   api = require ("./apiprocessor")
-,   queries = require("./queries/all")
-,   mime = require ("mime");
+// include libraries from node modules
+const bodyParser = require ("body-parser"),
+    busboy = require ("connect-busboy"),
+    compression = require ("compression"),
+    ejs = require ("ejs"),
+    express = require ("express"),
+    mime = require ("mime"),
+    moment = require ("moment"),
+    session = require ("express-session");
+
+// include local libraries
+const api = require ("./apiprocessor"),
+    middleware = require("./middleware"),
+    sessionManager = require ("./sessionmanager"),
+    queries = require("./queries/all");
 
 // initialize express
-var app = express ();
+let app = express ();
 app.set ("port", (process.env.RUNTIME_PORT || 80));
 app.set ("views", __dirname + "/views/layout");
 app.engine ("ejs", ejs.renderFile);
@@ -25,85 +28,7 @@ app.use (compression({level: 1, threshold: 0})); // use fastest compression
 app.use (express.static (__dirname + "/public"));
 app.use (busboy ()); // allow file uploads
 app.use (session ({secret: "dyspro-sess", resave: true, saveUninitialized: true}));
-
-// load the session
-app.use (function (req, res, next) {
-    sessionManager.init (req);
-    next ();
-});
-
-// initialize the api processor if an api page
-app.use (function (req, res, next) {
-    if (req.url.indexOf("/api/") === 0) {
-        api.init(req, res, sessionManager);
-        api.authenticate(function (accountData) {
-
-            api.accountId = accountData.accountId;
-            next();
-
-        });
-    }
-    else next();
-});
-
-// load multipart form data
-app.use (function (req, res, next) {
-    req.files = [];
-
-    // set body with query params if a get
-    if (req.method == "GET") {
-        next ();
-        return;
-    }
-
-    // skip if anything already set for body
-    if (Object.keys (req.body).length) {
-        next ();
-        return;
-    }
-
-    if (! req.busboy) {
-        next ();
-        return;
-    }
-
-    // reset request body and start load
-    req.body = {};
-    req.pipe (req.busboy);
-
-    // load field values to request body
-    req.busboy.on ("field", function (key, value, keyTruncated, valueTruncated) {
-        req.body[key] = value;
-    });
-
-    // load file data to request files
-    req.busboy.on ("file", function (fieldName, file, fileName, encoding, mimeType) {
-        var fileSource = Buffer("", "binary");
-        file.on ("data", function (data) {
-            fileSource = Buffer.concat([fileSource, Buffer.from(data, "binary")]);
-        });
-        file.on ("end", function () {
-
-            let fileNameParts = fileName.split (".");
-            let fileType = fileNameParts[fileNameParts.length - 1].toLowerCase ();
-
-            var fileData = {
-                fileName: fileName,
-                fileType: fileType,
-                source: fileSource
-            };
-            req.files.push(fileData);
-        });
-    });
-
-    // continue
-    req.busboy.on("finish", function () {
-        next ();
-    });
-
-});
-
-// HANDLE PAGES
+middleware.addAll(app);
 
 // home page
 app.get ("/", function (req, res) {
