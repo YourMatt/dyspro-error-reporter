@@ -2,6 +2,8 @@
   "name": "dyspro-error-reporter",
   "version": "0.1.0",
   "description": "System monitor and error reporting system.",
+  "license": "UNLICENSED",
+  "private": true,
   "main": "app.js",
   "repository": {
     "type": "git",
@@ -9,15 +11,30 @@
   },
   "author": "Matt Sadowski",
   "dependencies": {
+    "angular": "^1.6.10",
     "body-parser": "^1.18.2",
+    "bootstrap": "^4.1.1",
     "compression": "^1.7.2",
     "connect-busboy": "^0.0.2",
     "dotenv": "^5.0.1",
     "ejs": "^2.5.9",
     "express": "^4.16.3",
     "express-session": "^1.15.6",
+    "jquery": "^3.3.1",
     "mime": "^2.3.1",
     "moment": "^2.22.1",
-    "mysql": "^2.15.0"
+    "mysql": "^2.15.0",
+    "popper": "^1.0.1"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^2.2.1",
+    "grunt-contrib-sass": "^1.0.0",
+    "grunt-contrib-uglify": "^3.1.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-copy": "^0.1.0",
+    "grunt-postcss": "^0.9.0"
   }
 }

@@ -1,9 +1,5 @@
 var current_environment;
 
-$(document).ready (function () {
-});
-
-var app = angular.module ("ErrorReporter", []);
 app.controller ("DashboardController", ["$scope", function ($scope) {
 
     $scope.error_occurrences = [];

@@ -35,7 +35,6 @@ var ErrorOccurrenceStats = (function () {
 
 });
 
-var app = angular.module ("ErrorReporter", []);
 app.controller ("ErrorHistoryController", ["$scope", function ($scope) {
 
    $scope.error_occurrences = [];

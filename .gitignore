@@ -4,6 +4,7 @@ logs
 
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
+.sass-cache
 
 # Dependency directory
 node_modules
@@ -17,4 +18,5 @@ node_modules
 .idea*
 
 # Temp Files
-documentation/~* # Visio holds temp files in format of ~$$xxxxx
+# Visio holds temp files in format of ~$$xxxxx
+documentation/~*
