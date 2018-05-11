@@ -1,33 +1,31 @@
-<%- include header.ejs %>
+<%- include("template/header") %>
 
 <% if (environments.length) { %>
 
 <div ng-controller="DashboardController">
 
-    <ul class="container nav nav-tabs">
-        <li class="navbar-text">Environment</li>
+    <ul class="nav nav-tabs">
+        <li class="nav-item"><span class="navbar-text">Environment</span></li>
         <% for (var i = 0; i < environments.length; i++) { %>
-        <li<% if (selectedEnvironment == environments[i] ) { %> class="active"<% } %> environment="<%= environments[i] %>">
-            <a href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
+        <li class="nav-item <% if (selectedEnvironment == environments[i] ) { %> active<% } %>" environment="<%= environments[i] %>">
+            <a class="nav-link" href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
         </li>
         <% } %>
     </ul>
 
     <div class="container">
-    <%- include blocks/error-list.ejs %>
+    <%- include("blocks/error-list") %>
     </div>
 
 </div>
 
 <% } else { %>
 
-<div class="container" role="main">
-    <div class="jumbotron">
-        <h1>Dashboard</h1>
-        <p>You have not logged any errors.</p>
-    </div>
+<div class="jumbotron">
+    <h1>Dashboard</h1>
+    <p>You have not logged any errors.</p>
 </div>
 
 <% } %>
 
-<%- include footer.ejs %>
+<%- include("template/footer") %>

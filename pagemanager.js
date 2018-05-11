@@ -15,7 +15,7 @@ exports.processLogin = function (req, res) {
     queries.users.getByLogin(req.body.email, req.body.password, function (userData) {
 
         // user not authenticated
-        if (!userData) {
+        if (!userData.userId) {
             sessionManager.set("errorMessage", "Incorrect email or password.");
             return res.redirect(req.headers.referer);
         }

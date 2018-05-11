@@ -1,18 +1,18 @@
-<%- include header.ejs %>
+<%- include("template/header") %>
 
 <div class="container">
 
-    <%- include blocks/error-occurrence.ejs %>
+    <%- include("blocks/error-occurrence") %>
 
-    <%- include blocks/error-details.ejs %>
+    <%- include("blocks/error-details") %>
 
-    <%- include blocks/error-history.ejs %>
+    <%- include("blocks/error-history") %>
 
 </div>
 
-<div id="error-occurrence-metadata" class="hidden">
+<div id="error-occurrence-metadata" class="d-none">
     <environment><%= errorOccurrence.environment %></environment>
     <errorid><%= errorOccurrence.errorId %></errorid>
 </div>
 
-<%- include footer.ejs %>
+<%- include("template/footer") %>
