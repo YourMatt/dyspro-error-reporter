@@ -1,19 +1,18 @@
 
-<div class="row">
-    <table id="RecentErrors" class="table table-striped hidden">
-        <tbody>
-        <tr ng-repeat="eo in error_occurrences">
-            <td>
+<table id="RecentErrors" class="table table-sm table-hover table-striped">
+    <tbody>
+    <tr ng-repeat="eo in error_occurrences">
+        <td>
+            <a href="/errors/{{eo.error.error_id}}/occurrence/{{eo.error_occurrence_id}}">
                 <div class="row container text-nowrap">
-                    <a class="pull-right btn btn-sm btn-primary" href="/errors/{{eo.error.error_id}}/occurrence/{{eo.error_occurrence_id}}">View</a>
                     <div class="col-sm-3"><strong>{{eo.date.format("MM/DD [at] h:mm A")}}</strong></div>
                     <div class="col-sm-3"><strong>Product:</strong> {{eo.error.product}}</div>
                     <div class="col-sm-3"><strong>User:</strong> {{eo.user_name}}</div>
                     <div class="col-sm-2"><strong>Error:</strong> {{eo.error.error_id}}</div>
                 </div>
                 <div class="row container"><div class="col-sm-12 newlines">{{eo.message}}</div></div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
