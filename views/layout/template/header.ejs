@@ -7,12 +7,14 @@
         </head>
         <body>
 
-            <nav class="navbar navbar-expand-lg">
+            <header class="navbar navbar-expand-lg">
                 <div class="container-fluid">
-                    <div class="navbar-header">
-                        <a class="navbar-brand" href="/">Dyspro</a>
-                        <span class="navbar-text">/ Error Reporter</span>
-                    </div>
+                    <a href="/">
+                        <%- include("../svg/dyspro.svg") %>
+                        <div class="navbar-header">
+                            <span class="navbar-text">/ System Monitor</span>
+                        </div>
+                    </a>
                     <% if (! userId) { %>
                     <form class="form-inline" method="post" action="/login">
                         <input type="text" placeholder="Email" class="form-control mr-2" name="email" required/>
@@ -33,7 +35,7 @@
                     </ul>
                     <% } %>
                 </div>
-            </nav>
+            </header>
 
             <% if (errorMessage) { %>
             <div class="container alert alert-danger alert-dismissible fade show" role="alert">
