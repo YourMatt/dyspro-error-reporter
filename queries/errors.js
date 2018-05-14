@@ -12,8 +12,10 @@ exports.get = function (errorId, callback) {
 
     db.selectSingle({
             sql:
-            "SELECT     ErrorId, AccountId, Product, StackTrace " +
-            "FROM       Errors " +
+            "SELECT     e.ErrorId, e.AccountId, e.ProductId, e.StackTrace " +
+            ",          p.Name AS ProductName " +
+            "FROM       Errors e " +
+            "INNER JOIN Products p ON p.ProductId = e.ProductId " +
             "WHERE      ErrorId = ? ",
             values: [
                 errorId
@@ -24,7 +26,8 @@ exports.get = function (errorId, callback) {
 
             let error = new models.Error(
                 e.AccountId,
-                e.Product,
+                e.ProductId,
+                e.ProductName,
                 e.StackTrace,
                 e.ErrorId
             );
@@ -47,11 +50,11 @@ exports.getIdByProductAndStackTrace = function (errorData, callback) {
             "SELECT     ErrorId " +
             "FROM       Errors " +
             "WHERE      AccountId = ? " +
-            "AND        Product = ? " +
+            "AND        ProductId = ? " +
             "AND        MD5(StackTrace) = MD5(?) ",
             values: [
                 errorData.accountId,
-                errorData.product,
+                errorData.productId,
                 errorData.stackTrace
             ]
         },
@@ -78,11 +81,11 @@ exports.create = function (error, callback) {
                 {
                     sql:
                     "INSERT INTO    Errors " +
-                    "(              AccountId, Product, StackTrace) " +
+                    "(              AccountId, ProductId, StackTrace) " +
                     "VALUES (       ?, ?, ?) ",
                     values: [
                         error.accountId,
-                        error.product,
+                        error.productId,
                         error.stackTrace
                     ]
                 },

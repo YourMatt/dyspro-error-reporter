@@ -6,10 +6,12 @@
 
 module.exports = {
     accounts: require("./accounts"),
+    environments: require("./environments"),
     errors: require("./errors"),
     errorAttachments: require("./errorattachments"),
     errorNotes: require("./errornotes"),
     errorOccurrences: require("./erroroccurrences"),
     monitors: require("./monitors"),
+    products: require("./products"),
     users: require("./users")
 };

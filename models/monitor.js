@@ -3,12 +3,12 @@
  * MONITOR MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities");
+const utils = require("../utilities");
 
-var self = function (accountId, product, environment, endpointUri, intervalSeconds, monitorId) {
+let self = function (accountId, productId, environmentId, endpointUri, intervalSeconds, monitorId) {
     this.accountId = utils.toInt(accountId);
-    this.product = product;
-    this.environment = environment;
+    this.productId = utils.toInt(productId);
+    this.environmentId = utils.toInt(environmentId);
     this.endpointUri = endpointUri;
     this.intervalSeconds = utils.toInt(intervalSeconds);
     this.monitorId = utils.toInt(monitorId);
@@ -17,23 +17,21 @@ var self = function (accountId, product, environment, endpointUri, intervalSecon
 
     this.isValid = function () {
 
-        var missingFields = [];
-        var maxLengthExceededFields = [];
-        var outOfBoundsFields = [];
+        let missingFields = [];
+        let maxLengthExceededFields = [];
+        let outOfBoundsFields = [];
 
-        if (!accountId) missingFields.push("accountId");
+        if (!this.accountId) missingFields.push("accountId");
 
-        if (!product) missingFields.push("product");
-        else if (product.length > 50) maxLengthExceededFields.push("product");
+        if (!this.productId) missingFields.push("productId");
 
-        if (!environment) missingFields.push("environment");
-        else if (environment.length > 25) maxLengthExceededFields.push("environment");
+        if (!this.environmentId) missingFields.push("environmentId");
 
-        if (!endpointUri) missingFields.push("endpointUri");
-        else if (endpointUri.length > 500) maxLengthExceededFields.push("endpointUri");
+        if (!this.endpointUri) missingFields.push("endpointUri");
+        else if (this.endpointUri.length > 500) maxLengthExceededFields.push("endpointUri");
 
-        if (!intervalSeconds) missingFields.push("intervalSeconds");
-        else if (intervalSeconds < 1 || intervalSeconds >= (60 * 60 * 24)) outOfBoundsFields.push("intervalSeconds");
+        if (!this.intervalSeconds) missingFields.push("intervalSeconds");
+        else if (this.intervalSeconds < 1 || this.intervalSeconds >= (60 * 60 * 24)) outOfBoundsFields.push("intervalSeconds");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

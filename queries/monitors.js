@@ -3,7 +3,7 @@
  * DATABASE INTERACTION FOR MONITORS
  *
  **********************************************************************************************************************/
-var db = require("../databaseaccessor"),
+const db = require("../databaseaccessor"),
     models = require("../models/all");
 
 // Loads a single monitor.
@@ -13,7 +13,7 @@ exports.get = function(monitorId, callback) {
     db.selectSingle(
         {
             sql:
-            "SELECT     MonitorId, AccountId, Product, Environment, EndpointUri, IntervalSeconds " +
+            "SELECT     MonitorId, AccountId, ProductId, EnvironmentId, EndpointUri, IntervalSeconds " +
             "FROM       Monitors " +
             "WHERE      MonitorId = ? ",
             values: [
@@ -25,8 +25,8 @@ exports.get = function(monitorId, callback) {
 
             let monitor = new models.Monitor(
                 m.AccountId,
-                m.Product,
-                m.Environment,
+                m.ProductId,
+                m.EnvironmentId,
                 m.EndpointUri,
                 m.IntervalSeconds,
                 m.MonitorId
@@ -45,10 +45,10 @@ exports.getAllByAccountId = function(accountId, callback) {
     db.selectMultiple(
         {
             sql:
-            "SELECT     MonitorId, AccountId, Product, Environment, EndpointUri, IntervalSeconds " +
+            "SELECT     MonitorId, AccountId, ProductId, EnvironmentId, EndpointUri, IntervalSeconds " +
             "FROM       Monitors " +
             "WHERE      AccountId = ? " +
-            "ORDER BY   Product ASC ",
+            "ORDER BY   MonitorId ASC ",
             values: [
                 accountId
             ]
@@ -60,8 +60,8 @@ exports.getAllByAccountId = function(accountId, callback) {
             for (let i = 0; i < m.length; i++) {
                 monitors.push(new models.Monitor(
                     m[i].AccountId,
-                    m[i].Product,
-                    m[i].Environment,
+                    m[i].ProductId,
+                    m[i].EnvironmentId,
                     m[i].EndpointUri,
                     m[i].IntervalSeconds,
                     m[i].MonitorId
@@ -82,12 +82,12 @@ exports.create = function(monitor, callback) {
         {
             sql:
             "INSERT INTO    Monitors " +
-            "(              AccountId, Product, Environment, EndpointUri, IntervalSeconds) " +
+            "(              AccountId, ProductId, EnvironmentId, EndpointUri, IntervalSeconds) " +
             "VALUES (       ?, ?, ?, ?, ?) ",
             values: [
                 monitor.accountId,
-                monitor.product,
-                monitor.environment,
+                monitor.productId,
+                monitor.environmentId,
                 monitor.endpointUri,
                 monitor.intervalSeconds
             ]
@@ -105,12 +105,12 @@ exports.update = function(monitor, callback) {
         {
             sql:
             "UPDATE Monitors " +
-            "SET    AccountId = ?, Product = ?, Environment = ?, EndpointUri = ?, IntervalSeconds = ? " +
+            "SET    AccountId = ?, ProductId = ?, EnvironmentId = ?, EndpointUri = ?, IntervalSeconds = ? " +
             "WHERE  MonitorId = ? ",
             values: [
                 monitor.accountId,
-                monitor.product,
-                monitor.environment,
+                monitor.productId,
+                monitor.environmentId,
                 monitor.endpointUri,
                 monitor.intervalSeconds,
                 monitor.monitorId

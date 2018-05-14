@@ -50,7 +50,7 @@ exports.renderHome = function (req, res) {
 exports.renderDashboard = function (req, res) {
     if (!sessionManager.loggedIn()) return res.redirect("/");
 
-    queries.accounts.getEnvironments (sessionManager.data.user.accountId, function (environments) {
+    queries.environments.getAllByAccountId(sessionManager.data.user.accountId, function(environments) {
 
         pageUtils.renderPage(res, "dashboard.ejs", {
             jsFiles: ["errors.js", "dashboard.js"],

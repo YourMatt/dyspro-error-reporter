@@ -3,9 +3,9 @@
  * USER MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities");
+const utils = require("../utilities");
 
-var self = function (accountId, name, email, phone, password, createDate, userId) {
+let self = function (accountId, name, email, phone, password, createDate, userId) {
     this.accountId = utils.toInt(accountId);
     this.name = name;
     this.email = email;
@@ -18,19 +18,19 @@ var self = function (accountId, name, email, phone, password, createDate, userId
 
     this.isValid = function () {
 
-        var missingFields = [];
-        var maxLengthExceededFields = [];
-        var outOfBoundsFields = [];
+        let missingFields = [];
+        let maxLengthExceededFields = [];
+        let outOfBoundsFields = [];
 
-        if (!accountId) missingFields.push("accountId");
+        if (!this.accountId) missingFields.push("accountId");
 
-        if (!name) missingFields.push("name");
-        else if (name.length > 50) maxLengthExceededFields.push("name");
+        if (!this.name) missingFields.push("name");
+        else if (this.name.length > 50) maxLengthExceededFields.push("name");
 
-        if (!email) missingFields.push("email");
-        else if (email.length > 50) maxLengthExceededFields.push("email");
+        if (!this.email) missingFields.push("email");
+        else if (this.email.length > 50) maxLengthExceededFields.push("email");
 
-        if (phone.length !== 10) outOfBoundsFields.push("phone");
+        if (this.phone && this.phone.length !== 10) outOfBoundsFields.push("phone");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

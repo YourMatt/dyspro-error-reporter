@@ -7,8 +7,8 @@
     <ul class="nav nav-tabs">
         <li class="nav-item"><span class="navbar-text ml-3 mr-3">Environment</span></li>
         <% for (var i = 0; i < environments.length; i++) { %>
-        <li class="nav-item <% if (selectedEnvironment == environments[i] ) { %> active<% } %>" environment="<%= environments[i] %>">
-            <a class="nav-link" href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i] %></a>
+        <li class="nav-item <% if (selectedEnvironment.environmentId == environments[i].environmentId ) { %> active<% } %>" environment="<%= environments[i].name %>">
+            <a class="nav-link" href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i].name %></a>
         </li>
         <% } %>
     </ul>

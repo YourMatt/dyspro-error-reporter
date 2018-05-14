@@ -21,26 +21,48 @@ CREATE TABLE  Users
 ,             PRIMARY KEY (UserId)
 ,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
 
+-- Products are an identifier for scoping data to a given logical product.
+CREATE TABLE  Products
+(             ProductId   INT NOT NULL AUTO_INCREMENT
+,             AccountId   INT NOT NULL
+,             Name        VARCHAR(50) NOT NULL
+,             Sequence    INT NOT NULL
+,             CreateDate  TIMESTAMP NOT NULL
+,             PRIMARY KEY (ProductId)
+,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
+
+-- Environments are an identifier for scoping data to a given instance of the product.
+CREATE TABLE  Environments
+(             EnvironmentId INT NOT NULL AUTO_INCREMENT
+,             AccountId     INT NOT NULL
+,             Name          VARCHAR(25) NOT NULL
+,             Sequence      INT NOT NULL
+,             CreateDate    TIMESTAMP NOT NULL
+,             PRIMARY KEY   (EnvironmentId)
+,             FOREIGN KEY   (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
+
 -- Errors are a unique definition for a particular (possibly reoccurring) error that is only stored once.
 CREATE TABLE  Errors
 (             ErrorId     INT NOT NULL AUTO_INCREMENT
 ,             AccountId   INT NOT NULL
-,             Product     VARCHAR(50) NOT NULL
+,             ProductId   INT NOT NULL
 ,             StackTrace  MEDIUMTEXT
 ,             PRIMARY KEY (ErrorId)
-,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
+,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE
+,             FOREIGN KEY (ProductId) REFERENCES Products(ProductId) ON DELETE CASCADE);
 
 -- Provides information about a single occurrence of a particular error.
 CREATE TABLE  ErrorOccurrences
 (             ErrorOccurrenceId INT NOT NULL AUTO_INCREMENT
 ,             ErrorId           INT NOT NULL
-,             Environment       VARCHAR(25) NOT NULL
+,             EnvironmentId     INT NOT NULL
 ,             Message           TEXT
 ,             Server            VARCHAR(50)
 ,             UserName          VARCHAR(50)
 ,             Date              TIMESTAMP NOT NULL
 ,             PRIMARY KEY (ErrorOccurrenceId)
-,             FOREIGN KEY (ErrorId) REFERENCES Errors(ErrorId) ON DELETE CASCADE);
+,             FOREIGN KEY (ErrorId) REFERENCES Errors(ErrorId) ON DELETE CASCADE
+,             FOREIGN KEY (EnvironmentId) REFERENCES Environments(EnvironmentId) ON DELETE CASCADE);
 
 -- Files provided with the error package.
 CREATE TABLE  ErrorAttachments
@@ -66,12 +88,14 @@ CREATE TABLE  ErrorNotes
 CREATE TABLE  Monitors
 (             MonitorId       INT NOT NULL AUTO_INCREMENT
 ,             AccountId       INT NOT NULL
-,             Product         VARCHAR(50) NOT NULL
-,             Environment     VARCHAR(25) NOT NULL
+,             ProductId       INT NOT NULL
+,             EnvironmentId   INT NOT NULL
 ,             EndpointUri     VARCHAR(500) NOT NULL
 ,             IntervalSeconds INT NOT NULL
 ,             PRIMARY KEY (MonitorId)
-,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE);
+,             FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId) ON DELETE CASCADE
+,             FOREIGN KEY (ProductId) REFERENCES Products(ProductId) ON DELETE CASCADE
+,             FOREIGN KEY (EnvironmentId) REFERENCES Environments(EnvironmentId) ON DELETE CASCADE);
 
 -- Monitoring results.
 CREATE TABLE  MonitorResults

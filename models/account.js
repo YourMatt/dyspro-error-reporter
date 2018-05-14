@@ -3,9 +3,9 @@
  * ACCOUNT MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities");
+const utils = require("../utilities");
 
-var self = function (name, apiKey, createDate, accountId) {
+let self = function (name, apiKey, createDate, accountId) {
     this.name = name;
     this.apiKey = apiKey;
     this.createDate = createDate;

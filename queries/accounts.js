@@ -98,39 +98,6 @@ exports.getAll = function(callback) {
 
 };
 
-// Finds all environments that have been used within the account.
-// callback(array: List of environment strings)
-exports.getEnvironments = function (accountId, callback) {
-
-    // TODO: Move these into a separate table which will allow for faster lookups and ability for user sorts
-
-    db.selectMultiple(
-        {
-            sql:
-            "SELECT     DISTINCT eo.Environment " +
-            "FROM       Errors e " +
-            "INNER JOIN ErrorOccurrences eo ON eo.ErrorId = e.ErrorId " +
-            "WHERE      e.AccountId = ? " +
-            "UNION " +
-            "SELECT     DISTINCT Environment " +
-            "FROM       Monitors " +
-            "WHERE      AccountId = ? ",
-            values: [
-                accountId,
-                accountId
-            ]
-        },
-        function (result) {
-            let environments = [];
-            for (let i = 0; i < result.length; i++) {
-                environments.push(result[i].Environment);
-            }
-            callback(environments);
-        }
-    );
-
-};
-
 // Creates a new record.
 // callback(int: Account ID)
 exports.create = function(account, callback) {

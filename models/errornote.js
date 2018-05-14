@@ -3,9 +3,9 @@
  * ERROR NOTE MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities");
+const utils = require("../utilities");
 
-var self = function (accountId, errorId, message, userId, userName, date, errorNoteId) {
+let self = function (accountId, errorId, message, userId, userName, date, errorNoteId) {
     this.accountId = utils.toInt(accountId);
     this.errorId = utils.toInt(errorId);
     this.userId = utils.toInt(userId);
@@ -18,16 +18,16 @@ var self = function (accountId, errorId, message, userId, userName, date, errorN
 
     this.isValid = function () {
 
-        var missingFields = [];
-        var maxLengthExceededFields = [];
-        var outOfBoundsFields = [];
+        let missingFields = [];
+        let maxLengthExceededFields = [];
+        let outOfBoundsFields = [];
 
-        if (!errorId) missingFields.push("errorId");
+        if (!this.errorId) missingFields.push("errorId");
 
-        if (!userId) missingFields.push("userId");
+        if (!this.userId) missingFields.push("userId");
 
-        if (!message) missingFields.push("message");
-        else if (message.length > 64000) maxLengthExceededFields.push("message");
+        if (!this.message) missingFields.push("message");
+        else if (this.message.length > 64000) maxLengthExceededFields.push("message");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

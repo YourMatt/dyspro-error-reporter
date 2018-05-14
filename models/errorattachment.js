@@ -3,8 +3,9 @@
  * ERROR ATTACHMENT MODEL
  *
  **********************************************************************************************************************/
+const utils = require("../utilities");
 
-var self = function (errorOccurrenceId, fileName, fileType, source) {
+let self = function (errorOccurrenceId, fileName, fileType, source) {
     this.errorOccurrenceId = errorOccurrenceId;
     this.fileName = fileName;
     this.fileType = fileType;
@@ -14,19 +15,19 @@ var self = function (errorOccurrenceId, fileName, fileType, source) {
 
     this.isValid = function () {
 
-        var missingFields = [];
-        var maxLengthExceededFields = [];
-        var outOfBoundsFields = [];
+        let missingFields = [];
+        let maxLengthExceededFields = [];
+        let outOfBoundsFields = [];
 
-        if (!errorOccurrenceId) missingFields.push("errorOccurrenceId");
+        if (!this.errorOccurrenceId) missingFields.push("errorOccurrenceId");
 
-        if (!fileName) missingFields.push("fileName");
-        else if (fileName.length > 50) maxLengthExceededFields.push("fileName");
+        if (!this.fileName) missingFields.push("fileName");
+        else if (this.fileName.length > 50) maxLengthExceededFields.push("fileName");
 
-        if (!fileName) missingFields.push("fileType");
-        else if (fileName.length > 25) maxLengthExceededFields.push("fileType");
+        if (!this.fileName) missingFields.push("fileType");
+        else if (this.fileName.length > 25) maxLengthExceededFields.push("fileType");
 
-        if (source.length > 16000000) maxLengthExceededFields.push("source");
+        if (this.source.length > 16000000) maxLengthExceededFields.push("source");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

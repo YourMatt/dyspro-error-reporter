@@ -13,10 +13,12 @@ exports.get = function (errorOccurrenceId, callback) {
     db.selectSingle(
         {
             sql:
-            "SELECT     eo.ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.ErrorId, e.AccountId, e.Product, e.StackTrace " +
+            "SELECT     eo.ErrorOccurrenceId, eo.EnvironmentId, eo.Message, eo.Server, eo.UserName, eo.Date " +
+            ",          e.ErrorId, e.AccountId, e.ProductId, e.StackTrace " +
+            ",          en.Name AS EnvironmentName " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
+            "INNER JOIN Environments en ON en.EnvironmentId = eo.EnvironmentId " +
             "WHERE      eo.ErrorOccurrenceId = ? ",
             values: [
                 errorOccurrenceId
@@ -27,7 +29,8 @@ exports.get = function (errorOccurrenceId, callback) {
 
             let errorOccurrence = new models.ErrorOccurrence(
                 eo.ErrorId,
-                eo.Environment,
+                eo.EnvironmentId,
+                eo.EnvironmentName,
                 eo.Message,
                 eo.Server,
                 eo.UserName,
@@ -43,21 +46,21 @@ exports.get = function (errorOccurrenceId, callback) {
 
 // Loads all error occurrences of a given error ID.
 // callback(array: List of error occurrences)
-exports.getAllByErrorAndEnvironment = function (errorId, environment, callback) {
+exports.getAllByErrorAndEnvironment = function (errorId, environmentId, callback) {
 
     db.selectMultiple(
         {
             sql:
-            "SELECT     eo.ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.ErrorId, e.AccountId, e.Product, e.StackTrace " +
+            "SELECT     eo.ErrorOccurrenceId, eo.EnvironmentId, eo.Message, eo.Server, eo.UserName, eo.Date " +
+            ",          e.ErrorId, e.AccountId, e.ProductId, e.StackTrace " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "WHERE      eo.ErrorId = ? " +
-            "AND        eo.Environment = ? " +
+            "AND        eo.EnvironmentId = ? " +
             "ORDER BY   Date DESC ",
             values: [
                 errorId,
-                environment
+                environmentId
             ]
         },
         callback
@@ -67,22 +70,24 @@ exports.getAllByErrorAndEnvironment = function (errorId, environment, callback) 
 
 // Loads the latest errors from an account.
 // callback(array: List of error occurrences)
-exports.getLatestByAccountAndEnvironment = function (accountId, environment, limit, callback) {
+exports.getLatestByAccountAndEnvironment = function (accountId, environmentId, limit, callback) {
 
     db.selectMultiple(
         {
             sql:
-            "SELECT     eo.ErrorOccurrenceId, eo.Environment, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.ErrorId, e.AccountId, e.Product, e.StackTrace " +
+            "SELECT     eo.ErrorOccurrenceId, eo.EnvironmentId, eo.Message, eo.Server, eo.UserName, eo.Date " +
+            ",          e.ErrorId, e.AccountId, e.ProductId, e.StackTrace " +
+            ",          p.Name AS ProductName " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
+            "INNER JOIN Products p ON p.ProductId = e.ProductId " +
             "WHERE      e.AccountId = ? " +
-            "AND        eo.Environment = ? " +
+            "AND        eo.EnvironmentId = ? " +
             "ORDER BY   Date DESC " +
             "LIMIT ?    OFFSET 0 ",
             values: [
                 accountId,
-                environment,
+                environmentId,
                 limit
             ]
         },
@@ -99,11 +104,11 @@ exports.create = function (errorOccurrence, callback) {
         {
             sql:
             "INSERT INTO    ErrorOccurrences " +
-            "(              ErrorId, Environment, Message, Server, UserName) " +
+            "(              ErrorId, EnvironmentId, Message, Server, UserName) " +
             "VALUES (       ?, ?, ?, ?, ?) ",
             values: [
                 errorOccurrence.errorId,
-                errorOccurrence.environment,
+                errorOccurrence.environmentId,
                 errorOccurrence.message,
                 errorOccurrence.server,
                 errorOccurrence.userName

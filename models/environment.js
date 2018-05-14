@@ -1,16 +1,16 @@
 /***********************************************************************************************************************
  *
- * ERROR MODEL
+ * ENVIRONMENT MODEL
  *
  **********************************************************************************************************************/
 const utils = require("../utilities");
 
-let self = function (accountId, productId, productName, stackTrace, errorId) {
-    this.accountId = utils.toInt(accountId);
-    this.productId = utils.toInt(productId);
-    this.productName = productName;
-    this.stackTrace = stackTrace;
-    this.errorId = utils.toInt(errorId);
+let self = function (accountId, name, sequence, createDate, environmentId) {
+    this.accountId = accountId;
+    this.name = name;
+    this.sequence = sequence;
+    this.createDate = createDate;
+    this.environmentId = utils.toInt(environmentId);
 
     this.errorMessage = "";
 
@@ -20,11 +20,10 @@ let self = function (accountId, productId, productName, stackTrace, errorId) {
         let maxLengthExceededFields = [];
         let outOfBoundsFields = [];
 
-        if (!this.accountId) missingFields.push("accountId");
+        if (!this.name) missingFields.push("name");
+        else if (this.name.length > 25) maxLengthExceededFields.push("name");
 
-        if (!this.productId) missingFields.push("productId");
-
-        if (this.stackTrace.length > 16000000) maxLengthExceededFields.push("stackTrace");
+        if (this.sequence && (this.sequence < 1 || this.sequence > 100)) outOfBoundsFields.push("sequence");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

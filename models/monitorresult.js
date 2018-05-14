@@ -3,9 +3,9 @@
  * MONITOR RESULTS MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities");
+const utils = require("../utilities");
 
-var self = function (monitorId, metric, day, rawData, averagesPer15MinuteInterval, averageForDay) {
+let self = function (monitorId, metric, day, rawData, averagesPer15MinuteInterval, averageForDay) {
     this.monitorId = utils.toInt(monitorId);
     this.metric = metric;
     this.day = day; // always YYYYMMDD format
@@ -17,23 +17,23 @@ var self = function (monitorId, metric, day, rawData, averagesPer15MinuteInterva
 
     this.isValid = function () {
 
-        var missingFields = [];
-        var maxLengthExceededFields = [];
-        var outOfBoundsFields = [];
+        let missingFields = [];
+        let maxLengthExceededFields = [];
+        let outOfBoundsFields = [];
 
-        if (!monitorId) missingFields.push("monitorId");
+        if (!this.monitorId) missingFields.push("monitorId");
 
-        if (!metric) missingFields.push("metric");
-        else if (metric.length > 50) maxLengthExceededFields.push("metric");
+        if (!this.metric) missingFields.push("metric");
+        else if (this.metric.length > 50) maxLengthExceededFields.push("metric");
 
-        if (!day) missingFields.push("day");
-        else if (day.length != 8) outOfBoundsFields.push("day");
+        if (!this.day) missingFields.push("day");
+        else if (this.day.length !== 8) outOfBoundsFields.push("day");
 
-        if (rawData.length > 16000000) maxLengthExceededFields.push("rawData");
+        if (this.rawData.length > 16000000) maxLengthExceededFields.push("rawData");
 
-        if (averagesPer15MinuteInterval.length > 1000) maxLengthExceededFields.push("averagesPer15MinuteInterval");
+        if (this.averagesPer15MinuteInterval.length > 1000) maxLengthExceededFields.push("averagesPer15MinuteInterval");
 
-        if (averageForDay.length > 25) maxLengthExceededFields.push("averageForDay");
+        if (this.averageForDay.length > 25) maxLengthExceededFields.push("averageForDay");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

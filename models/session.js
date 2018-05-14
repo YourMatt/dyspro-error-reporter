@@ -4,7 +4,7 @@
  *
  **********************************************************************************************************************/
 
-var self = function () {
+let self = function () {
     this.user = {};
     this.errorMessage = "";
     this.successMessage = "";

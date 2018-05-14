@@ -3,11 +3,12 @@
  * ERROR OCCURRENCE MODEL
  *
  **********************************************************************************************************************/
-var utils = require("../utilities");
+const utils = require("../utilities");
 
-var self = function (errorId, environment, message, server, userName, date, errorOccurrenceId) {
+let self = function (errorId, environmentId, environmentName, message, server, userName, date, errorOccurrenceId) {
     this.errorId = utils.toInt(errorId);
-    this.environment = environment;
+    this.environmentId = environmentId;
+    this.environmentName = environmentName;
     this.message = message;
     this.server = server;
     this.userName = userName;
@@ -19,20 +20,19 @@ var self = function (errorId, environment, message, server, userName, date, erro
 
     this.isValid = function () {
 
-        var missingFields = [];
-        var maxLengthExceededFields = [];
-        var outOfBoundsFields = [];
+        let missingFields = [];
+        let maxLengthExceededFields = [];
+        let outOfBoundsFields = [];
 
-        if (!errorId) missingFields.push("errorId");
+        if (!this.errorId) missingFields.push("errorId");
 
-        if (!environment) missingFields.push("environment");
-        else if (environment.length > 25) maxLengthExceededFields.push("environment");
+        if (!this.environmentId) missingFields.push("environmentId");
 
-        if (message.length > 64000) maxLengthExceededFields.push("message");
+        if (this.message.length > 64000) maxLengthExceededFields.push("message");
 
-        if (server.length > 50) maxLengthExceededFields.push("server");
+        if (this.server.length > 50) maxLengthExceededFields.push("server");
 
-        if (userName.length > 50) maxLengthExceededFields.push("userName");
+        if (this.userName.length > 50) maxLengthExceededFields.push("userName");
 
         this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
         return (this.errorMessage === "");

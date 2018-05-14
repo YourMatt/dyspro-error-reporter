@@ -79,70 +79,78 @@ exports.error = {
         let numErrors = utils.toInt(req.params.count);
         if (!numErrors) numErrors = 20;
 
-        queries.errorOccurrences.getLatestByAccountAndEnvironment(
-            exports.accountId,
-            req.params.environment,
-            numErrors,
-            function (errors) {
-                apiUtils.sendResponse(200, errors);
-            }
-        )
+        apiUtils.loadEnvironmentId(req.params.environment, function(environmentId) {
+
+            queries.errorOccurrences.getLatestByAccountAndEnvironment(
+                exports.accountId,
+                environmentId,
+                numErrors,
+                function (errors) {
+                    apiUtils.sendResponse(200, errors);
+                }
+            )
+
+        });
 
     },
 
     create: function () {
 
-        let error = new models.Error(
-            exports.accountId,
-            req.body.product,
-            req.body.stackTrace
-        );
+        apiUtils.loadProductAndEnvironmentIds(req.body.product, req.body.environment, function (productId, environmentId) {
 
-        if (!error.isValid()) return apiUtils.sendResponse(400, error.errorMessage);
-
-        queries.errors.create(error, function (errorId) {
-            if (!errorId) return apiUtils.sendResponse(500, "Error saving the error to the database.");
-
-            let errorOccurrence = new models.ErrorOccurrence(
-                errorId,
-                req.body.environment,
-                req.body.message,
-                req.body.server,
-                req.body.userName
+            let error = new models.Error(
+                exports.accountId,
+                productId, "",
+                req.body.stackTrace
             );
 
-            if (!errorOccurrence.isValid()) return apiUtils.sendResponse(400, error.errorMessage);
+            if (!error.isValid()) return apiUtils.sendResponse(400, error.errorMessage);
 
-            queries.errorOccurrences.create(errorOccurrence, function (errorOccurrenceId) {
-                if (!errorOccurrenceId) return apiUtils.sendResponse(500, "Error saving error occurrence to database. The error definition was saved.");
+            queries.errors.create(error, function (errorId) {
+                if (!errorId) return apiUtils.sendResponse(500, "Error saving the error to the database.");
 
-                // return if no files to attach to the error occurrence
-                if (!req.files.length) {
-                    return apiUtils.sendResponse(201, {
-                        errorId: errorId,
-                        errorOccurrenceId: errorOccurrenceId
-                    });
-                }
+                let errorOccurrence = new models.ErrorOccurrence(
+                    errorId,
+                    environmentId, "",
+                    req.body.message,
+                    req.body.server,
+                    req.body.userName
+                );
 
-                let numAttachmentsSaved = 0;
-                for (let i = 0; i < req.files.length; i++) {
-                    queries.errorAttachments.create(
-                        errorOccurrenceId,
-                        req.files[i],
-                        function (success) {
-                            // TODO: Handle attachment save error - currently success is always true
+                if (!errorOccurrence.isValid()) return apiUtils.sendResponse(400, error.errorMessage);
 
-                            numAttachmentsSaved++;
-                            if (numAttachmentsSaved === req.files.length) {
-                                return apiUtils.sendResponse(201, {
-                                    errorId: errorId,
-                                    errorOccurrenceId: errorOccurrenceId
-                                });
+                queries.errorOccurrences.create(errorOccurrence, function (errorOccurrenceId) {
+                    if (!errorOccurrenceId) return apiUtils.sendResponse(500, "Error saving error occurrence to database. The error definition was saved.");
+
+                    // return if no files to attach to the error occurrence
+                    if (!req.files.length) {
+                        return apiUtils.sendResponse(201, {
+                            errorId: errorId,
+                            errorOccurrenceId: errorOccurrenceId
+                        });
+                    }
+
+                    let numAttachmentsSaved = 0;
+                    for (let i = 0; i < req.files.length; i++) {
+                        queries.errorAttachments.create(
+                            errorOccurrenceId,
+                            req.files[i],
+                            function (success) {
+                                // TODO: Handle attachment save error - currently success is always true
+
+                                numAttachmentsSaved++;
+                                if (numAttachmentsSaved === req.files.length) {
+                                    return apiUtils.sendResponse(201, {
+                                        errorId: errorId,
+                                        errorOccurrenceId: errorOccurrenceId
+                                    });
+                                }
+
                             }
+                        )
+                    }
 
-                        }
-                    )
-                }
+                });
 
             });
 
@@ -399,20 +407,24 @@ exports.monitor = {
 
     create: function () {
 
-        let monitor = new models.Monitor(
-            exports.accountId,
-            req.body.product,
-            req.body.environment,
-            req.body.endpointUri,
-            req.body.intervalSeconds
-        );
+        apiUtils.loadProductAndEnvironmentIds(req.body.product, req.body.environment, function(productId, environmentId) {
 
-        if (!monitor.isValid()) return apiUtils.sendResponse(400, monitor.errorMessage);
+            let monitor = new models.Monitor(
+                exports.accountId,
+                productId,
+                environmentId,
+                req.body.endpointUri,
+                req.body.intervalSeconds
+            );
 
-        queries.monitors.create(monitor, function(monitorId) {
-            if (!monitorId) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+            if (!monitor.isValid()) return apiUtils.sendResponse(400, monitor.errorMessage);
 
-            apiUtils.sendResponse(201, {monitorId: monitorId});
+            queries.monitors.create(monitor, function (monitorId) {
+                if (!monitorId) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+
+                apiUtils.sendResponse(201, {monitorId: monitorId});
+
+            });
 
         });
 
@@ -421,25 +433,29 @@ exports.monitor = {
     update: function () {
 
         const monitorId = utils.toInt(req.params.monitorId);
-
         if (!monitorId) return apiUtils.sendResponse(400, "Missing monitor ID.");
 
-        queries.monitors.get(monitorId, function(monitor) {
+        queries.monitors.get(monitorId, function (monitor) {
             if (monitor.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Monitor does not exist.");
 
-            monitor.product = req.body.product;
-            monitor.environment = req.body.environment;
-            monitor.endpointUri = req.body.endpointUri;
-            monitor.intervalSeconds = utils.toInt(req.body.intervalSeconds);
+            apiUtils.loadProductAndEnvironmentIds(req.body.product, req.body.environment, function(productId, environmentId) {
 
-            if (!monitor.isValid()) return apiUtils.sendResponse(400, monitor.errorMessage);
+                monitor.productId = productId;
+                monitor.environmentId = environmentId;
+                monitor.endpointUri = req.body.endpointUri;
+                monitor.intervalSeconds = utils.toInt(req.body.intervalSeconds);
 
-            queries.monitors.update(monitor, function (numUpdated) {
-                if (!numUpdated) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+                if (!monitor.isValid()) return apiUtils.sendResponse(400, monitor.errorMessage);
 
-                apiUtils.sendResponse(201);
+                queries.monitors.update(monitor, function (numUpdated) {
+                    if (!numUpdated) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+
+                    apiUtils.sendResponse(201);
+
+                });
 
             });
+
         });
 
     },
@@ -490,7 +506,7 @@ const apiUtils = {
         if (!object) return object;
 
         if (Array.isArray(object)) {
-            for (var i = 0; i < object.length; i++) {
+            for (let i = 0; i < object.length; i++) {
                 delete object[i].accountId;
                 delete object[i].errorMessage;
             }
@@ -501,6 +517,76 @@ const apiUtils = {
         }
 
         return object;
+
+    },
+
+    // Finds the IDs for product and environment.
+    // callback(int: Product ID, int: Environment ID)
+    loadProductAndEnvironmentIds: function(productName, environmentName, callback) {
+
+        apiUtils.loadProductId(productName, function(productId) {
+            apiUtils.loadEnvironmentId(environmentName, function(environmentId) {
+                callback(productId, environmentId);
+            });
+        });
+
+    },
+
+    // Finds the ID for product name.
+    // callback(int: Product ID)
+    loadProductId: function(name, callback) {
+
+        queries.products.getByName(exports.accountId, name, function(product) {
+
+            // return if found a product
+            if (product.productId) return callback(product.productId);
+
+            // create the product if does not already exist
+            product.accountId = exports.accountId;
+            product.name = name;
+
+            if (!product.isValid()) return apiUtils.sendResponse(400, product.errorMessage);
+
+            queries.products.create(
+                product,
+                function (productId) {
+                    if (!productId) return apiUtils.sendResponse(500, "Error saving product to database.");
+
+                    callback(productId);
+
+                }
+            );
+
+        });
+
+    },
+
+    // Finds the ID for environment name.
+    // callback(int: Environment ID)
+    loadEnvironmentId: function(name, callback) {
+
+        queries.environments.getByName(exports.accountId, name, function(environment) {
+
+            // return if found an environment
+            if (environment.environmentId) return callback(environment.environmentId);
+
+            // create the environment if does not already exist
+            environment.accountId = exports.accountId;
+            environment.name = name;
+
+            if (!environment.isValid()) return apiUtils.sendResponse(400, environment.errorMessage);
+
+            queries.environments.create(
+                environment,
+                function (environmentId) {
+                    if (!environmentId) return apiUtils.sendResponse(500, "Error saving environment to database.");
+
+                    callback(environmentId);
+
+                }
+            );
+
+        });
 
     }
 

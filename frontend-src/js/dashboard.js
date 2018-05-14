@@ -33,7 +33,7 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
                     error_occurrence.date = moment(results[i].Date);
                     error_occurrence.error.error_id = results[i].ErrorId;
                     error_occurrence.error.account_id = results[i].AccountId;
-                    error_occurrence.error.product = results[i].Product;
+                    error_occurrence.error.product = results[i].ProductName;
                     error_occurrence.error.stack_trace = results[i].StackTrace;
 
                     $scope.error_occurrences.push(error_occurrence);
