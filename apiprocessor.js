@@ -490,7 +490,7 @@ const apiUtils = {
         res.writeHead (statusCode, {"Content-Type": "application/json"});
 
         // return if no data to send
-        if (!returnData) res.end();
+        if (!returnData) res.end("{}");
 
         // if return data is a string, assume an error message
         else if (typeof returnData === "string") res.end(JSON.stringify({error: returnData}));

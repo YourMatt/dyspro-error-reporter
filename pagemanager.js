@@ -40,9 +40,7 @@ exports.processLogout = function (req, res) {
 // Renders the home page.
 exports.renderHome = function (req, res) {
 
-    pageUtils.renderPage(res, "home.ejs", {
-        jsFiles: []
-    });
+    pageUtils.renderPage(res, "home.ejs");
 
 };
 
@@ -53,7 +51,6 @@ exports.renderDashboard = function (req, res) {
     queries.environments.getAllByAccountId(sessionManager.data.user.accountId, function(environments) {
 
         pageUtils.renderPage(res, "dashboard.ejs", {
-            jsFiles: ["errors.js", "dashboard.js"],
             environments: environments,
             selectedEnvironment: environments[0] // TODO: Pull value from settings if exists
         });
@@ -89,10 +86,8 @@ exports.renderErrorOccurrenceDetail = function (req, res) {
                 queries.errors.get(errorOccurrence.errorId, function (error) {
 
                     pageUtils.renderPage(res, "error-occurrence-detail.ejs", {
-                        jsFiles: ["errors.js", "error-detail.js"],
                         errorOccurrence: errorOccurrence,
-                        error: error,
-                        moment: moment
+                        error: error
                     });
 
                 });
@@ -113,7 +108,6 @@ exports.renderErrorDetail = function (req, res) {
         }
 
         pageUtils.renderPage(res, "error-details.ejs", {
-            jsFiles: ["errors.js", "error-detail.js"],
             error: error
         });
 
@@ -154,9 +148,7 @@ exports.renderErrorAttachment = function (req, res) {
 exports.renderSettings = function (req, res) {
     if (!sessionManager.loggedIn()) return res.redirect("/");
 
-    pageUtils.renderPage(res, "settings.ejs", {
-        jsFiles: []
-    });
+    pageUtils.renderPage(res, "settings.ejs");
 
 };
 
@@ -171,6 +163,7 @@ const pageUtils = {
         ejsVariables.errorMessage = sessionManager.getOnce("errorMessage");
         ejsVariables.successMessage = sessionManager.getOnce("successMessage");
         ejsVariables.userId = sessionManager.data.user.userId;
+        ejsVariables.moment = moment;
 
         // render the page
         res.render(ejsFileName, ejsVariables);

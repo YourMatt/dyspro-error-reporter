@@ -38,15 +38,22 @@ module.exports = function (grunt) {
                 },
                 files: {
                     "public/site.min.js": [
+                        // installed modules
                         "node_modules/jquery/dist/jquery.js",
                         "node_modules/popper.js/dist/umd/popper.js",
                         "node_modules/bootstrap/dist/js/bootstrap.js",
                         "node_modules/angular/angular.js",
                         "node_modules/moment/moment.js",
+                        "node_modules/toastr/toastr.js",
+                        // custom init
                         "frontend-src/js/init.js",
+                        // page-specific
                         "frontend-src/js/dashboard.js",
                         "frontend-src/js/errors.js",
-                        "frontend-src/js/error-detail.js"
+                        "frontend-src/js/error-detail.js",
+                        "frontend-src/js/settings.js",
+                        // general
+                        "frontend-src/js/notifications.js"
                     ]
                 }
             }

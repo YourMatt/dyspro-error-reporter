@@ -1,9 +1,68 @@
 <%- include("template/header") %>
+<div ng-controller="SettingsController">
 
-<div class="jumbotron">
-    <h1>Settings</h1>
-    <p>Stub page for settings.</p>
+    <div class="jumbotron">
+        <h1>Settings</h1>
 
+        <div class="form-group">
+            <label for="setting-account-name">Account Name</label>
+            <input id="setting-account-name" class="form-control" value="test" readonly />
+            <small class="form-text text-muted">This is also your API user. Changing this will require updates to your auth strings.</small>
+        </div>
+        <div class="form-group">
+            <label for="setting-api-key">API Key</label>
+            <input id="setting-api-key" class="form-control" value="test" readonly />
+        </div>
+    </div>
+
+    <div class="container">
+        <nav>
+            <div class="nav nav-tabs">
+                <a class="nav-item nav-link active" id="nav-tab-user" data-toggle="tab" href="#nav-user">User</a>
+                <a class="nav-item nav-link" id="nav-tab-monitoring" data-toggle="tab" href="#nav-monitoring">Monitoring</a>
+            </div>
+        </nav>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="nav-user">
+
+                <form>
+
+                    <h2>User Settings</h2>
+                    <div class="form-group">
+                        <label for="setting-user-name">Full Name</label>
+                        <input id="setting-user-name" class="form-control" placeholder="First Last" ng-model="user.name" required />
+                        <small class="form-text text-muted">Your team-mates will see updates from this name when leaving notes.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-user-email">Email Address</label>
+                        <input id="setting-user-email" class="form-control" type="email" placeholder="name@dyspro.net" ng-model="user.email" required />
+                        <small class="form-text text-muted">This is your login user name and can be used for error notifications.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-user-phone">Phone Number</label>
+                        <input id="setting-user-phone" class="form-control" type="tel" placeholder="888-555-1234" ng-model="user.phone" />
+                        <small class="form-text text-muted">Provide your phone number to enable text-based notifications.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" ng-click="saveUser()">Save</button>
+
+                </form>
+
+            </div>
+            <div class="tab-pane fade" id="nav-monitoring">
+
+                monitoring form
+
+            </div>
+        </div>
+    </div>
+
+    <div id="account-metadata" class="d-none">
+        <userid><%= userId %></userid>
+    </div>
+
+</div>
+<!--
 <form>
     <div class="input-group">
         <input type="text" class="form-control" aria-label="Text input with dropdown button">
@@ -15,7 +74,6 @@
         </div>
     </div>
 </form>
-
-</div>
+-->
 
 <%- include("template/footer") %>

@@ -26,6 +26,9 @@
 @import "../../node_modules/bootstrap/scss/type";
 @import "../../node_modules/bootstrap/scss/utilities";
 
+// add toast styling
+@import "../../node_modules/toastr/toastr";
+
 // load all bootstrap modules - enable only when need troubleshooting bootstrap error
 //@import "../../node_modules/bootstrap/scss/bootstrap";
 
