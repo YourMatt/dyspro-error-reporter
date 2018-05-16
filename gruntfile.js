@@ -45,6 +45,8 @@ module.exports = function (grunt) {
                         "node_modules/angular/angular.js",
                         "node_modules/moment/moment.js",
                         "node_modules/toastr/toastr.js",
+                        // third-party scripts not available through npm
+                        "frontend-src/js/plugins/jquery.mask.js",
                         // custom init
                         "frontend-src/js/init.js",
                         // page-specific

@@ -25,26 +25,43 @@
         <div class="tab-content">
             <div class="tab-pane fade show active" id="nav-user">
 
-                <form>
+                <form id="form-user">
 
-                    <h2>User Settings</h2>
                     <div class="form-group">
                         <label for="setting-user-name">Full Name</label>
-                        <input id="setting-user-name" class="form-control" placeholder="First Last" ng-model="user.name" required />
+                        <input id="setting-user-name" class="form-control" placeholder="First Last" ng-model="user.name" maxlength="50" required />
                         <small class="form-text text-muted">Your team-mates will see updates from this name when leaving notes.</small>
                     </div>
-                    <div class="form-group">
-                        <label for="setting-user-email">Email Address</label>
-                        <input id="setting-user-email" class="form-control" type="email" placeholder="name@dyspro.net" ng-model="user.email" required />
-                        <small class="form-text text-muted">This is your login user name and can be used for error notifications.</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="setting-user-phone">Phone Number</label>
-                        <input id="setting-user-phone" class="form-control" type="tel" placeholder="888-555-1234" ng-model="user.phone" />
-                        <small class="form-text text-muted">Provide your phone number to enable text-based notifications.</small>
+
+                    <div class="row">
+                        <div class="col form-group">
+                            <label for="setting-user-email">Email Address</label>
+                            <input id="setting-user-email" class="form-control" type="email" placeholder="name@dyspro.net" ng-model="user.email" maxlength="50" required />
+                            <small class="form-text text-muted">This is your login user name and can be used for error notifications.</small>
+                        </div>
+                        <div class="col form-group">
+                            <label for="setting-user-phone">Phone Number</label>
+                            <input id="setting-user-phone" class="form-control" type="tel" placeholder="888-555-1234" ng-model="user.phone" maxlength="12" />
+                            <small class="form-text text-muted">Provide your phone number to enable text-based notifications.</small>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" ng-click="saveUser()">Save</button>
+                    <hr/>
+
+                    <div class="row">
+                        <div class="col form-group">
+                            <label for="setting-user-phone">Current Password</label>
+                            <input id="setting-user-password-current" class="form-control" type="password" placeholder="" />
+                            <small class="form-text text-muted">Enter if changing your password.</small>
+                        </div>
+                        <div class="col form-group">
+                            <label for="setting-user-phone">New Password</label>
+                            <input id="setting-user-password-new" class="form-control" type="password" placeholder="" minlength="7" />
+                            <small class="form-text text-muted">Just make sure it's 7 or more characters</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" ng-click="saveUser()" ng-disabled="isFormSubmitDisabled">Save</button>
 
                 </form>
 

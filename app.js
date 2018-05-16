@@ -67,6 +67,7 @@ app.delete  ("/api/monitor/:monitorId", api.monitor.delete);
 app.get     ("/api/user/:userId", api.user.getSingle);
 app.get     ("/api/users", api.user.getAllInAccount);
 app.post    ("/api/user", api.user.create);
+app.post    ("/api/user/authenticate", api.user.authenticate);
 app.put     ("/api/user/:userId", api.user.update);
 app.delete  ("/api/user/:userId", api.user.delete);
 

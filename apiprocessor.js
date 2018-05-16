@@ -309,6 +309,27 @@ exports.user = {
 
     },
 
+    authenticate: function () {
+
+        const email = req.body.email,
+            password = req.body.password;
+
+        if (!email) return apiUtils.sendResponse(400, "Missing email.");
+        if (!password) return apiUtils.sendResponse(400, "Missing password.");
+
+        queries.users.getByLogin(
+            req.body.email,
+            req.body.password,
+            function(user) {
+                if (!user.userId) return apiUtils.sendResponse(401, "Invalid email or password.");
+
+                apiUtils.sendResponse(200);
+
+            }
+        );
+
+    },
+
     create: function () {
 
         let user = new models.User(
