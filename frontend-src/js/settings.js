@@ -33,10 +33,15 @@ var settingsPage = {
     },
 
     updateAngularValue: function (command) {
+
+        // run the provided function to update the value
         command();
+
+        // evaluate if need to run $apply() - if left out, will generate errors when updating an existing value
         var phase = settingsPage.angularScope.$root.$$phase;
         if (phase !== "$apply" && phase !== "$digest")
             settingsPage.angularScope.$apply();
+
     },
 
     formEnableSubmit: function () {
@@ -146,7 +151,42 @@ var settingsPage = {
 
         // validate all fields
         if ($("#form-user")[0].checkValidity() === false) {
-            return;
+            return false
+        }
+
+        // if adding a new password, prompt to confirm the new password
+        var newPassword = $("#setting-user-password-new").val();
+        if (newPassword) {
+
+            var newPasswordConfirm = $("#setting-user-password-new-confirm").val();
+
+            // validate the new password confirmation if already entered
+            if (newPasswordConfirm) {
+
+                var validityPasswordMismatch = "";
+                if (newPasswordConfirm !== newPassword) {
+                    validityPasswordMismatch = "Your password does not match what was entered.";
+                }
+                $("#setting-user-password-new-confirm")[0].setCustomValidity(validityPasswordMismatch);
+
+                if ($("#form-password-confirm")[0].checkValidity() === false) {
+                    return false
+                }
+
+                $("#modal-password-confirm").modal("hide");
+
+            }
+
+            // prompt for the new password confirmation if not yet entered
+            else {
+
+                $("#modal-password-confirm").on("shown.bs.modal", function (e) {
+                    $("#setting-user-password-new-confirm").focus();
+                });
+                $("#modal-password-confirm").modal();
+                return false;
+
+            }
         }
 
         return true;

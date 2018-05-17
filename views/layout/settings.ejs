@@ -4,15 +4,13 @@
     <div class="jumbotron">
         <h1>Settings</h1>
 
-        <div class="form-group">
-            <label for="setting-account-name">Account Name</label>
-            <input id="setting-account-name" class="form-control" value="test" readonly />
-            <small class="form-text text-muted">This is also your API user. Changing this will require updates to your auth strings.</small>
-        </div>
-        <div class="form-group">
-            <label for="setting-api-key">API Key</label>
-            <input id="setting-api-key" class="form-control" value="test" readonly />
-        </div>
+        <dl class="row">
+            <dt class="col-2">Account Name</dt>
+            <dd class="col-10">test</dd>
+            <dt class="col-2">API Key</dt>
+            <dd class="col-10">test2</dd>
+        </dl>
+
     </div>
 
     <div class="container">
@@ -30,19 +28,19 @@
                     <div class="form-group">
                         <label for="setting-user-name">Full Name</label>
                         <input id="setting-user-name" class="form-control" placeholder="First Last" ng-model="user.name" maxlength="50" required />
-                        <small class="form-text text-muted">Your team-mates will see updates from this name when leaving notes.</small>
+                        <small class="form-text text-muted">Your teammates will see updates from this name when leaving notes.</small>
                     </div>
 
                     <div class="row">
                         <div class="col form-group">
                             <label for="setting-user-email">Email Address</label>
                             <input id="setting-user-email" class="form-control" type="email" placeholder="name@dyspro.net" ng-model="user.email" maxlength="50" required />
-                            <small class="form-text text-muted">This is your login user name and can be used for error notifications.</small>
+                            <small class="form-text text-muted">Your login user name and can be used for error notifications.</small>
                         </div>
                         <div class="col form-group">
                             <label for="setting-user-phone">Phone Number</label>
                             <input id="setting-user-phone" class="form-control" type="tel" placeholder="888-555-1234" ng-model="user.phone" maxlength="12" />
-                            <small class="form-text text-muted">Provide your phone number to enable text-based notifications.</small>
+                            <small class="form-text text-muted">Your phone number enables the option of text-based notifications.</small>
                         </div>
                     </div>
 
@@ -56,8 +54,8 @@
                         </div>
                         <div class="col form-group">
                             <label for="setting-user-phone">New Password</label>
-                            <input id="setting-user-password-new" class="form-control" type="password" placeholder="" minlength="7" />
-                            <small class="form-text text-muted">Just make sure it's 7 or more characters</small>
+                            <input id="setting-user-password-new" class="form-control" type="password" placeholder="" minlength="7" autocomplete="new-password" />
+                            <small class="form-text text-muted">Just make sure it's 7 or more characters.</small>
                         </div>
                     </div>
 
@@ -71,6 +69,25 @@
                 monitoring form
 
             </div>
+        </div>
+    </div>
+
+    <div id="modal-password-confirm" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <form id="form-password-confirm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">One last thing…</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Please confirm your new password.</p>
+                    <input id="setting-user-password-new-confirm" class="form-control" type="password" placeholder="" minlength="7" autocomplete="new-password" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" ng-click="saveUser()">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 
