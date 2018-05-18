@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR ERRORS
  *
  **********************************************************************************************************************/
-const db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single error definition.
 // callback(models.Error: Error data)
-exports.get = function (errorId, callback) {
+exports.get = function (db, errorId, callback) {
 
     db.selectSingle({
             sql:
@@ -40,7 +39,7 @@ exports.get = function (errorId, callback) {
 
 // Load a single error definition by product and stack trace.
 // callback(int: Error ID)
-exports.getIdByProductAndStackTrace = function (errorData, callback) {
+exports.getIdByProductAndStackTrace = function (db, errorData, callback) {
 
     // TODO: Hash the stack trace before sending to the query.
 
@@ -67,9 +66,10 @@ exports.getIdByProductAndStackTrace = function (errorData, callback) {
 
 // Creates a new record.
 // callback(int: Error ID)
-exports.create = function (error, callback) {
+exports.create = function (db, error, callback) {
 
     exports.getIdByProductAndStackTrace(
+        db,
         error,
         function (errorId) {
 

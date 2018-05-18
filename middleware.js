@@ -3,31 +3,28 @@
  * HANDLES ALL MIDDLEWARE INJECTIONS
  *
  **********************************************************************************************************************/
-const db = require("./databaseaccessor"),
+const databaseAccessor = require("./databaseaccessor"),
     sessionManager = require("./sessionmanager"),
     api = require("./apiprocessor");
 
 // Adds all middleware.
 exports.addAll = function (app) {
 
-    // load the session
+    // load the session and database connection for use by this specific request
     app.use (function (req, res, next) {
-        db.init(function(success) {
+        req.sessionManager = new sessionManager(req);
+        req.db = new databaseAccessor(function(success) {
             if (!success) return res.end("Error connecting to database.");
-
-            sessionManager.init (req);
             next ();
-
         });
     });
 
     // initialize the api processor if an api page
     app.use (function (req, res, next) {
         if (req.url.indexOf("/api/") === 0) {
-            api.init(req, res, sessionManager);
-            api.authenticate(function (accountData) {
+            api.authenticate(req, res, function (accountData) {
 
-                api.accountId = accountData.accountId;
+                req.accountId = accountData.accountId;
                 next();
 
             });
@@ -96,7 +93,7 @@ exports.addAll = function (app) {
     app.use (function (req, res, next) {
 
         res.on("finish", function () {
-            db.close();
+            req.db.close();
         });
 
         next();

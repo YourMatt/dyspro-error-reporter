@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR PRODUCTS
  *
  **********************************************************************************************************************/
-var db = require("../databaseaccessor"),
-    models = require("../models/all");
+var models = require("../models/all");
 
 // Loads a single product.
 // callback(models.Product: Product details)
-exports.get = function(productId, callback) {
+exports.get = function(db, productId, callback) {
 
     db.selectSingle(
         {
@@ -39,7 +38,7 @@ exports.get = function(productId, callback) {
 
 // Loads a single product by name.
 // callback(models.Product: Product details)
-exports.getByName = function(accountId, name, callback) {
+exports.getByName = function(db, accountId, name, callback) {
 
     db.selectSingle(
         {
@@ -72,7 +71,7 @@ exports.getByName = function(accountId, name, callback) {
 
 // Loads the next unused sequence number.
 // callback(int: New sequence number)
-exports.getNextSequence = function(accountId, callback) {
+exports.getNextSequence = function(db, accountId, callback) {
 
     db.selectSingle(
         {
@@ -96,7 +95,7 @@ exports.getNextSequence = function(accountId, callback) {
 
 // Loads all for an account.
 // callback(array: List of model.Product)
-exports.getAllByAccountId = function(accountId, callback) {
+exports.getAllByAccountId = function(db, accountId, callback) {
 
     db.selectMultiple(
         {
@@ -131,10 +130,11 @@ exports.getAllByAccountId = function(accountId, callback) {
 
 // Creates a new record.
 // callback(int: Product ID)
-exports.create = function(product, callback) {
+exports.create = function(db, product, callback) {
 
     // find the next sequence
     exports.getNextSequence(
+        db,
         product.accountId,
         function(sequence) {
             product.sequence = sequence;
@@ -161,7 +161,7 @@ exports.create = function(product, callback) {
 
 // Updates a record.
 // callback(int: Number of affected rows)
-exports.update = function(product, callback) {
+exports.update = function(db, product, callback) {
 
     db.update(
         {
@@ -183,7 +183,7 @@ exports.update = function(product, callback) {
 
 // Deletes a record.
 // callback(int: Number of affected rows)
-exports.delete = function(productId, callback) {
+exports.delete = function(db, productId, callback) {
 
     db.delete(
         {

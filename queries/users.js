@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR USERS
  *
  **********************************************************************************************************************/
-var db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single user.
 // callback(models.User: User details)
-exports.get = function(userId, callback) {
+exports.get = function(db, userId, callback) {
 
     db.selectSingle(
         {
@@ -41,7 +40,7 @@ exports.get = function(userId, callback) {
 
 // Loads a single user by email and password.
 // callback(models.User: User data)
-exports.getByLogin = function (email, password, callback) {
+exports.getByLogin = function (db, email, password, callback) {
 
     db.selectSingle(
         {
@@ -76,7 +75,7 @@ exports.getByLogin = function (email, password, callback) {
 
 // Loads all for an account.
 // callback(array: List of model.User)
-exports.getAllByAccountId = function(accountId, callback) {
+exports.getAllByAccountId = function (db, accountId, callback) {
 
     db.selectMultiple(
         {
@@ -113,7 +112,7 @@ exports.getAllByAccountId = function(accountId, callback) {
 
 // Creates a new record.
 // callback(int: User ID)
-exports.create = function(user, callback) {
+exports.create = function (db, user, callback) {
 
     db.insert(
         {
@@ -136,7 +135,7 @@ exports.create = function(user, callback) {
 
 // Updates a record.
 // callback(int: Number of affected rows)
-exports.update = function(user, callback) {
+exports.update = function (db, user, callback) {
 
     db.update(
         {
@@ -178,7 +177,7 @@ exports.update = function(user, callback) {
 
 // Deletes a record.
 // callback(int: Number of affected rows)
-exports.delete = function(userId, callback) {
+exports.delete = function (db, userId, callback) {
 
     db.delete(
         {

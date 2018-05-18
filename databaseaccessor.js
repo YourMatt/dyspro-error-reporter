@@ -1,33 +1,39 @@
+/***********************************************************************************************************************
+ *
+ * HANDLES ALL DATABASE INTERACTION
+ * This is meant to be created as an object on req, ensuring the database connection is scoped to the current request.
+ *
+ **********************************************************************************************************************/
 const mysql = require("mysql");
 
-// Creates a connection to the database.
-// callback(bool: True if successful)
-exports.init = function (callback) {
-    connection.open(callback);
-};
+// Constructor.
+// callback(bool: True if connected)
+let self = function (callback) {
 
-// Closes a connection to the database.
-exports.close = function () {
-    connection.close();
+    this.db = {}; // database connection - will be set on open
+
+    this.open(callback);
+
 };
 
 // Returns a single record from the database. If multiple records found, returns the first row.
 // callback(object: Results)
-exports.selectSingle = function (query, callback) {
+self.prototype.selectSingle = function (query, callback) {
 
-    exports.selectMultiple(query, callback, true);
+    this.selectMultiple(query, callback, true);
 
 };
 
 // Returns rows from the database.
 // callback(array: List of objects)
-exports.selectMultiple = function (query, callback, returnSingle) {
+self.prototype.selectMultiple = function (query, callback, returnSingle) {
+    let base = this;
 
-    connection.query(query, function (error, rows) {
+    this.query(query, function (error, rows) {
 
         // report error and return if error state
         if (error) {
-            connection.handleError(query, error);
+            base.handleError(query, error);
             return callback();
         }
 
@@ -39,15 +45,17 @@ exports.selectMultiple = function (query, callback, returnSingle) {
 
 };
 
+
 // Runs an insert against the database.
 // callback(int: Insert ID)
-exports.insert = function (query, callback) {
+self.prototype.insert = function (query, callback) {
+    let base = this;
 
-    connection.query(query, function (error, result) {
+    this.query(query, function (error, result) {
 
         // report error and return
         if (error) {
-            connection.handleError(query, error);
+            base.handleError(query, error);
             return callback(0);
         }
 
@@ -60,13 +68,14 @@ exports.insert = function (query, callback) {
 
 // Runs an update against the database.
 // callback(int: Number of updated rows)
-exports.update = function (query, callback) {
+self.prototype.update = function (query, callback) {
+    let base = this;
 
     // run the update
-    connection.query(query, function (error, result) {
+    this.query(query, function (error, result) {
 
         if (error) {
-            connection.handleError(query, error);
+            base.handleError(query, error);
             return callback(0);
         }
 
@@ -79,12 +88,13 @@ exports.update = function (query, callback) {
 
 // Runs a delete against the database.
 // callback(int: Number of deleted rows)
-exports.delete = function (query, callback) {
+self.prototype.delete = function (query, callback) {
+    let base = this;
 
-    connection.query(query, function (error, result) {
+    this.query(query, function (error, result) {
 
         if (error) {
-            connection.handleError(query, error);
+            base.handleError(query, error);
             return callback(0);
         }
 
@@ -95,59 +105,57 @@ exports.delete = function (query, callback) {
 
 };
 
-// Handles all interaction with the database object.
-const connection = {
+// Creates the connection to the database.
+// callback(bool: True if success)
+self.prototype.open = function (callback) {
+    let base = this;
 
-    db: {}, // database connection - will be set on open
+    // create the db connection
+    this.db = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+    });
 
-    // Creates the connection to the database.
-    // callback(bool: True if success)
-    open: function (callback) {
+    // connect to the database
+    this.db.connect(function (error) {
+        if (error) {
+            if (error) base.handleError("Connection Open Operation", error);
+            return callback(false);
+        }
 
-        // create the db connection
-        connection.db = mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME
-        });
+        callback(true);
 
-        // connect to the database
-        connection.db.connect(function (error) {
-            if (error) {
-                // TODO: write error data to logs
-                console.log("Error connecting to Db: " + error);
-                return callback(false);
-            }
-
-            callback(true);
-
-        });
-
-    },
-
-    // Runs a query against the database.
-    // callback(string: Error, object: Results)
-    query: function (query, callback) {
-
-        connection.db.query(query, callback);
-
-    },
-
-    // Closes the database connection.
-    close: function () {
-
-        connection.db.end();
-
-    },
-
-    // Logs a database error.
-    handleError: function (query, error) {
-
-        // TODO: write error data to logs
-        console.log("Error running query: " + error);
-        console.log(query);
-
-    }
+    });
 
 };
+
+// Closes the connection to the database.
+self.prototype.close = function () {
+    let base = this;
+
+    this.db.end(function (error) {
+        if (error) base.handleError("Connection Close Operation", error);
+    });
+
+};
+
+// Runs a query against the database.
+// callback(string: Error, object: Results)
+self.prototype.query = function (query, callback) {
+
+    this.db.query(query, callback);
+
+};
+
+// Handles any errors interacting with the database.
+self.prototype.handleError = function (query, error) {
+
+    // TODO: write error data to logs
+    console.log("Error running query: " + error);
+    console.log(query);
+
+};
+
+module.exports = self;

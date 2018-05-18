@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR ERROR OCCURRENCES
  *
  **********************************************************************************************************************/
-const db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single error occurrence
 // callback(models.ErrorOccurrence: Error occurrence data)
-exports.get = function (errorOccurrenceId, callback) {
+exports.get = function (db, errorOccurrenceId, callback) {
 
     db.selectSingle(
         {
@@ -46,7 +45,7 @@ exports.get = function (errorOccurrenceId, callback) {
 
 // Loads all error occurrences of a given error ID.
 // callback(array: List of error occurrences)
-exports.getAllByErrorAndEnvironment = function (errorId, environmentId, callback) {
+exports.getAllByErrorAndEnvironment = function (db, errorId, environmentId, callback) {
 
     db.selectMultiple(
         {
@@ -70,7 +69,7 @@ exports.getAllByErrorAndEnvironment = function (errorId, environmentId, callback
 
 // Loads the latest errors from an account.
 // callback(array: List of error occurrences)
-exports.getLatestByAccountAndEnvironment = function (accountId, environmentId, limit, callback) {
+exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentId, limit, callback) {
 
     db.selectMultiple(
         {
@@ -98,7 +97,7 @@ exports.getLatestByAccountAndEnvironment = function (accountId, environmentId, l
 
 // Creates a new record.
 // callback(int: Error occurrence ID)
-exports.create = function (errorOccurrence, callback) {
+exports.create = function (db, errorOccurrence, callback) {
 
     db.insert(
         {

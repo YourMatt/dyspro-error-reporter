@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR MONITORS
  *
  **********************************************************************************************************************/
-const db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single monitor.
 // callback(models.Monitor: Monitor details)
-exports.get = function(monitorId, callback) {
+exports.get = function(db, monitorId, callback) {
 
     db.selectSingle(
         {
@@ -40,7 +39,7 @@ exports.get = function(monitorId, callback) {
 
 // Loads all for an account.
 // callback(array: List of model.Monitor)
-exports.getAllByAccountId = function(accountId, callback) {
+exports.getAllByAccountId = function(db, accountId, callback) {
 
     db.selectMultiple(
         {
@@ -76,7 +75,7 @@ exports.getAllByAccountId = function(accountId, callback) {
 
 // Creates a new record.
 // callback(int: Monitor ID)
-exports.create = function(monitor, callback) {
+exports.create = function(db, monitor, callback) {
 
     db.insert(
         {
@@ -99,7 +98,7 @@ exports.create = function(monitor, callback) {
 
 // Updates a record.
 // callback(int: Number of affected rows)
-exports.update = function(monitor, callback) {
+exports.update = function(db, monitor, callback) {
 
     db.update(
         {
@@ -123,7 +122,7 @@ exports.update = function(monitor, callback) {
 
 // Deletes a record.
 // callback(int: Number of affected rows)
-exports.delete = function(monitorId, callback) {
+exports.delete = function(db, monitorId, callback) {
 
     db.delete(
         {

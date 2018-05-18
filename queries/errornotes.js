@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR ERROR NOTES
  *
  **********************************************************************************************************************/
-const db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single error note.
 // callback(models.ErrorNote: Error note details)
-exports.get = function(errorNoteId, callback) {
+exports.get = function(db, errorNoteId, callback) {
 
     db.selectSingle(
         {
@@ -43,7 +42,7 @@ exports.get = function(errorNoteId, callback) {
 
 // Loads all for a given error.
 // callback(array: List of model.ErrorNote)
-exports.getAllByErrorId = function(errorId, callback) {
+exports.getAllByErrorId = function(db, errorId, callback) {
 
     db.selectMultiple(
         {
@@ -82,7 +81,7 @@ exports.getAllByErrorId = function(errorId, callback) {
 
 // Creates a new record.
 // callback(int: Error Note ID)
-exports.create = function(errorNote, callback) {
+exports.create = function(db, errorNote, callback) {
 
     db.insert(
         {
@@ -103,7 +102,7 @@ exports.create = function(errorNote, callback) {
 
 // Updates a record.
 // callback(int: Number of affected rows)
-exports.update = function(errorNote, callback) {
+exports.update = function(db, errorNote, callback) {
 
     db.update(
         {
@@ -124,7 +123,7 @@ exports.update = function(errorNote, callback) {
 
 // Deletes a record.
 // callback(int: Number of affected rows)
-exports.delete = function(errorNoteId, callback) {
+exports.delete = function(db, errorNoteId, callback) {
 
     db.delete(
         {

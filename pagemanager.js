@@ -6,33 +6,37 @@
 const mime = require ("mime"),
     moment = require("moment"),
     models = require("./models/all"),
-    queries = require("./queries/all"),
-    sessionManager = require("./sessionmanager");
+    queries = require("./queries/all");
 
 // Processes a login.
 exports.processLogin = function (req, res) {
 
-    queries.users.getByLogin(req.body.email, req.body.password, function (userData) {
+    queries.users.getByLogin(
+        req.db,
+        req.body.email,
+        req.body.password,
+        function (userData) {
 
-        // user not authenticated
-        if (!userData.userId) {
-            sessionManager.set("errorMessage", "Incorrect email or password.");
-            return res.redirect(req.headers.referer);
+            // user not authenticated
+            if (!userData.userId) {
+                req.sessionManager.set("errorMessage", "Incorrect email or password.");
+                return res.redirect(req.headers.referer);
+            }
+
+            // save user to session and forward to the dashboard
+            req.sessionManager.set("user", userData);
+            res.redirect("/dashboard");
+
         }
-
-        // save user to session and forward to the dashboard
-        sessionManager.set("user", userData);
-        res.redirect("/dashboard");
-
-    });
+    );
 
 };
 
 // Process a logout.
 exports.processLogout = function (req, res) {
 
-    sessionManager.set ("user", new models.User());
-    sessionManager.set ("successMessage", "You have successfully logged out.");
+    req.sessionManager.set ("user", new models.User());
+    req.sessionManager.set ("successMessage", "You have successfully logged out.");
     res.redirect ("/");
 
 };
@@ -40,38 +44,43 @@ exports.processLogout = function (req, res) {
 // Renders the home page.
 exports.renderHome = function (req, res) {
 
-    pageUtils.renderPage(res, "home.ejs");
+    pageUtils.renderPage(req, res, "home.ejs");
 
 };
 
 // Renders the dashboard page.
 exports.renderDashboard = function (req, res) {
-    if (!sessionManager.loggedIn()) return res.redirect("/");
+    if (!req.sessionManager.loggedIn()) return res.redirect("/");
 
-    queries.environments.getAllByAccountId(sessionManager.data.user.accountId, function(environments) {
+    queries.environments.getAllByAccountId(
+        req.db,
+        req.sessionManager.get("user.accountId"),
+        function(environments) {
 
-        pageUtils.renderPage(res, "dashboard.ejs", {
-            environments: environments,
-            selectedEnvironment: environments[0] // TODO: Pull value from settings if exists
-        });
+            pageUtils.renderPage(req, res, "dashboard.ejs", {
+                environments: environments,
+                selectedEnvironment: environments[0] // TODO: Pull value from settings if exists
+            });
 
-    });
+        }
+    );
 
 };
 
 // Renders the error occurrence detail page.
 exports.renderErrorOccurrenceDetail = function (req, res) {
-    if (!sessionManager.loggedIn()) return res.redirect("/");
+    if (!req.sessionManager.loggedIn()) return res.redirect("/");
 
     // load the error occurrence data
-    queries.errorOccurrences.get(req.params.errorOccurrenceId, function (errorOccurrence) {
+    queries.errorOccurrences.get(req.db, req.params.errorOccurrenceId, function (errorOccurrence) {
         if (!errorOccurrence) {
-            sessionManager.set("errorMessage", "Error occurrence not found.");
+            req.sessionManager.set("errorMessage", "Error occurrence not found.");
             return res.redirect(req.headers.referer);
         }
 
         // load the attachments for the error occurrence
         queries.errorAttachments.getAllByErrorOccurrence(
+            req.db,
             errorOccurrence.errorOccurrenceId,
             function (attachments) {
                 errorOccurrence.attachments = attachments;
@@ -83,14 +92,19 @@ exports.renderErrorOccurrenceDetail = function (req, res) {
                 catch (e) {}
 
                 // load the error details
-                queries.errors.get(errorOccurrence.errorId, function (error) {
+                queries.errors.get(
+                    req.db,
+                    errorOccurrence.errorId,
+                    function (error) {
 
-                    pageUtils.renderPage(res, "error-occurrence-detail.ejs", {
-                        errorOccurrence: errorOccurrence,
-                        error: error
-                    });
+                        pageUtils.renderPage(req, res, "error-occurrence-detail.ejs", {
+                            errorOccurrence: errorOccurrence,
+                            error: error
+                        });
 
-                });
+                    }
+                );
+
             }
         );
     });
@@ -98,26 +112,30 @@ exports.renderErrorOccurrenceDetail = function (req, res) {
 
 // Renders the error detail page.
 exports.renderErrorDetail = function (req, res) {
-    if (!sessionManager.loggedIn()) return res.redirect("/");
+    if (!req.sessionManager.loggedIn()) return res.redirect("/");
 
     // load the error data
-    queries.errors.get(req.params.errorId, function (error) {
-        if (!error) {
-            sessionManager.set("errorMessage", "Error not found.");
-            return res.redirect(req.headers.referer);
+    queries.errors.get(
+        req.db,
+        req.params.errorId,
+        function (error) {
+            if (!error) {
+                req.sessionManager.set("errorMessage", "Error not found.");
+                return res.redirect(req.headers.referer);
+            }
+
+            pageUtils.renderPage(req, res, "error-details.ejs", {
+                error: error
+            });
         }
-
-        pageUtils.renderPage(res, "error-details.ejs", {
-            error: error
-        });
-
-    });
+    );
 
 };
 
 // Renders an error attachment source file.
 exports.renderErrorAttachment = function (req, res) {
     queries.errorAttachments.get(
+        req.db,
         req.params.errorOccurrenceId,
         req.params.fileName,
         function (file) {
@@ -146,23 +164,23 @@ exports.renderErrorAttachment = function (req, res) {
 
 // Renders the settings page.
 exports.renderSettings = function (req, res) {
-    if (!sessionManager.loggedIn()) return res.redirect("/");
+    if (!req.sessionManager.loggedIn()) return res.redirect("/");
 
-    pageUtils.renderPage(res, "settings.ejs");
+    pageUtils.renderPage(req, res, "settings.ejs");
 
 };
 
 // Common methods to this module.
 const pageUtils = {
 
-    renderPage: function (res, ejsFileName, ejsVariables) {
+    renderPage: function (req, res, ejsFileName, ejsVariables) {
 
         // add common variables to provided object
         if (!ejsVariables) ejsVariables = {};
         ejsVariables.page = ejsFileName.replace(".ejs", "").replace("-", "");
-        ejsVariables.errorMessage = sessionManager.getOnce("errorMessage");
-        ejsVariables.successMessage = sessionManager.getOnce("successMessage");
-        ejsVariables.userId = sessionManager.data.user.userId;
+        ejsVariables.errorMessage = req.sessionManager.getOnce("errorMessage");
+        ejsVariables.successMessage = req.sessionManager.getOnce("successMessage");
+        ejsVariables.userId = req.sessionManager.get("user.userId");
         ejsVariables.moment = moment;
 
         // render the page

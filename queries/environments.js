@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR ENVIRONMENTS
  *
  **********************************************************************************************************************/
-var db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single environment.
 // callback(models.Environment: Environment details)
-exports.get = function(environmentId, callback) {
+exports.get = function(db, environmentId, callback) {
 
     db.selectSingle(
         {
@@ -39,7 +38,7 @@ exports.get = function(environmentId, callback) {
 
 // Loads a single environment by name.
 // callback(models.Environment: Environment details)
-exports.getByName = function(accountId, name, callback) {
+exports.getByName = function(db, accountId, name, callback) {
 
     db.selectSingle(
         {
@@ -72,7 +71,7 @@ exports.getByName = function(accountId, name, callback) {
 
 // Loads the next unused sequence number.
 // callback(int: New sequence number)
-exports.getNextSequence = function(accountId, callback) {
+exports.getNextSequence = function(db, accountId, callback) {
 
     db.selectSingle(
         {
@@ -96,7 +95,7 @@ exports.getNextSequence = function(accountId, callback) {
 
 // Loads all for an account.
 // callback(array: List of model.Environment)
-exports.getAllByAccountId = function(accountId, callback) {
+exports.getAllByAccountId = function(db, accountId, callback) {
 
     db.selectMultiple(
         {
@@ -131,10 +130,11 @@ exports.getAllByAccountId = function(accountId, callback) {
 
 // Creates a new record.
 // callback(int: Environment ID)
-exports.create = function(environment, callback) {
+exports.create = function(db, environment, callback) {
 
     // find the next sequence
     exports.getNextSequence(
+        db,
         environment.accountId,
         function(sequence) {
             if (!sequence) return callback(0);
@@ -162,7 +162,7 @@ exports.create = function(environment, callback) {
 
 // Updates a record.
 // callback(int: Number of affected rows)
-exports.update = function(environment, callback) {
+exports.update = function(db, environment, callback) {
 
     db.update(
         {
@@ -184,7 +184,7 @@ exports.update = function(environment, callback) {
 
 // Deletes a record.
 // callback(int: Number of affected rows)
-exports.delete = function(environmentId, callback) {
+exports.delete = function(db, environmentId, callback) {
 
     db.delete(
         {

@@ -14,22 +14,9 @@
 const models = require("./models/all"),
     queries = require("./queries/all"),
     utils = require("./utilities");
-// following are set by init
-let req = {},
-    res = {},
-    sessionManager = {};
-
-exports.accountId = 0; // set after authenticated
-
-// Initializes local variables.
-exports.init = function (initReq, initRes, initSessionManager) {
-    req = initReq;
-    res = initRes;
-    sessionManager = initSessionManager;
-};
 
 // Processes authentication requests.
-exports.authenticate = function (callback) {
+exports.authenticate = function (req, res, callback) {
 
     // load authentication data
     let header = req.headers["authorization"] || "",
@@ -41,52 +28,53 @@ exports.authenticate = function (callback) {
 
     // use auth token if provided
     if (userName && apiKey) {
-        queries.accounts.getByApiKey(userName, apiKey, callback);
+        queries.accounts.getByApiKey(req.db, userName, apiKey, callback);
     }
 
     // use session if no auth token, and user logged into the session
-    else if (sessionManager.data.user.accountId) {
+    else if (req.session.data.user.accountId) {
         let account = new models.Account(); // skipping query from DB because account ID is only needed
-        account.accountId = sessionManager.data.user.accountId;
+        account.accountId = req.session.data.user.accountId;
         callback(account);
     }
 
     // return if not authenticated
-    else apiUtils.sendResponse(401, "Could not authenticate. Check your API Key.");
+    else apiUtils.sendResponse(res, 401, "Could not authenticate. Check your API Key.");
 
 };
 
 // Processes error requests.
 exports.error = {
 
-    getSingle: function () {
+    getSingle: function (req, res) {
 
         const errorId = utils.toInt(req.params.errorId);
 
-        if (!errorId) return apiUtils.sendResponse(400, "Missing error ID.");
+        if (!errorId) return apiUtils.sendResponse(res, 400, "Missing error ID.");
 
-        queries.errors.get(errorId, function (error) {
-            if (error.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Error does not exist.");
+        queries.errors.get(req.db, errorId, function (error) {
+            if (error.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Error does not exist.");
 
-            apiUtils.sendResponse(200, error);
+            apiUtils.sendResponse(res, 200, error);
 
         });
 
     },
 
-    getLatestForEnvironment: function () {
+    getLatestForEnvironment: function (req, res) {
 
         let numErrors = utils.toInt(req.params.count);
         if (!numErrors) numErrors = 20;
 
-        apiUtils.loadEnvironmentId(req.params.environment, function(environmentId) {
+        apiUtils.loadEnvironmentId(req, res, req.params.environment, function(environmentId) {
 
             queries.errorOccurrences.getLatestByAccountAndEnvironment(
-                exports.accountId,
+                req.db,
+                req.accountId,
                 environmentId,
                 numErrors,
                 function (errors) {
-                    apiUtils.sendResponse(200, errors);
+                    apiUtils.sendResponse(res, 200, errors);
                 }
             )
 
@@ -94,20 +82,20 @@ exports.error = {
 
     },
 
-    create: function () {
+    create: function (req, res) {
 
-        apiUtils.loadProductAndEnvironmentIds(req.body.product, req.body.environment, function (productId, environmentId) {
+        apiUtils.loadProductAndEnvironmentIds(req, res, req.body.product, req.body.environment, function (productId, environmentId) {
 
             let error = new models.Error(
-                exports.accountId,
+                req.accountId,
                 productId, "",
                 req.body.stackTrace
             );
 
-            if (!error.isValid()) return apiUtils.sendResponse(400, error.errorMessage);
+            if (!error.isValid()) return apiUtils.sendResponse(res, 400, error.errorMessage);
 
-            queries.errors.create(error, function (errorId) {
-                if (!errorId) return apiUtils.sendResponse(500, "Error saving the error to the database.");
+            queries.errors.create(req.db, error, function (errorId) {
+                if (!errorId) return apiUtils.sendResponse(res, 500, "Error saving the error to the database.");
 
                 let errorOccurrence = new models.ErrorOccurrence(
                     errorId,
@@ -117,14 +105,14 @@ exports.error = {
                     req.body.userName
                 );
 
-                if (!errorOccurrence.isValid()) return apiUtils.sendResponse(400, error.errorMessage);
+                if (!errorOccurrence.isValid()) return apiUtils.sendResponse(res, 400, error.errorMessage);
 
-                queries.errorOccurrences.create(errorOccurrence, function (errorOccurrenceId) {
-                    if (!errorOccurrenceId) return apiUtils.sendResponse(500, "Error saving error occurrence to database. The error definition was saved.");
+                queries.errorOccurrences.create(req.db, errorOccurrence, function (errorOccurrenceId) {
+                    if (!errorOccurrenceId) return apiUtils.sendResponse(res, 500, "Error saving error occurrence to database. The error definition was saved.");
 
                     // return if no files to attach to the error occurrence
                     if (!req.files.length) {
-                        return apiUtils.sendResponse(201, {
+                        return apiUtils.sendResponse(res, 201, {
                             errorId: errorId,
                             errorOccurrenceId: errorOccurrenceId
                         });
@@ -133,6 +121,7 @@ exports.error = {
                     let numAttachmentsSaved = 0;
                     for (let i = 0; i < req.files.length; i++) {
                         queries.errorAttachments.create(
+                            req.db,
                             errorOccurrenceId,
                             req.files[i],
                             function (success) {
@@ -140,7 +129,7 @@ exports.error = {
 
                                 numAttachmentsSaved++;
                                 if (numAttachmentsSaved === req.files.length) {
-                                    return apiUtils.sendResponse(201, {
+                                    return apiUtils.sendResponse(res, 201, {
                                         errorId: errorId,
                                         errorOccurrenceId: errorOccurrenceId
                                     });
@@ -163,65 +152,69 @@ exports.error = {
 // Processes error note requests.
 exports.errorNotes = {
 
-    getSingle: function () {
+    getSingle: function (req, res) {
 
         const errorNoteId = utils.toInt(req.params.errorNoteId);
 
-        if (!errorNoteId) return apiUtils.sendResponse(400, "Missing error note ID.");
+        if (!errorNoteId) return apiUtils.sendResponse(res, 400, "Missing error note ID.");
 
-        queries.errorNotes.get(errorNoteId, function (errorNote) {
-            if (errorNote.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Error note does not exist.");
+        queries.errorNotes.get(req.db, errorNoteId, function (errorNote) {
+            if (errorNote.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Error note does not exist.");
 
-            apiUtils.sendResponse(200, errorNote);
+            apiUtils.sendResponse(res, 200, errorNote);
 
         });
 
     },
 
-    getAllForError: function () {
+    getAllForError: function (req, res) {
 
         const errorId = utils.toInt(req.params.errorId);
 
-        if (!errorId) return apiUtils.sendResponse(400, "Missing error ID.");
+        if (!errorId) return apiUtils.sendResponse(res, 400, "Missing error ID.");
 
-        queries.errors.get(errorId, function (error) {
-            if (error.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Error does not exist.");
+        queries.errors.get(
+            req.db,
+            errorId,
+            function (error) {
+                if (error.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Error does not exist.");
 
-            queries.errorNotes.getAllByErrorId(error.errorId, function (errorNote) {
-                apiUtils.sendResponse(200, errorNote);
-            });
+                queries.errorNotes.getAllByErrorId(req.db, error.errorId, function (errorNote) {
+                    apiUtils.sendResponse(res, 200, errorNote);
+                });
 
-        });
+            }
+        );
 
     },
 
-    create: function () {
+    create: function (req, res) {
 
         const errorId = utils.toInt(req.body.errorId),
             userId = utils.toInt(req.body.userId);
 
-        if (!errorId) return apiUtils.sendResponse(400, "Missing error ID.");
-        if (!userId) return apiUtils.sendResponse(400, "Missing user ID.");
+        if (!errorId) return apiUtils.sendResponse(res, 400, "Missing error ID.");
+        if (!userId) return apiUtils.sendResponse(res, 400, "Missing user ID.");
 
-        queries.errors.get(errorId, function(error) {
-            if (error.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Error does not exist.");
+        queries.errors.get(req.db, errorId, function(error) {
+            if (error.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Error does not exist.");
 
-            queries.users.get(userId, function(user) {
-                if (user.accountId !== exports.accountId) return apiUtils.sendResponse(403, "User does not exist.");
+            queries.users.get(req.db, userId, function(user) {
+                if (user.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "User does not exist.");
 
                 let errorNote = new models.ErrorNote(
-                    exports.accountId,
+                    req.accountId,
                     errorId,
                     req.body.message,
                     userId
                 );
 
-                if (!errorNote.isValid()) return apiUtils.sendResponse(400, errorNote.errorMessage);
+                if (!errorNote.isValid()) return apiUtils.sendResponse(res, 400, errorNote.errorMessage);
 
-                queries.errorNotes.create(errorNote, function(errorNoteId) {
-                    if (!errorNoteId) return apiUtils.sendResponse(500, "Error saving error note to database.");
+                queries.errorNotes.create(req.db, errorNote, function(errorNoteId) {
+                    if (!errorNoteId) return apiUtils.sendResponse(res, 500, "Error saving error note to database.");
 
-                    apiUtils.sendResponse(201, {errorNoteId: errorNoteId});
+                    apiUtils.sendResponse(res, 201, {errorNoteId: errorNoteId});
 
                 });
 
@@ -230,29 +223,29 @@ exports.errorNotes = {
 
     },
 
-    update: function () {
+    update: function (req, res) {
 
         const errorNoteId = utils.toInt(req.params.errorNoteId),
             userId = utils.toInt(req.body.userId);
 
-        if (!errorNoteId) return apiUtils.sendResponse(400, "Missing error note ID.");
-        if (!userId) return apiUtils.sendResponse(400, "Missing user ID.");
+        if (!errorNoteId) return apiUtils.sendResponse(res, 400, "Missing error note ID.");
+        if (!userId) return apiUtils.sendResponse(res, 400, "Missing user ID.");
 
-        queries.errorNotes.get(errorNoteId, function (errorNote) {
-            if (errorNote.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Error note does not exist.");
+        queries.errorNotes.get(req.db, errorNoteId, function (errorNote) {
+            if (errorNote.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Error note does not exist.");
 
-            queries.users.get(userId, function(user) {
-                if (user.accountId !== exports.accountId) return apiUtils.sendResponse(403, "User does not exist.");
+            queries.users.get(req.db, userId, function(user) {
+                if (user.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "User does not exist.");
 
                 errorNote.message = req.body.message;
                 errorNote.userId = userId;
 
-                if (!errorNote.isValid()) return apiUtils.sendResponse(400, errorNote.errorMessage);
+                if (!errorNote.isValid()) return apiUtils.sendResponse(res, 400, errorNote.errorMessage);
 
-                queries.errorNotes.update(errorNote, function (numUpdated) {
-                    if (!numUpdated) return apiUtils.sendResponse(500, "Error saving error note to database.");
+                queries.errorNotes.update(req.db, errorNote, function (numUpdated) {
+                    if (!numUpdated) return apiUtils.sendResponse(res, 500, "Error saving error note to database.");
 
-                    apiUtils.sendResponse(201);
+                    apiUtils.sendResponse(res, 201);
 
                 });
 
@@ -261,19 +254,19 @@ exports.errorNotes = {
 
     },
 
-    delete: function () {
+    delete: function (req, res) {
 
         const errorNoteId = utils.toInt(req.params.errorNoteId);
 
-        if (!errorNoteId) return apiUtils.sendResponse(400, "Missing error note ID.");
+        if (!errorNoteId) return apiUtils.sendResponse(res, 400, "Missing error note ID.");
 
-        queries.errorNotes.get(errorNoteId, function (errorNote) {
-            if (errorNote.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Error note does not exist.");
+        queries.errorNotes.get(req.db, errorNoteId, function (errorNote) {
+            if (errorNote.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Error note does not exist.");
 
-            queries.errorNotes.delete(req.params.errorNoteId, function (numUpdated) {
-                if (!numUpdated) return apiUtils.sendResponse(500, "Error deleting from database.");
+            queries.errorNotes.delete(req.db, req.params.errorNoteId, function (numUpdated) {
+                if (!numUpdated) return apiUtils.sendResponse(res, 500, "Error deleting from database.");
 
-                apiUtils.sendResponse(200);
+                apiUtils.sendResponse(res, 200);
 
             });
 
@@ -286,91 +279,92 @@ exports.errorNotes = {
 // Processes user requests.
 exports.user = {
 
-    getSingle: function () {
+    getSingle: function (req, res) {
 
         const userId = utils.toInt(req.params.userId);
 
-        if (!userId) return apiUtils.sendResponse(400, "Missing user ID.");
+        if (!userId) return apiUtils.sendResponse(res, 400, "Missing user ID.");
 
-        queries.users.get(userId, function(user) {
-            if (user.accountId !== exports.accountId) return apiUtils.sendResponse(403, "User does not exist.");
+        queries.users.get(req.db, userId, function(user) {
+            if (user.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "User does not exist.");
 
-            apiUtils.sendResponse(200, user);
+            apiUtils.sendResponse(res, 200, user);
 
         });
 
     },
 
-    getAllInAccount: function () {
+    getAllInAccount: function (req, res) {
 
-        queries.users.getAllByAccountId(exports.accountId, function(users) {
-            apiUtils.sendResponse(200, users);
+        queries.users.getAllByAccountId(req.db, req.accountId, function(users) {
+            apiUtils.sendResponse(res, 200, users);
         });
 
     },
 
-    authenticate: function () {
+    authenticate: function (req, res) {
 
         const email = req.body.email,
             password = req.body.password;
 
-        if (!email) return apiUtils.sendResponse(400, "Missing email.");
-        if (!password) return apiUtils.sendResponse(400, "Missing password.");
+        if (!email) return apiUtils.sendResponse(res, 400, "Missing email.");
+        if (!password) return apiUtils.sendResponse(res, 400, "Missing password.");
 
         queries.users.getByLogin(
+            req.db,
             req.body.email,
             req.body.password,
             function(user) {
-                if (!user.userId) return apiUtils.sendResponse(401, "Invalid email or password.");
+                if (!user.userId) return apiUtils.sendResponse(res, 401, "Invalid email or password.");
 
-                apiUtils.sendResponse(200);
+                apiUtils.sendResponse(res, 200);
 
             }
         );
 
     },
 
-    create: function () {
+    create: function (req, res) {
 
         let user = new models.User(
-            exports.accountId,
+            req.accountId,
             req.body.name,
             req.body.email,
             req.body.phone,
             req.body.password
         );
 
-        if (!user.isValid()) return apiUtils.sendResponse(400, user.errorMessage);
+        if (!user.isValid()) return apiUtils.sendResponse(res, 400, user.errorMessage);
 
-        queries.users.create(user, function(userId) {
-            if (!userId) return apiUtils.sendResponse(500, "Error saving user to database.");
+        queries.users.create(req.db, user, function(userId) {
+            if (!userId) return apiUtils.sendResponse(res, 500, "Error saving user to database.");
 
-            apiUtils.sendResponse(201, {userId: userId});
+            apiUtils.sendResponse(res, 201, {userId: userId});
 
         });
 
     },
 
-    update: function () {
+    update: function (req, res) {
 
         const userId = utils.toInt(req.params.userId);
 
-        if (!userId) return apiUtils.sendResponse(400, "Missing user ID.");
+        if (!userId) return apiUtils.sendResponse(res, 400, "Missing user ID.");
 
-        queries.users.get(userId, function(user) {
-            if (user.accountId !== exports.accountId) return apiUtils.sendResponse(403, "User does not exist.");
+        queries.users.get(req.db, userId, function(user) {
+            if (user.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "User does not exist.");
 
             user.name = req.body.name;
             user.email = req.body.email;
             user.phone = req.body.phone;
             user.password = req.body.password;
 
-            if (!user.isValid()) return apiUtils.sendResponse(400, user.errorMessage);
+            if (!user.isValid()) return apiUtils.sendResponse(res, 400, user.errorMessage);
 
-            queries.users.update(user, function (numUpdated) {
-                if (!numUpdated) return apiUtils.sendResponse(500, "Error saving user to database.");
+            queries.users.update(req.db, user, function (numUpdated) {
+                if (!numUpdated) return apiUtils.sendResponse(res, 500, "Error saving user to database.");
 
-                apiUtils.sendResponse(201);
+                apiUtils.sendResponse(res, 201);
 
             });
 
@@ -378,19 +372,19 @@ exports.user = {
 
     },
 
-    delete: function () {
+    delete: function (req, res) {
 
         const userId = utils.toInt(req.params.userId);
 
-        if (!userId) return apiUtils.sendResponse(400, "Missing user ID.");
+        if (!userId) return apiUtils.sendResponse(res, 400, "Missing user ID.");
 
-        queries.users.get(userId, function(user) {
-            if (user.accountId !== exports.accountId) return apiUtils.sendResponse(403, "User does not exist.");
+        queries.users.get(req.db, userId, function(user) {
+            if (user.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "User does not exist.");
 
-            queries.users.delete(user.userId, function (numUpdated) {
-                if (!numUpdated) return apiUtils.sendResponse(500, "Error deleting from database.");
+            queries.users.delete(req.db, user.userId, function (numUpdated) {
+                if (!numUpdated) return apiUtils.sendResponse(res, 500, "Error deleting from database.");
 
-                apiUtils.sendResponse(200);
+                apiUtils.sendResponse(res, 200);
 
             });
 
@@ -403,47 +397,47 @@ exports.user = {
 // Processes monitor requests.
 exports.monitor = {
 
-    getSingle: function () {
+    getSingle: function (req, res) {
 
         const monitorId = utils.toInt(req.params.monitorId);
 
-        if (!monitorId) return apiUtils.sendResponse(400, "Missing monitor ID.");
+        if (!monitorId) return apiUtils.sendResponse(res, 400, "Missing monitor ID.");
 
-        queries.monitors.get(monitorId, function(monitor) {
-            if (monitor.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Monitor does not exist.");
+        queries.monitors.get(req.db, monitorId, function(monitor) {
+            if (monitor.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Monitor does not exist.");
 
-            apiUtils.sendResponse(200, monitor);
+            apiUtils.sendResponse(res, 200, monitor);
 
         });
 
     },
 
-    getAllInAccount: function () {
+    getAllInAccount: function (req, res) {
 
-        queries.monitors.getAllByAccountId(exports.accountId, function(monitors) {
-            apiUtils.sendResponse(200, monitors);
+        queries.monitors.getAllByAccountId(req.db, req.accountId, function(monitors) {
+            apiUtils.sendResponse(res, 200, monitors);
         });
 
     },
 
-    create: function () {
+    create: function (req, res) {
 
-        apiUtils.loadProductAndEnvironmentIds(req.body.product, req.body.environment, function(productId, environmentId) {
+        apiUtils.loadProductAndEnvironmentIds(req, res, req.body.product, req.body.environment, function(productId, environmentId) {
 
             let monitor = new models.Monitor(
-                exports.accountId,
+                req.accountId,
                 productId,
                 environmentId,
                 req.body.endpointUri,
                 req.body.intervalSeconds
             );
 
-            if (!monitor.isValid()) return apiUtils.sendResponse(400, monitor.errorMessage);
+            if (!monitor.isValid()) return apiUtils.sendResponse(res, 400, monitor.errorMessage);
 
-            queries.monitors.create(monitor, function (monitorId) {
-                if (!monitorId) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+            queries.monitors.create(req.db, monitor, function (monitorId) {
+                if (!monitorId) return apiUtils.sendResponse(res, 500, "Error saving monitor to database.");
 
-                apiUtils.sendResponse(201, {monitorId: monitorId});
+                apiUtils.sendResponse(res, 201, {monitorId: monitorId});
 
             });
 
@@ -451,27 +445,27 @@ exports.monitor = {
 
     },
 
-    update: function () {
+    update: function (req, res) {
 
         const monitorId = utils.toInt(req.params.monitorId);
-        if (!monitorId) return apiUtils.sendResponse(400, "Missing monitor ID.");
+        if (!monitorId) return apiUtils.sendResponse(res, 400, "Missing monitor ID.");
 
-        queries.monitors.get(monitorId, function (monitor) {
-            if (monitor.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Monitor does not exist.");
+        queries.monitors.get(req.db, monitorId, function (monitor) {
+            if (monitor.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Monitor does not exist.");
 
-            apiUtils.loadProductAndEnvironmentIds(req.body.product, req.body.environment, function(productId, environmentId) {
+            apiUtils.loadProductAndEnvironmentIds(req, res, req.body.product, req.body.environment, function(productId, environmentId) {
 
                 monitor.productId = productId;
                 monitor.environmentId = environmentId;
                 monitor.endpointUri = req.body.endpointUri;
                 monitor.intervalSeconds = utils.toInt(req.body.intervalSeconds);
 
-                if (!monitor.isValid()) return apiUtils.sendResponse(400, monitor.errorMessage);
+                if (!monitor.isValid()) return apiUtils.sendResponse(res, 400, monitor.errorMessage);
 
-                queries.monitors.update(monitor, function (numUpdated) {
-                    if (!numUpdated) return apiUtils.sendResponse(500, "Error saving monitor to database.");
+                queries.monitors.update(req.db, monitor, function (numUpdated) {
+                    if (!numUpdated) return apiUtils.sendResponse(res, 500, "Error saving monitor to database.");
 
-                    apiUtils.sendResponse(201);
+                    apiUtils.sendResponse(res, 201);
 
                 });
 
@@ -481,19 +475,19 @@ exports.monitor = {
 
     },
 
-    delete: function () {
+    delete: function (req, res) {
 
         const monitorId = utils.toInt(req.params.monitorId);
 
-        if (!monitorId) return apiUtils.sendResponse(400, "Missing monitor ID.");
+        if (!monitorId) return apiUtils.sendResponse(res, 400, "Missing monitor ID.");
 
-        queries.monitors.get(monitorId, function(monitor) {
-            if (monitor.accountId !== exports.accountId) return apiUtils.sendResponse(403, "Monitor does not exist.");
+        queries.monitors.get(req.db, monitorId, function(monitor) {
+            if (monitor.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Monitor does not exist.");
 
-            queries.monitors.delete(req.params.monitorId, function (numUpdated) {
-                if (!numUpdated) return apiUtils.sendResponse(500, "Error deleting from database.");
+            queries.monitors.delete(req.db, req.params.monitorId, function (numUpdated) {
+                if (!numUpdated) return apiUtils.sendResponse(res, 500, "Error deleting from database.");
 
-                apiUtils.sendResponse(200);
+                apiUtils.sendResponse(res, 200);
 
             });
 
@@ -506,7 +500,7 @@ exports.monitor = {
 // Common methods to this module.
 const apiUtils = {
 
-    sendResponse: function (statusCode, returnData) {
+    sendResponse: function (res, statusCode, returnData) {
 
         res.writeHead (statusCode, {"Content-Type": "application/json"});
 
@@ -543,10 +537,10 @@ const apiUtils = {
 
     // Finds the IDs for product and environment.
     // callback(int: Product ID, int: Environment ID)
-    loadProductAndEnvironmentIds: function(productName, environmentName, callback) {
+    loadProductAndEnvironmentIds: function(req, res, productName, environmentName, callback) {
 
-        apiUtils.loadProductId(productName, function(productId) {
-            apiUtils.loadEnvironmentId(environmentName, function(environmentId) {
+        apiUtils.loadProductId(req, res, productName, function(productId) {
+            apiUtils.loadEnvironmentId(req, res, environmentName, function(environmentId) {
                 callback(productId, environmentId);
             });
         });
@@ -555,52 +549,59 @@ const apiUtils = {
 
     // Finds the ID for product name.
     // callback(int: Product ID)
-    loadProductId: function(name, callback) {
+    loadProductId: function(req, res, name, callback) {
 
-        queries.products.getByName(exports.accountId, name, function(product) {
+        queries.products.getByName(
+            req.db,
+            req.accountId,
+            name,
+            function(product) {
 
-            // return if found a product
-            if (product.productId) return callback(product.productId);
+                // return if found a product
+                if (product.productId) return callback(product.productId);
 
-            // create the product if does not already exist
-            product.accountId = exports.accountId;
-            product.name = name;
+                // create the product if does not already exist
+                product.accountId = req.accountId;
+                product.name = name;
 
-            if (!product.isValid()) return apiUtils.sendResponse(400, product.errorMessage);
+                if (!product.isValid()) return apiUtils.sendResponse(res, 400, product.errorMessage);
 
-            queries.products.create(
-                product,
-                function (productId) {
-                    if (!productId) return apiUtils.sendResponse(500, "Error saving product to database.");
+                queries.products.create(
+                    req.db,
+                    product,
+                    function (productId) {
+                        if (!productId) return apiUtils.sendResponse(res, 500, "Error saving product to database.");
 
-                    callback(productId);
+                        callback(productId);
 
-                }
-            );
+                    }
+                );
 
-        });
+            }
+        );
 
     },
 
     // Finds the ID for environment name.
     // callback(int: Environment ID)
-    loadEnvironmentId: function(name, callback) {
+    loadEnvironmentId: function(req, res, name, callback) {
 
-        queries.environments.getByName(exports.accountId, name, function(environment) {
+        queries.environments.getByName(req.db, req.accountId, name, function(environment) {
 
             // return if found an environment
             if (environment.environmentId) return callback(environment.environmentId);
 
             // create the environment if does not already exist
-            environment.accountId = exports.accountId;
+            environment.accountId = req.accountId;
             environment.name = name;
 
-            if (!environment.isValid()) return apiUtils.sendResponse(400, environment.errorMessage);
+            if (!environment.isValid()) return apiUtils.sendResponse(res, 400, environment.errorMessage);
 
             queries.environments.create(
+                req.db,
                 environment,
                 function (environmentId) {
-                    if (!environmentId) return apiUtils.sendResponse(500, "Error saving environment to database.");
+                    if (!environmentId) return apiUtils.sendResponse(res, 500, "Error saving environment to database.");
 
                     callback(environmentId);
 

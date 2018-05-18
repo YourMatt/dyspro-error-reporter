@@ -1,31 +1,49 @@
-var models = require("./models/all");
+/***********************************************************************************************************************
+ *
+ * HANDLES ALL SESSION INTERACTION
+ * This is meant to be created as an object on req, ensuring the session is always scoped to the current request.
+ *
+ **********************************************************************************************************************/
+const models = require("./models/all");
 
-var req;
-exports.init = function (init_req) {
-    req = init_req;
-    if (req.session.data) {
-        exports.data = req.session.data;
-    }
-    else {
-        exports.data = new models.Session();
-    }
-};
+// Constructor.
+let self = function (req) {
 
-exports.set = function (name, value) {
+    this.req = req; // current request is target for reading and writing session data
 
-    eval ("exports.data." + name + " = value;");
-    req.session.data = exports.data;
+    // initialize the session data if is not already set
+    if (!this.req.session.data) this.req.session.data = new models.Session();
 
 };
-exports.getOnce = function (name) {
 
-    var value;
-    eval ("value = exports.data." + name + ";");
-    eval ("exports.data." + name + " = '';");
+// Writes a value to the session data object.
+self.prototype.set = function (name, value) {
+
+    eval ("this.req.session.data." + name + " = value;");
+
+};
+
+// Retrieves a value from the session data object.
+self.prototype.get = function (name) {
+
+    let value = "";
+    eval("value = this.req.session.data." + name + ";");
     return value;
 
 };
 
-exports.loggedIn = function () {
-    return (exports.data.user.userId);
+// Retrieves a value the removes it from the session data object.
+self.prototype.getOnce = function (name) {
+
+    let value = this.get(name);
+    eval ("this.req.session.data." + name + " = '';");
+    return value;
+
 };
+
+// Checks if a user is currently logged in.
+self.prototype.loggedIn = function () {
+    return (this.req.session.data.user.userId);
+};
+
+module.exports = self;

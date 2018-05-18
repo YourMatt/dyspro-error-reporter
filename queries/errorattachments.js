@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR ERROR ATTACHMENTS
  *
  **********************************************************************************************************************/
-const db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single error attachment.
 // callback(model.ErrorAttachment: Error attachment data)
-exports.get = function (errorOccurrenceId, fileName, callback) {
+exports.get = function (db, errorOccurrenceId, fileName, callback) {
 
     db.selectSingle(
         {
@@ -40,7 +39,7 @@ exports.get = function (errorOccurrenceId, fileName, callback) {
 
 // Loads all attachments for an error occurrence.
 // callback(array: List of attachment data)
-exports.getAllByErrorOccurrence = function (errorOccurrenceId, callback) {
+exports.getAllByErrorOccurrence = function (db, errorOccurrenceId, callback) {
 
     db.selectMultiple(
         {
@@ -73,7 +72,7 @@ exports.getAllByErrorOccurrence = function (errorOccurrenceId, callback) {
 
 // Creates a new record.
 // callback(bool: True if successful)
-exports.create = function (errorOccurrenceId, errorAttachment, callback) {
+exports.create = function (db, errorOccurrenceId, errorAttachment, callback) {
 
     db.insert(
         {

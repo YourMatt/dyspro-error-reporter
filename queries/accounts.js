@@ -3,12 +3,11 @@
  * DATABASE INTERACTION FOR ACCOUNTS
  *
  **********************************************************************************************************************/
-const db = require("../databaseaccessor"),
-    models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single account.
 // callback(models.Account: Account details)
-exports.get = function(accountId, callback) {
+exports.get = function(db, accountId, callback) {
 
     db.selectSingle(
         {
@@ -38,7 +37,7 @@ exports.get = function(accountId, callback) {
 
 // Load a single account by its API key.
 // callback(models.Account: Account data)
-exports.getByApiKey = function (userName, apiKey, callback) {
+exports.getByApiKey = function (db, userName, apiKey, callback) {
 
     db.selectSingle(
         {
@@ -70,7 +69,7 @@ exports.getByApiKey = function (userName, apiKey, callback) {
 
 // Loads all.
 // callback(array: List of model.User)
-exports.getAll = function(callback) {
+exports.getAll = function(db, callback) {
 
     db.selectMultiple(
         {
@@ -100,7 +99,7 @@ exports.getAll = function(callback) {
 
 // Creates a new record.
 // callback(int: Account ID)
-exports.create = function(account, callback) {
+exports.create = function(db, account, callback) {
 
     db.insert(
         {
@@ -119,7 +118,7 @@ exports.create = function(account, callback) {
 
 // Updates a record.
 // callback(int: Number of affected rows)
-exports.update = function(account, callback) {
+exports.update = function(db, account, callback) {
 
     db.update(
         {
@@ -139,7 +138,7 @@ exports.update = function(account, callback) {
 
 // Deletes a record.
 // callback(int: Number of affected rows)
-exports.delete = function(accountId, callback) {
+exports.delete = function(db, accountId, callback) {
 
     db.delete(
         {
