@@ -12,9 +12,13 @@ exports.get = function(db, monitorId, callback) {
     db.selectSingle(
         {
             sql:
-            "SELECT     MonitorId, AccountId, ProductId, EnvironmentId, EndpointUri, IntervalSeconds " +
-            "FROM       Monitors " +
-            "WHERE      MonitorId = ? ",
+            "SELECT     m.MonitorId, m.AccountId, m.ProductId, m.EnvironmentId, m.EndpointUri, m.IntervalSeconds " +
+            ",          p.Name AS ProductName " +
+            ",          e.Name AS EnvironmentName " +
+            "FROM       Monitors m " +
+            "INNER JOIN Products p ON p.ProductId = m.ProductId " +
+            "INNER JOIN Environments e ON e.EnvironmentId = m.EnvironmentId " +
+            "WHERE      m.MonitorId = ? ",
             values: [
                 monitorId
             ]
@@ -25,7 +29,9 @@ exports.get = function(db, monitorId, callback) {
             let monitor = new models.Monitor(
                 m.AccountId,
                 m.ProductId,
+                m.ProductName,
                 m.EnvironmentId,
+                m.EnvironmentName,
                 m.EndpointUri,
                 m.IntervalSeconds,
                 m.MonitorId
@@ -44,10 +50,14 @@ exports.getAllByAccountId = function(db, accountId, callback) {
     db.selectMultiple(
         {
             sql:
-            "SELECT     MonitorId, AccountId, ProductId, EnvironmentId, EndpointUri, IntervalSeconds " +
-            "FROM       Monitors " +
-            "WHERE      AccountId = ? " +
-            "ORDER BY   MonitorId ASC ",
+            "SELECT     m.MonitorId, m.AccountId, m.ProductId, m.EnvironmentId, m.EndpointUri, m.IntervalSeconds " +
+            ",          p.Name AS ProductName " +
+            ",          e.Name AS EnvironmentName " +
+            "FROM       Monitors m " +
+            "INNER JOIN Products p ON p.ProductId = m.ProductId " +
+            "INNER JOIN Environments e ON e.EnvironmentId = m.EnvironmentId " +
+            "WHERE      m.AccountId = ? " +
+            "ORDER BY   m.MonitorId ASC ",
             values: [
                 accountId
             ]
@@ -60,7 +70,9 @@ exports.getAllByAccountId = function(db, accountId, callback) {
                 monitors.push(new models.Monitor(
                     m[i].AccountId,
                     m[i].ProductId,
+                    m[i].ProductName,
                     m[i].EnvironmentId,
+                    m[i].EnvironmentName,
                     m[i].EndpointUri,
                     m[i].IntervalSeconds,
                     m[i].MonitorId

@@ -3,7 +3,7 @@
  * DATABASE INTERACTION FOR PRODUCTS
  *
  **********************************************************************************************************************/
-var models = require("../models/all");
+const models = require("../models/all");
 
 // Loads a single product.
 // callback(models.Product: Product details)
@@ -101,7 +101,7 @@ exports.getAllByAccountId = function(db, accountId, callback) {
         {
             sql:
             "SELECT     ProductId, AccountId, Name, Sequence, CreateDate " +
-            "FROM       Product " +
+            "FROM       Products " +
             "WHERE      AccountId = ? " +
             "ORDER BY   Sequence ASC ",
             values: [

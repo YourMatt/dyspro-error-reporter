@@ -60,6 +60,7 @@ app.delete  ("/api/errornote/:errorNoteId", api.errorNotes.delete);
 // monitors
 app.get     ("/api/monitor/:monitorId", api.monitor.getSingle);
 app.get     ("/api/monitors", api.monitor.getAllInAccount);
+app.get     ("/api/monitor/test/:uri", api.monitor.testUri);
 app.post    ("/api/monitor", api.monitor.create);
 app.put     ("/api/monitor/:monitorId", api.monitor.update);
 app.delete  ("/api/monitor/:monitorId", api.monitor.delete);
@@ -70,6 +71,10 @@ app.post    ("/api/user", api.user.create);
 app.post    ("/api/user/authenticate", api.user.authenticate);
 app.put     ("/api/user/:userId", api.user.update);
 app.delete  ("/api/user/:userId", api.user.delete);
+// products
+app.get     ("/api/products", api.product.getAllInAccount);
+// environments
+app.get     ("/api/environments", api.environment.getAllInAccount);
 
 // start server
 app.listen (app.get ("port"));

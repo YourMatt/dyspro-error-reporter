@@ -12,6 +12,7 @@ module.exports = {
     ErrorNote: require("./errornote"),
     ErrorOccurrence: require("./erroroccurrence"),
     Monitor: require("./monitor"),
+    MonitorResponse: require("./monitorresponse"),
     MonitorResult: require("./monitorresult"),
     Product: require("./product"),
     Session: require("./session"),

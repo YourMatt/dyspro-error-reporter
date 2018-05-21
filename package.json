@@ -25,6 +25,7 @@
     "moment": "^2.22.1",
     "mysql": "^2.15.0",
     "popper.js": "^1.14.3",
+    "request": "^2.86.0",
     "toastr": "^2.1.4"
   },
   "devDependencies": {

@@ -13,6 +13,7 @@
  **********************************************************************************************************************/
 const models = require("./models/all"),
     queries = require("./queries/all"),
+    uriMonitor = require("./urimonitor"),
     utils = require("./utilities");
 
 // Processes authentication requests.
@@ -426,8 +427,8 @@ exports.monitor = {
 
             let monitor = new models.Monitor(
                 req.accountId,
-                productId,
-                environmentId,
+                productId, "",
+                environmentId, "",
                 req.body.endpointUri,
                 req.body.intervalSeconds
             );
@@ -491,6 +492,40 @@ exports.monitor = {
 
             });
 
+        });
+
+    },
+
+    testUri: function (req, res) {
+
+        uriMonitor.getResponse(req.params.uri, (monitorResponse) => {
+            apiUtils.sendResponse(res, 200, monitorResponse);
+        });
+
+    }
+
+};
+
+// Processes Product requests.
+exports.product = {
+
+    getAllInAccount: function (req, res) {
+
+        queries.products.getAllByAccountId(req.db, req.accountId, function(products) {
+            apiUtils.sendResponse(res, 200, products);
+        });
+
+    }
+
+};
+
+// Processes Environment requests.
+exports.environment = {
+
+    getAllInAccount: function (req, res) {
+
+        queries.environments.getAllByAccountId(req.db, req.accountId, function(environments) {
+            apiUtils.sendResponse(res, 200, environments);
         });
 
     }

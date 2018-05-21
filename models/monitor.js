@@ -5,10 +5,12 @@
  **********************************************************************************************************************/
 const utils = require("../utilities");
 
-let self = function (accountId, productId, environmentId, endpointUri, intervalSeconds, monitorId) {
+let self = function (accountId, productId, productName, environmentId, environmentName, endpointUri, intervalSeconds, monitorId) {
     this.accountId = utils.toInt(accountId);
     this.productId = utils.toInt(productId);
+    this.productName = productName;
     this.environmentId = utils.toInt(environmentId);
+    this.environmentName = environmentName;
     this.endpointUri = endpointUri;
     this.intervalSeconds = utils.toInt(intervalSeconds);
     this.monitorId = utils.toInt(monitorId);

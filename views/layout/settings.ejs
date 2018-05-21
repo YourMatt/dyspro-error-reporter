@@ -1,74 +1,143 @@
 <%- include("template/header") %>
-<div ng-controller="SettingsController">
+<div class="container" ng-controller="SettingsController">
 
-    <div class="jumbotron">
-        <h1>Settings</h1>
+    <nav>
+        <div class="nav nav-tabs">
+            <a class="nav-item nav-link active" id="nav-tab-user" data-toggle="tab" href="#nav-user">User</a>
+            <a class="nav-item nav-link" id="nav-tab-monitoring" data-toggle="tab" href="#nav-monitoring">Monitoring</a>
+        </div>
+    </nav>
 
-        <dl class="row">
-            <dt class="col-2">Account Name</dt>
-            <dd class="col-10">test</dd>
-            <dt class="col-2">API Key</dt>
-            <dd class="col-10">test2</dd>
-        </dl>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="nav-user">
 
-    </div>
+            <form id="form-user">
 
-    <div class="container">
-        <nav>
-            <div class="nav nav-tabs">
-                <a class="nav-item nav-link active" id="nav-tab-user" data-toggle="tab" href="#nav-user">User</a>
-                <a class="nav-item nav-link" id="nav-tab-monitoring" data-toggle="tab" href="#nav-monitoring">Monitoring</a>
-            </div>
-        </nav>
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="nav-user">
+                <div class="form-group">
+                    <label for="setting-user-name">Full Name</label>
+                    <input id="setting-user-name" class="form-control" placeholder="First Last" ng-model="user.name" maxlength="50" required />
+                    <small class="form-text text-muted">Your teammates will see updates from this name when leaving notes.</small>
+                </div>
 
-                <form id="form-user">
-
-                    <div class="form-group">
-                        <label for="setting-user-name">Full Name</label>
-                        <input id="setting-user-name" class="form-control" placeholder="First Last" ng-model="user.name" maxlength="50" required />
-                        <small class="form-text text-muted">Your teammates will see updates from this name when leaving notes.</small>
+                <div class="row">
+                    <div class="col form-group">
+                        <label for="setting-user-email">Email Address</label>
+                        <input id="setting-user-email" class="form-control" type="email" placeholder="name@dyspro.net" ng-model="user.email" maxlength="50" required />
+                        <small class="form-text text-muted">Your login user name and can be used for error notifications.</small>
                     </div>
-
-                    <div class="row">
-                        <div class="col form-group">
-                            <label for="setting-user-email">Email Address</label>
-                            <input id="setting-user-email" class="form-control" type="email" placeholder="name@dyspro.net" ng-model="user.email" maxlength="50" required />
-                            <small class="form-text text-muted">Your login user name and can be used for error notifications.</small>
-                        </div>
-                        <div class="col form-group">
-                            <label for="setting-user-phone">Phone Number</label>
-                            <input id="setting-user-phone" class="form-control" type="tel" placeholder="888-555-1234" ng-model="user.phone" maxlength="12" />
-                            <small class="form-text text-muted">Your phone number enables the option of text-based notifications.</small>
-                        </div>
+                    <div class="col form-group">
+                        <label for="setting-user-phone">Phone Number</label>
+                        <input id="setting-user-phone" class="form-control" type="tel" placeholder="888-555-1234" ng-model="user.phone" maxlength="12" />
+                        <small class="form-text text-muted">Your phone number enables the option of text-based notifications.</small>
                     </div>
+                </div>
 
-                    <hr/>
+                <hr/>
 
-                    <div class="row">
-                        <div class="col form-group">
-                            <label for="setting-user-phone">Current Password</label>
-                            <input id="setting-user-password-current" class="form-control" type="password" placeholder="" />
-                            <small class="form-text text-muted">Enter if changing your password.</small>
-                        </div>
-                        <div class="col form-group">
-                            <label for="setting-user-phone">New Password</label>
-                            <input id="setting-user-password-new" class="form-control" type="password" placeholder="" minlength="7" autocomplete="new-password" />
-                            <small class="form-text text-muted">Just make sure it's 7 or more characters.</small>
-                        </div>
+                <div class="row">
+                    <div class="col form-group">
+                        <label for="setting-user-phone">Current Password</label>
+                        <input id="setting-user-password-current" class="form-control" type="password" placeholder="" />
+                        <small class="form-text text-muted">Enter if changing your password.</small>
                     </div>
+                    <div class="col form-group">
+                        <label for="setting-user-phone">New Password</label>
+                        <input id="setting-user-password-new" class="form-control" type="password" placeholder="" minlength="7" autocomplete="new-password" />
+                        <small class="form-text text-muted">Just make sure it's 7 or more characters.</small>
+                    </div>
+                </div>
 
-                    <button type="submit" class="btn btn-primary" ng-click="saveUser()" ng-disabled="isFormSubmitDisabled">Save</button>
+                <button type="submit" class="btn btn-primary" ng-click="saveUser()" ng-disabled="isUserFormSubmitDisabled">Save</button>
 
-                </form>
+            </form>
 
-            </div>
-            <div class="tab-pane fade" id="nav-monitoring">
+        </div>
+        <div class="tab-pane fade" id="nav-monitoring">
 
-                monitoring form
+            <form id="form-monitor">
 
-            </div>
+                <div class="form-group">
+                    <label for="setting-monitor-endpoint-uri">Endpoint URI</label>
+                    <input id="setting-monitor-endpoint-uri" class="form-control" placeholder="https://example.com" ng-model="monitor.endpointUri" maxlength="500" required />
+                    <small class="form-text text-muted">Can be to any URL or an endpoint providing additional performance metrics.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="setting-monitor-interval">Run Interval</label>
+                    <div id="setting-monitor-interval" class="btn-group btn-group-toggle input-group" data-toggle="buttons">
+                        <label class="btn btn-secondary active">
+                            <input type="radio" id="setting-monitor-interval-option-1" name="setting-monitor-interval" value="5" autocomplete="off" checked /> 5 seconds
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" id="setting-monitor-interval-option-2" name="setting-monitor-interval" value="15" autocomplete="off" /> 15 seconds
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" id="setting-monitor-interval-option-3" name="setting-monitor-interval" value="60" autocomplete="off" /> 1 minute
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" id="setting-monitor-interval-option-4" name="setting-monitor-interval" value="3600" autocomplete="off" /> 1 hour
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" id="setting-monitor-interval-option-5" name="setting-monitor-interval" value="0" autocomplete="off" /> 1 day
+                        </label>
+                    </div>
+                    <small class="form-text text-muted">How often should this run?</small>
+                </div>
+
+                <div class="row">
+                    <div class="col form-group">
+                        <label for="setting-monitor-product">Product</label>
+                        <div class="input-group">
+                            <input id="setting-monitor-product" type="text" class="form-control">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" ng-repeat="p in products">{{p.name}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Name such as <em>Marketing Site</em> or <em>Customer Portal</em>.</small>
+                    </div>
+                    <div class="col form-group">
+                        <label for="setting-monitor-environment">Environment</label>
+                        <div class="input-group">
+                            <input id="setting-monitor-environment" type="text" class="form-control">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" ng-repeat="e in environments">{{e.name}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Name such as <em>Dev</em> or <em>Prod</em>.</small>
+                    </div>
+                </div>
+
+
+
+                <button type="submit" class="btn btn-primary" ng-click="testMonitor()" ng-disabled="isMonitorFormSubmitDisabled">Test Monitor</button>
+
+            </form>
+
+            <table id="monitor-list" class="table table-sm table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Product</th>
+                    <th>Environment</th>
+                    <th>Interval</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="m in monitors">
+                    <td>{{m.endpointUri}}</td>
+                    <td>{{m.productName}}</td>
+                    <td>{{m.environmentName}}</td>
+                    <td>{{m.intervalSeconds}}</td>
+                </tr>
+                </tbody>
+            </table>
+
         </div>
     </div>
 
@@ -85,7 +154,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" ng-click="saveUser()">Save</button>
+                    <button type="submit" class="btn btn-primary" ng-click="saveUser()" ng-disabled="isUserFormSubmitDisabled">Save</button>
                 </div>
             </form>
         </div>
