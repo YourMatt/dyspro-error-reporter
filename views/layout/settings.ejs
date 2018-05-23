@@ -65,20 +65,20 @@
                 <div class="form-group">
                     <label for="setting-monitor-interval">Run Interval</label>
                     <div id="setting-monitor-interval" class="btn-group btn-group-toggle input-group" data-toggle="buttons">
-                        <label class="btn btn-secondary active">
-                            <input type="radio" id="setting-monitor-interval-option-1" name="setting-monitor-interval" value="5" autocomplete="off" checked /> 5 seconds
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="setting-monitor-interval" value="5" autocomplete="off" /> 5 seconds
                         </label>
                         <label class="btn btn-secondary">
-                            <input type="radio" id="setting-monitor-interval-option-2" name="setting-monitor-interval" value="15" autocomplete="off" /> 15 seconds
+                            <input type="radio" name="setting-monitor-interval" value="15" autocomplete="off" /> 15 seconds
                         </label>
                         <label class="btn btn-secondary">
-                            <input type="radio" id="setting-monitor-interval-option-3" name="setting-monitor-interval" value="60" autocomplete="off" /> 1 minute
+                            <input type="radio" name="setting-monitor-interval" value="60" autocomplete="off" /> 1 minute
                         </label>
                         <label class="btn btn-secondary">
-                            <input type="radio" id="setting-monitor-interval-option-4" name="setting-monitor-interval" value="3600" autocomplete="off" /> 1 hour
+                            <input type="radio" name="setting-monitor-interval" value="3600" autocomplete="off" /> 1 hour
                         </label>
                         <label class="btn btn-secondary">
-                            <input type="radio" id="setting-monitor-interval-option-5" name="setting-monitor-interval" value="0" autocomplete="off" /> 1 day
+                            <input type="radio" name="setting-monitor-interval" value="0" autocomplete="off" /> 1 day
                         </label>
                     </div>
                     <small class="form-text text-muted">How often should this run?</small>
@@ -88,7 +88,7 @@
                     <div class="col form-group">
                         <label for="setting-monitor-product">Product</label>
                         <div class="input-group">
-                            <input id="setting-monitor-product" type="text" class="form-control">
+                            <input id="setting-monitor-product" type="text" class="form-control" ng-model="monitor.product" maxlength="50" required/>
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu">
@@ -101,7 +101,7 @@
                     <div class="col form-group">
                         <label for="setting-monitor-environment">Environment</label>
                         <div class="input-group">
-                            <input id="setting-monitor-environment" type="text" class="form-control">
+                            <input id="setting-monitor-environment" type="text" class="form-control" ng-model="monitor.environment" maxlength="50" required/>
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu">
@@ -113,9 +113,7 @@
                     </div>
                 </div>
 
-
-
-                <button type="submit" class="btn btn-primary" ng-click="testMonitor()" ng-disabled="isMonitorFormSubmitDisabled">Test Monitor</button>
+                <button type="submit" class="btn btn-primary" ng-click="saveMonitor()" ng-disabled="isMonitorFormSubmitDisabled">Save</button>
 
             </form>
 
@@ -158,6 +156,68 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <div id="modal-endpoint-uri-test" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Test Endpoint</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+
+                    <h6>
+                        Metrics
+                        <a href="javascript:" id="link-about-metrics" class="float-right">About Custom Metrics</a>
+                    </h6>
+                    <div class="row" ng-repeat="(metricName, metricValue) in monitorTestResults.responseParsed">
+                        <div class="col text-right">{{metricName}}</div>
+                        <div class="col">{{metricValue}}</div>
+                    </div>
+
+                    <h6>
+                        Response
+                        <a href="#content-monitor-response-data" id="link-toggle-response-data" class="float-right" data-toggle="collapse" aria-expanded="false" aria-controls="content-monitor-response-data">
+                            <span class="closed">Display Response Data</span>
+                            <span class="opened">Hide Response Data</span>
+                        </a>
+                    </h6>
+
+                    <div class="row">
+                        <div id="content-monitor-tested-uri" class="col">
+                            <span class="badge" ng-class="{'badge-success': (monitorTestResults.statusText == 'success'), 'badge-danger': (monitorTestResults.statusText == 'error'), 'badge-warning': (monitorTestResults.statusText == 'warning')}">{{monitorTestResults.statusCode}}</span>
+                            {{monitorTestResults.checkedUri}}
+                        </div>
+                    </div>
+                    <div id="content-monitor-response-data" class="collapse">
+                        <p>Returned {{monitorTestResults.response.length | number}} bytes of {{monitorTestResults.contentType}} data.</p>
+                        <textarea class="form-control" rows="6">{{monitorTestResults.response}}</textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" ng-click="saveMonitor()" ng-disabled="isMonitorFormSubmitDisabled">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="popover-content-about-metrics" class="d-none">
+        <p>You can specify a URI that contains additional metrics besides general response time. This may include server
+            information such as memory use and load averages, as well as application-specific metrics such as read time
+            from a specific database table.</p>
+        <p>Metrics are customizable for your use. Give a descriptive name, and this will be included with monitor
+            results on the dashboard and can be used for notification triggers. Acceptable return data can include
+            integers, percents, and boolean values.</p>
+        <p>To use custom metrics, set up an endpoint that returns a JSON object in the following example format.</p>
+        <p><pre><code>{
+diskUse: "29%",
+databaseQueryTime: 18,
+activeHttpConnections: 76,
+chatAvailable: true
+}</code></pre></p>
     </div>
 
     <div id="account-metadata" class="d-none">

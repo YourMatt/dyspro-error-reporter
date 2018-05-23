@@ -6,7 +6,8 @@
  **********************************************************************************************************************/
 const utils = require("../utilities");
 
-let self = function (statusCode, contentType, response, responseMilliseconds, errorMessage) {
+let self = function (checkedUri, statusCode, contentType, response, responseMilliseconds, errorMessage) {
+    this.checkedUri = checkedUri;
     this.statusCode = utils.toInt(statusCode);
     this.contentType = contentType;
     this.response = response;

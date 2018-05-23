@@ -4,6 +4,7 @@
  *
  **********************************************************************************************************************/
 
+/*
 // add required bootstrap modules
 @import "../../node_modules/bootstrap/scss/functions";
 @import "../../node_modules/bootstrap/scss/variables";
@@ -11,6 +12,7 @@
 
 // add additional bootstrap modules as needed
 @import "../../node_modules/bootstrap/scss/alert";
+@import "../../node_modules/bootstrap/scss/badge";
 @import "../../node_modules/bootstrap/scss/buttons";
 @import "../../node_modules/bootstrap/scss/button-group";
 @import "../../node_modules/bootstrap/scss/close";
@@ -22,16 +24,46 @@
 @import "../../node_modules/bootstrap/scss/modal";
 @import "../../node_modules/bootstrap/scss/nav";
 @import "../../node_modules/bootstrap/scss/navbar";
+@import "../../node_modules/bootstrap/scss/popover";
 @import "../../node_modules/bootstrap/scss/reboot";
 @import "../../node_modules/bootstrap/scss/tables";
 @import "../../node_modules/bootstrap/scss/type";
 @import "../../node_modules/bootstrap/scss/utilities";
+*/
+
+// load all bootstrap modules - enable only when need troubleshooting bootstrap error
+@import "../../node_modules/bootstrap/scss/bootstrap";
 
 // add toast styling
 @import "../../node_modules/toastr/toastr";
 
-// load all bootstrap modules - enable only when need troubleshooting bootstrap error
-//@import "../../node_modules/bootstrap/scss/bootstrap";
-
 // template elements
 @import "./template";
+
+#modal-endpoint-uri-test {
+  #content-monitor-tested-uri {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  textarea {
+    font-size: 12px;
+    font-family: monospace;
+  }
+}
+
+.popover {
+  max-width: 600px;
+  code {
+    font-size: 12px;
+  }
+}
+
+a[aria-expanded="true"] {
+  .closed { display: none; }
+  .opened { display: block; }
+}
+a[aria-expanded="false"] {
+  .closed { display: block; }
+  .opened { display: none; }
+}

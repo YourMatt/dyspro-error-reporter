@@ -38,15 +38,6 @@ module.exports = function (grunt) {
                 },
                 files: {
                     "public/site.min.js": [
-                        // installed modules
-                        "node_modules/jquery/dist/jquery.js",
-                        "node_modules/popper.js/dist/umd/popper.js",
-                        "node_modules/bootstrap/dist/js/bootstrap.js",
-                        "node_modules/angular/angular.js",
-                        "node_modules/moment/moment.js",
-                        "node_modules/toastr/toastr.js",
-                        // third-party scripts not available through npm
-                        "frontend-src/js/plugins/jquery.mask.js",
                         // custom init
                         "frontend-src/js/init.js",
                         // page-specific
@@ -56,6 +47,26 @@ module.exports = function (grunt) {
                         "frontend-src/js/settings.js",
                         // general
                         "frontend-src/js/notifications.js"
+                    ]
+                }
+            },
+            uglify_framework_js: {
+                options: {
+                    compress: true,
+                    mangle: true,
+                    sourceMap: true
+                },
+                files: {
+                    "public/framework.min.js": [
+                        // installed modules
+                        "node_modules/jquery/dist/jquery.js",
+                        "node_modules/popper.js/dist/umd/popper.js",
+                        "node_modules/bootstrap/dist/js/bootstrap.js",
+                        "node_modules/angular/angular.js",
+                        "node_modules/moment/moment.js",
+                        "node_modules/toastr/toastr.js",
+                        // third-party scripts not available through npm
+                        "frontend-src/js/plugins/jquery.mask.js"
                     ]
                 }
             }
@@ -80,6 +91,14 @@ module.exports = function (grunt) {
                 ],
                 tasks: [
                     "uglify:uglify_site_js"
+                ]
+            },
+            watch_js_files_framework: {
+                files: [
+                    "frontend-src/js/plugins/*.js"
+                ],
+                tasks: [
+                    "uglify:uglify_framework_js"
                 ]
             }
         }

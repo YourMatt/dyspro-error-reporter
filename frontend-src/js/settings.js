@@ -8,15 +8,18 @@ app.controller ("SettingsController", ["$scope", function ($scope) {
 
     // add local properties
     $scope.user = {};
-    $scope.isUserFormSubmitDisabled = false;
+    $scope.isUserFormSubmitDisabled = true;
 
     $scope.monitors = [];
     $scope.products = [];
     $scope.environments = [];
-    $scope.isMonitorFormSubmitDisabled = false;
+    $scope.monitor = {};
+    $scope.monitorTestResults = {};
+    $scope.isMonitorFormSubmitDisabled = true;
 
     // add local methods
     $scope.saveUser = settingsPage.userForm.saveUser;
+    $scope.saveMonitor = settingsPage.monitorForm.saveMonitor;
 
     // initialize the page
     settingsPage.init($scope);
@@ -36,6 +39,7 @@ var settingsPage = {
         settingsPage.monitorForm.loadMonitors();
         settingsPage.monitorForm.loadProducts();
         settingsPage.monitorForm.loadEnvironments();
+        settingsPage.monitorForm.initializeForm();
 
     },
 
@@ -170,7 +174,7 @@ var settingsPage = {
 
             // validate all fields
             if ($("#form-user")[0].checkValidity() === false) {
-                return false
+                return false;
             }
 
             // if adding a new password, prompt to confirm the new password
@@ -189,7 +193,7 @@ var settingsPage = {
                     $("#setting-user-password-new-confirm")[0].setCustomValidity(validityPasswordMismatch);
 
                     if ($("#form-password-confirm")[0].checkValidity() === false) {
-                        return false
+                        return false;
                     }
 
                     $("#modal-password-confirm").modal("hide");
@@ -216,6 +220,43 @@ var settingsPage = {
 
     // Methods only useful for the monitor management tab.
     monitorForm: {
+
+        originalMonitorEndpointUri: "", // used for checking if path has changed and need to test the endpoint prior to saving
+
+        formEnableSubmit: function () {
+            settingsPage.updateAngularValue(function () {
+                settingsPage.angularScope.isMonitorFormSubmitDisabled = false;
+            });
+        },
+        formDisableSubmit: function () {
+            settingsPage.updateAngularValue(function () {
+                settingsPage.angularScope.isMonitorFormSubmitDisabled = true;
+            });
+        },
+
+        initializeForm: function () {
+
+            // TODO: Set following only if selecting an existing monitor
+            //settingsPage.updateAngularValue(function () { settingsPage.angularScope.monitor =  });
+
+            settingsPage.monitorForm.formEnableSubmit();
+
+            // add handler for radio button routing between angular and control - could not get this to work with
+            // angular alone, likely due to mixing with a bootstrap custom control that hides the radio inputs
+            // themselves - adding this hack for a quick solution so can move on
+            $("input[name=setting-monitor-interval]").change(function () {
+                settingsPage.angularScope.monitor.intervalSeconds = $(this).val();
+            });
+
+            // add help information about metrics
+            $("#link-about-metrics").popover({
+                content: $("#popover-content-about-metrics").html(),
+                html: true,
+                placement: "bottom",
+                trigger: "focus"
+            });
+
+        },
 
         loadMonitors: function () {
 
@@ -265,8 +306,94 @@ var settingsPage = {
 
         },
 
-        testMonitor: function () {
+        saveMonitor: function () {
 
+            if (!settingsPage.monitorForm.isFormValidated()) return;
+
+            settingsPage.monitorForm.formDisableSubmit();
+
+            // test the endpoint if changed since loading
+            if (settingsPage.angularScope.monitor.endpointUri !== settingsPage.monitorForm.originalMonitorEndpointUri) {
+
+                $.ajax("/api/monitor/test/" + encodeURIComponent(settingsPage.angularScope.monitor.endpointUri))
+                .done(function (results) {
+
+                    // if no status code, then a catastrophic issue is in play and the URL should not be accepted
+                    if (!results.statusCode) {
+                        settingsPage.monitorForm.formEnableSubmit();
+                        $("#setting-monitor-endpoint-uri")[0].setCustomValidity(results.requestErrorMessage);
+                        $("#form-monitor")[0].checkValidity();
+                        notifications.error("The Endpoint URI cannot be used. " + results.requestErrorMessage); // custom validity not displaying in this case, so also issuing a toast notification
+                        return;
+                    }
+
+                    results.responseParsed.responseTime = results.responseMilliseconds + "ms";
+                    results.statusText = settingsPage.monitorForm.evaluateHttpStatus(results.statusCode);
+
+                    settingsPage.updateAngularValue(function () {
+                        settingsPage.angularScope.monitorTestResults = results;
+                    });
+
+                    console.log(results);
+
+                    $("#modal-endpoint-uri-test")
+                    .on("hide.bs.modal", function  () {
+                        settingsPage.monitorForm.formEnableSubmit();
+                    })
+                    .modal();
+
+                })
+                .fail (function (response) {
+                    notifications.errorFromServiceResponse(response);
+                });
+
+                return;
+
+            }
+
+            console.log("No need to test.");
+
+            /*
+            $.ajax({
+                type: "put",
+                url: "/api/user/" + settingsPage.userForm.userId,
+                data: settingsPage.userForm.getUserDataForSave(settingsPage.angularScope.user)
+            })
+            .done(function (results) {
+                $("#setting-user-password-current").val("");
+                $("#setting-user-password-new").val("");
+                settingsPage.userForm.originalEmailAddress = $("#setting-user-email").val();
+                notifications.success("Successfully saved your user information.");
+            })
+            .fail(function (response) {
+                notifications.errorFromServiceResponse(response);
+            })
+            .always(function () {
+                settingsPage.userForm.formEnableSubmit();
+            });
+            */
+
+        },
+
+        // Validates the user form.
+        isFormValidated: function () {
+
+            $("#setting-monitor-endpoint-uri")[0].setCustomValidity(""); // remove any custom validity message that may have been added on a previous attempt
+
+            // validate all fields
+            if ($("#form-monitor")[0].checkValidity() === false) {
+                return false
+            }
+
+            return true;
+
+        },
+
+        // Checks the status code to make it fall into one of these categories of: success, error, or warning.
+        evaluateHttpStatus: function (statusCode) {
+            if (statusCode >= 200 && statusCode < 300) return "success";
+            else if (statusCode >= 400 && statusCode < 600) return "error";
+            else return "warning";
         }
 
     }
