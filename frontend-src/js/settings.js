@@ -20,6 +20,14 @@ app.controller ("SettingsController", ["$scope", function ($scope) {
     // add local methods
     $scope.saveUser = settingsPage.userForm.saveUser;
     $scope.saveMonitor = settingsPage.monitorForm.saveMonitor;
+    $scope.resetForm = settingsPage.monitorForm.resetForm;
+    $scope.selectMonitor = settingsPage.monitorForm.loadMonitor;
+    $scope.selectProduct = settingsPage.monitorForm.selectExistingProduct;
+    $scope.selectEnvironment = settingsPage.monitorForm.selectExistingEnvironment;
+
+    // watch for changes to monitor interval seconds and then apply to the selection - this is a hack to allow the
+    // bootstrap buttons to work with underlying radio button
+    $scope.$watch("monitor.intervalSeconds", settingsPage.monitorForm.handleIntervalSecondsChange);
 
     // initialize the page
     settingsPage.init($scope);
@@ -43,6 +51,7 @@ var settingsPage = {
 
     },
 
+    // Applies an object update to the related scope.
     updateAngularValue: function (command) {
 
         // run the provided function to update the value
@@ -61,6 +70,7 @@ var settingsPage = {
         userId: 0,
         originalEmailAddress: "", // used for validating the current password - will always be checked against the currently-saved email and not the changed input value
 
+        // Changes submit button enabled status.
         formEnableSubmit: function () {
             settingsPage.updateAngularValue(function () {
                 settingsPage.angularScope.isUserFormSubmitDisabled = false;
@@ -72,6 +82,7 @@ var settingsPage = {
             });
         },
 
+        // Prepares the input form.
         initializeForm: function () {
 
             $("#setting-user-phone").mask("000-000-0000");
@@ -81,6 +92,7 @@ var settingsPage = {
 
         },
 
+        // Formats the user object to match what is expected from the update service.
         getUserDataForSave: function (user) {
 
             var saveData = {
@@ -99,6 +111,7 @@ var settingsPage = {
 
         },
 
+        // Loads user information.
         loadUser: function () {
 
             $.ajax("/api/user/" + settingsPage.userForm.userId)
@@ -115,6 +128,7 @@ var settingsPage = {
 
         },
 
+        // Updates user information.
         saveUser: function () {
 
             if (!settingsPage.userForm.isFormUserValidated()) return;
@@ -223,6 +237,7 @@ var settingsPage = {
 
         originalMonitorEndpointUri: "", // used for checking if path has changed and need to test the endpoint prior to saving
 
+        // Changes submit button enabled status.
         formEnableSubmit: function () {
             settingsPage.updateAngularValue(function () {
                 settingsPage.angularScope.isMonitorFormSubmitDisabled = false;
@@ -234,22 +249,63 @@ var settingsPage = {
             });
         },
 
+        // Converts the monitor object to what is expected from the create and update services.
+        getMonitorDataForSave: function (monitor) {
+
+            var saveData = {
+                endpointUri: monitor.endpointUri,
+                intervalSeconds: monitor.intervalSeconds,
+                product: monitor.productName,
+                environment: monitor.environmentName
+            };
+
+            return saveData;
+
+        },
+
+        // Prepares the input form.
         initializeForm: function () {
 
-            // TODO: Set following only if selecting an existing monitor
-            //settingsPage.updateAngularValue(function () { settingsPage.angularScope.monitor =  });
-
             settingsPage.monitorForm.formEnableSubmit();
+            settingsPage.monitorForm.resetForm();
 
             // add handler for radio button routing between angular and control - could not get this to work with
             // angular alone, likely due to mixing with a bootstrap custom control that hides the radio inputs
             // themselves - adding this hack for a quick solution so can move on
             $("input[name=setting-monitor-interval]").change(function () {
-                settingsPage.angularScope.monitor.intervalSeconds = $(this).val();
+                var newInterval = $(this).val();
+                settingsPage.updateAngularValue(function () {
+                    settingsPage.angularScope.monitor.intervalSeconds = newInterval;
+                });
+            });
+
+            // add delete confirmation
+            $("#button-delete")
+            .popover({
+                content: $("#popover-content-delete-confirmation").html(),
+                html: true,
+                placement: "bottom",
+                template: '<div class="popover popover-confirmation" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>'
+            })
+            .on("show.bs.popover", function () {
+                $("#button-delete").prop("disabled", true);
+            })
+            .on("hidden.bs.popover", function () {
+                $("#button-delete").prop("disabled", false);
+            });
+
+            // add handlers for buttons in the confirmation popover - note that has to apply to document and cannot be set on the click handler or be called directly via angular due to how the popover code creates the elements
+            $(document)
+            .on("click", "#button-delete-cancel", function () {
+                $("#button-delete").popover("hide");
+            })
+            .on("click", "#button-delete-confirm", function () {
+                settingsPage.monitorForm.delete();
+                $("#button-delete").popover("hide");
             });
 
             // add help information about metrics
-            $("#link-about-metrics").popover({
+            $("#link-about-metrics-on-page, #link-about-metrics-in-modal").popover({
                 content: $("#popover-content-about-metrics").html(),
                 html: true,
                 placement: "bottom",
@@ -258,6 +314,16 @@ var settingsPage = {
 
         },
 
+        // Resets the form to default state.
+        resetForm: function () {
+
+            settingsPage.updateAngularValue(function () {
+                settingsPage.angularScope.monitor = {intervalSeconds: 60};
+            });
+
+        },
+
+        // Loads all monitors for display.
         loadMonitors: function () {
 
             $.ajax("/api/monitors")
@@ -274,6 +340,26 @@ var settingsPage = {
 
         },
 
+        // Loads a monitor for editing.
+        loadMonitor: function(monitorId) {
+
+            $.ajax("/api/monitor/" + monitorId)
+            .done(function (results) {
+
+                settingsPage.monitorForm.originalMonitorEndpointUri = results.endpointUri;
+
+                settingsPage.updateAngularValue(function () {
+                    settingsPage.angularScope.monitor = results;
+                });
+
+            })
+            .fail(function (response) {
+                notifications.errorFromServiceResponse(response);
+            });
+
+        },
+
+        // Loads all products to allow select from existing.
         loadProducts: function () {
 
             $.ajax("/api/products")
@@ -290,6 +376,7 @@ var settingsPage = {
 
         },
 
+        // Loads all environments to allow select from existing.
         loadEnvironments: function () {
 
             $.ajax("/api/environments")
@@ -306,13 +393,41 @@ var settingsPage = {
 
         },
 
+        // Adds an existing product to the product form field.
+        selectExistingProduct: function (name) {
+
+            settingsPage.updateAngularValue(function () {
+                settingsPage.angularScope.monitor.productName = name;
+            });
+
+        },
+
+        // Adds an existing environment to the environment form field.
+        selectExistingEnvironment: function (name) {
+
+            settingsPage.updateAngularValue(function () {
+                settingsPage.angularScope.monitor.environmentName = name;
+            });
+
+        },
+
+        // Sends a click to the button that represents the interval seconds radio button.
+        handleIntervalSecondsChange: function(value) {
+
+            if (value != $("input[name=setting-monitor-interval]:checked").val()) {
+                $("input[name=setting-monitor-interval][value=" + value + "]").parent().click();
+            }
+
+        },
+
+        // Saves a new monitor or updates an existing monitor.
         saveMonitor: function () {
 
             if (!settingsPage.monitorForm.isFormValidated()) return;
 
             settingsPage.monitorForm.formDisableSubmit();
 
-            // test the endpoint if changed since loading
+            // test the endpoint if changed
             if (settingsPage.angularScope.monitor.endpointUri !== settingsPage.monitorForm.originalMonitorEndpointUri) {
 
                 $.ajax("/api/monitor/test/" + encodeURIComponent(settingsPage.angularScope.monitor.endpointUri))
@@ -322,60 +437,127 @@ var settingsPage = {
                     if (!results.statusCode) {
                         settingsPage.monitorForm.formEnableSubmit();
                         $("#setting-monitor-endpoint-uri")[0].setCustomValidity(results.requestErrorMessage);
+                        $("#setting-monitor-endpoint-uri")[0].reportValidity();
                         $("#form-monitor")[0].checkValidity();
                         notifications.error("The Endpoint URI cannot be used. " + results.requestErrorMessage); // custom validity not displaying in this case, so also issuing a toast notification
                         return;
                     }
 
+                    // add derived values to the response object then write back to the test results object
                     results.responseParsed.responseTime = results.responseMilliseconds + "ms";
                     results.statusText = settingsPage.monitorForm.evaluateHttpStatus(results.statusCode);
-
                     settingsPage.updateAngularValue(function () {
                         settingsPage.angularScope.monitorTestResults = results;
                     });
 
-                    console.log(results);
+                    // assign the original URI to the new URI to allow the save to complete when confirming through the modal
+                    settingsPage.monitorForm.originalMonitorEndpointUri = settingsPage.angularScope.monitor.endpointUri;
 
-                    $("#modal-endpoint-uri-test")
-                    .on("hide.bs.modal", function  () {
-                        settingsPage.monitorForm.formEnableSubmit();
-                    })
-                    .modal();
+                    $("#modal-endpoint-uri-test").modal();
 
                 })
                 .fail (function (response) {
                     notifications.errorFromServiceResponse(response);
+                })
+                .always (function () {
+                    settingsPage.monitorForm.formEnableSubmit();
                 });
 
                 return;
 
             }
 
-            console.log("No need to test.");
+            // update if already has a monitor ID
+            if (settingsPage.angularScope.monitor.monitorId) {
 
-            /*
-            $.ajax({
-                type: "put",
-                url: "/api/user/" + settingsPage.userForm.userId,
-                data: settingsPage.userForm.getUserDataForSave(settingsPage.angularScope.user)
-            })
-            .done(function (results) {
-                $("#setting-user-password-current").val("");
-                $("#setting-user-password-new").val("");
-                settingsPage.userForm.originalEmailAddress = $("#setting-user-email").val();
-                notifications.success("Successfully saved your user information.");
-            })
-            .fail(function (response) {
-                notifications.errorFromServiceResponse(response);
-            })
-            .always(function () {
-                settingsPage.userForm.formEnableSubmit();
-            });
-            */
+                $.ajax({
+                    type: "put",
+                    url: "/api/monitor/" + settingsPage.angularScope.monitor.monitorId,
+                    data: settingsPage.monitorForm.getMonitorDataForSave(settingsPage.angularScope.monitor)
+                })
+                .done(function (results) {
+
+                    // reload all existing monitor information
+                    settingsPage.monitorForm.loadMonitors();
+                    settingsPage.monitorForm.loadProducts();
+                    settingsPage.monitorForm.loadEnvironments();
+
+                    // clear the form
+                    settingsPage.monitorForm.resetForm();
+
+                    notifications.success("Successfully saved your monitor.");
+
+                })
+                .fail(function (response) {
+                    notifications.errorFromServiceResponse(response);
+                })
+                .always (function () {
+                    $("#modal-endpoint-uri-test").modal("hide");
+                    settingsPage.monitorForm.formEnableSubmit();
+                });
+
+            }
+
+            // create if no monitor ID
+            else {
+
+                $.ajax({
+                    type: "post",
+                    url: "/api/monitor",
+                    data: settingsPage.monitorForm.getMonitorDataForSave(settingsPage.angularScope.monitor)
+                })
+                .done(function (results) {
+
+                    // reload all existing monitor information
+                    settingsPage.monitorForm.loadMonitors();
+                    settingsPage.monitorForm.loadProducts();
+                    settingsPage.monitorForm.loadEnvironments();
+
+                    // clear the form
+                    settingsPage.monitorForm.resetForm();
+
+                    notifications.success("Successfully saved your new monitor.");
+
+                })
+                .fail(function (response) {
+                    notifications.errorFromServiceResponse(response);
+                })
+                .always (function () {
+                    $("#modal-endpoint-uri-test").modal("hide");
+                    settingsPage.monitorForm.formEnableSubmit();
+                });
+
+            }
 
         },
 
-        // Validates the user form.
+        // Deletes the currently-selected monitor.
+        delete: function () {
+
+            var monitorId = settingsPage.angularScope.monitor.monitorId;
+
+            $.ajax({
+                type: "delete",
+                url: "/api/monitor/" + monitorId
+            })
+            .done(function (results) {
+
+                // reload existing monitors
+                settingsPage.monitorForm.loadMonitors();
+
+                // clear the foorm
+                settingsPage.monitorForm.resetForm();
+
+                notifications.success("Successfully deleted the monitor.");
+
+            })
+            .fail(function (response) {
+                notifications.errorFromServiceResponse(response);
+            });
+
+        },
+
+        // Validates the form.
         isFormValidated: function () {
 
             $("#setting-monitor-endpoint-uri")[0].setCustomValidity(""); // remove any custom validity message that may have been added on a previous attempt

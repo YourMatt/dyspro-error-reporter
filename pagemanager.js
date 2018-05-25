@@ -23,9 +23,29 @@ exports.processLogin = function (req, res) {
                 return res.redirect(req.headers.referer);
             }
 
-            // save user to session and forward to the dashboard
+            // save user to the session
             req.sessionManager.set("user", userData);
-            res.redirect("/dashboard");
+
+            // load the account information
+            queries.accounts.get(
+                req.db,
+                userData.accountId,
+                function (accountData) {
+
+                    // account not found
+                    if (!accountData.accountId) {
+                        req.sessionManager.set("errorMessage", "Could not load account information.");
+                        return res.redirect(req.headers.referrer);
+                    }
+
+                    // save the account to the session
+                    req.sessionManager.set("account", accountData);
+
+                    // redirect to the dashboard
+                    res.redirect("/dashboard");
+
+                }
+            );
 
         }
     );
@@ -181,6 +201,7 @@ const pageUtils = {
         ejsVariables.errorMessage = req.sessionManager.getOnce("errorMessage");
         ejsVariables.successMessage = req.sessionManager.getOnce("successMessage");
         ejsVariables.userId = req.sessionManager.get("user.userId");
+        ejsVariables.accountName = req.sessionManager.get("account.name");
         ejsVariables.moment = moment;
 
         // render the page

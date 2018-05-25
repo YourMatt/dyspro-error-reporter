@@ -6,6 +6,7 @@
 
 let self = function () {
     this.user = {};
+    this.account = {};
     this.errorMessage = "";
     this.successMessage = "";
 };

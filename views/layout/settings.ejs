@@ -47,7 +47,9 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" ng-click="saveUser()" ng-disabled="isUserFormSubmitDisabled">Save</button>
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-primary ml-auto" ng-click="saveUser()" ng-disabled="isUserFormSubmitDisabled">Save</button>
+                </div>
 
             </form>
 
@@ -59,7 +61,7 @@
                 <div class="form-group">
                     <label for="setting-monitor-endpoint-uri">Endpoint URI</label>
                     <input id="setting-monitor-endpoint-uri" class="form-control" placeholder="https://example.com" ng-model="monitor.endpointUri" maxlength="500" required />
-                    <small class="form-text text-muted">Can be to any URL or an endpoint providing additional performance metrics.</small>
+                    <small class="form-text text-muted">Can be to any URL or an endpoint providing <a href="javascript:" id="link-about-metrics-on-page">additional performance metrics</a>.</small>
                 </div>
 
                 <div class="form-group">
@@ -88,11 +90,11 @@
                     <div class="col form-group">
                         <label for="setting-monitor-product">Product</label>
                         <div class="input-group">
-                            <input id="setting-monitor-product" type="text" class="form-control" ng-model="monitor.product" maxlength="50" required/>
-                            <div class="input-group-append">
+                            <input id="setting-monitor-product" type="text" class="form-control" ng-model="monitor.productName" maxlength="50" required/>
+                            <div class="input-group-append" ng-show="products.length">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#" ng-repeat="p in products">{{p.name}}</a>
+                                    <a class="dropdown-item" href="#" ng-repeat="p in products" ng-click="selectProduct(p.name)">{{p.name}}</a>
                                 </div>
                             </div>
                         </div>
@@ -101,11 +103,11 @@
                     <div class="col form-group">
                         <label for="setting-monitor-environment">Environment</label>
                         <div class="input-group">
-                            <input id="setting-monitor-environment" type="text" class="form-control" ng-model="monitor.environment" maxlength="50" required/>
-                            <div class="input-group-append">
+                            <input id="setting-monitor-environment" type="text" class="form-control" ng-model="monitor.environmentName" maxlength="50" required/>
+                            <div class="input-group-append" ng-show="environments.length">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#" ng-repeat="e in environments">{{e.name}}</a>
+                                    <a class="dropdown-item" href="#" ng-repeat="e in environments" ng-click="selectEnvironment(e.name)">{{e.name}}</a>
                                 </div>
                             </div>
                         </div>
@@ -113,11 +115,18 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" ng-click="saveMonitor()" ng-disabled="isMonitorFormSubmitDisabled">Save</button>
+                <div class="d-flex">
+                    <button type="button" class="btn btn-secondary mr-1" ng-click="resetForm()" ng-show="monitor.monitorId">Cancel</button>
+                    <button id="button-delete" type="button" class="btn btn-danger" ng-show="monitor.monitorId">Delete</button>
+                    <button type="submit" class="btn btn-primary ml-auto" ng-click="saveMonitor()" ng-disabled="isMonitorFormSubmitDisabled">
+                        <span class="active">Save</span>
+                        <span class="disabled">Testing Endpoint…</span>
+                    </button>
+                </div>
 
             </form>
 
-            <table id="monitor-list" class="table table-sm table-hover table-striped">
+            <table id="monitor-list" class="table table-sm table-hover table-striped" ng-show="monitors.length">
                 <thead>
                 <tr>
                     <th>Endpoint</th>
@@ -127,7 +136,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr ng-repeat="m in monitors">
+                <tr ng-repeat="m in monitors" ng-click="selectMonitor(m.monitorId)">
                     <td>{{m.endpointUri}}</td>
                     <td>{{m.productName}}</td>
                     <td>{{m.environmentName}}</td>
@@ -167,9 +176,13 @@
                 </div>
                 <div class="modal-body">
 
+                    <div class="alert alert-danger" role="alert" ng-show="monitorTestResults.statusText == 'error'">
+                        The page returned a {{monitorTestResults.statusCode}} error. This can still be used for a monitoring target, but you may want to select a different page or find why the page is returning this response. Press Cancel to adjust the URI and re-test the endpoint.
+                    </div>
+
                     <h6>
                         Metrics
-                        <a href="javascript:" id="link-about-metrics" class="float-right">About Custom Metrics</a>
+                        <a href="javascript:" id="link-about-metrics-in-modal" class="float-right">About Custom Metrics</a>
                     </h6>
                     <div class="row" ng-repeat="(metricName, metricValue) in monitorTestResults.responseParsed">
                         <div class="col text-right">{{metricName}}</div>
@@ -220,23 +233,18 @@ chatAvailable: true
 }</code></pre></p>
     </div>
 
+    <div id="popover-content-delete-confirmation" class="d-none">
+        <p>Are you sure want to delete this monitor? All historical data for this monitor will also be deleted.</p>
+        <div class="d-flex justify-content-between">
+            <button id="button-delete-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            <button id="button-delete-confirm" type="button" class="btn btn-danger">Confirm</button>
+        </div>
+    </div>
+
     <div id="account-metadata" class="d-none">
         <userid><%= userId %></userid>
     </div>
 
 </div>
-<!--
-<form>
-    <div class="input-group">
-        <input type="text" class="form-control" aria-label="Text input with dropdown button">
-        <div class="input-group-append">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="#">Add existing products here</a>
-            </div>
-        </div>
-    </div>
-</form>
--->
 
 <%- include("template/footer") %>

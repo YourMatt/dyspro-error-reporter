@@ -13,7 +13,12 @@
                     <a href="/">
                         <%- include("../svg/dyspro.svg") %>
                         <div class="navbar-header">
-                            <span class="navbar-text">/ System Monitor</span>
+                            <span class="navbar-text">
+                                / System Monitor
+                                <% if (accountName) { %>
+                                / <%= accountName %>
+                                <% } %>
+                            </span>
                         </div>
                     </a>
                     <% if (! userId) { %>

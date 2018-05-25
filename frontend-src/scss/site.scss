@@ -39,6 +39,8 @@
 
 // template elements
 @import "./template";
+@import "./toggle-states";
+
 
 #modal-endpoint-uri-test {
   #content-monitor-tested-uri {
@@ -54,16 +56,10 @@
 
 .popover {
   max-width: 600px;
+  &.popover-confirmation {
+    max-width: 300px;
+  }
   code {
     font-size: 12px;
   }
-}
-
-a[aria-expanded="true"] {
-  .closed { display: none; }
-  .opened { display: block; }
-}
-a[aria-expanded="false"] {
-  .closed { display: block; }
-  .opened { display: none; }
 }

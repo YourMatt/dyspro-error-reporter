@@ -6984,6 +6984,32 @@ header svg {
 header .navbar-header {
   margin-left: 106px; }
 
+/***********************************************************************************************************************
+ *
+ * STYLES FOR TOGGLING CONTENT
+ * This is used for all areas where the text within an element may be toggled to show different content depending upon
+ * the current state of the parent element. For example: Showing different button text if the button is disabled.
+ *
+ **********************************************************************************************************************/
+a[aria-expanded="true"] .closed {
+  display: none; }
+a[aria-expanded="true"] .opened {
+  display: block; }
+
+a[aria-expanded="false"] .closed {
+  display: block; }
+a[aria-expanded="false"] .opened {
+  display: none; }
+
+button .active {
+  display: block; }
+button .disabled {
+  display: none; }
+button:disabled .active {
+  display: none; }
+button:disabled .disabled {
+  display: block; }
+
 #modal-endpoint-uri-test #content-monitor-tested-uri {
   overflow: hidden;
   white-space: nowrap;
@@ -6994,17 +7020,9 @@ header .navbar-header {
 
 .popover {
   max-width: 600px; }
+  .popover.popover-confirmation {
+    max-width: 300px; }
   .popover code {
     font-size: 12px; }
-
-a[aria-expanded="true"] .closed {
-  display: none; }
-a[aria-expanded="true"] .opened {
-  display: block; }
-
-a[aria-expanded="false"] .closed {
-  display: block; }
-a[aria-expanded="false"] .opened {
-  display: none; }
 
 /*# sourceMappingURL=site.css.map */
