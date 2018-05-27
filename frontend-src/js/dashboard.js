@@ -5,14 +5,17 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
     $scope.error_occurrences = [];
 
     $scope.changeEnvironmentTab = function (event) {
-        current_environment = $(event.currentTarget).parent().attr ("environment");
-        $(".nav-tabs li").removeClass ("active");
-        $(event.currentTarget).parent().addClass ("active");
+
+        current_environment = $(event.currentTarget).text().trim();
+        $(".nav-tabs a").removeClass("active");
+        $(event.currentTarget).addClass("active");
+
         this.reloadErrorOccurrences ();
     };
 
     $scope.reloadErrorOccurrences = function () {
-        if (! current_environment) current_environment = $(".nav-tabs li.active").attr("environment"); // TODO: load this from a different method
+        if (! current_environment) current_environment = $(".nav-tabs a.active").text().trim(); // TODO: load this from a different method
+
         $.ajax("/api/errors/" + current_environment + "/20")
             .done(function (results) {
 

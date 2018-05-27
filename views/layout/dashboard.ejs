@@ -2,18 +2,27 @@
 
 <% if (environments.length) { %>
 
-<div ng-controller="DashboardController">
+<div class="container-fluid" ng-controller="DashboardController">
 
-    <ul class="nav nav-tabs">
-        <li class="nav-item"><span class="navbar-text ml-3 mr-3">Environment</span></li>
-        <% for (var i = 0; i < environments.length; i++) { %>
-        <li class="nav-item <% if (selectedEnvironment.environmentId == environments[i].environmentId ) { %> active<% } %>" environment="<%= environments[i].name %>">
-            <a class="nav-link" href="#" ng-click="changeEnvironmentTab($event)"><%= environments[i].name %></a>
-        </li>
-        <% } %>
-    </ul>
+    <nav>
+        <div class="nav nav-tabs">
+            <span class="nav-item navbar-text mr-3">Environment</span>
+            <% for (var i = 0; i < environments.length; i++) { %>
+            <a class="nav-item nav-link<% if (selectedEnvironment.environmentId == environments[i].environmentId ) { %> active<% } %>" href="javascript:" ng-click="changeEnvironmentTab($event)">
+                <%= environments[i].name %>
+            </a>
+            <% } %>
+        </div>
+    </nav>
 
-    <%- include("blocks/error-list") %>
+    <div class="tab-content">
+
+        <section>
+            Description of page.
+        </section>
+
+        <%- include("blocks/error-list") %>
+    </div>
 
 </div>
 

@@ -352,6 +352,8 @@ var settingsPage = {
                     settingsPage.angularScope.monitor = results;
                 });
 
+                utilities.scrollToTopOfPage();
+
             })
             .fail(function (response) {
                 notifications.errorFromServiceResponse(response);
