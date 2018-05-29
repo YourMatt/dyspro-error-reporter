@@ -1,0 +1,22 @@
+/***********************************************************************************************************************
+ *
+ * STYLES SPECIFIC TO THE SETTINGS PAGE
+ *
+ **********************************************************************************************************************/
+
+#page-settings {
+  #modal-endpoint-uri-test {
+    #content-monitor-tested-uri {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    textarea {
+      font-size: 12px;
+      font-family: monospace;
+    }
+  }
+  #content-monitor-tested-metrics {
+    margin-bottom: 15px;
+  }
+}

@@ -3,32 +3,16 @@
  * MAIN SCSS FOR PUTTING TOGETHER FULL SITE CSS
  *
  **********************************************************************************************************************/
-/*
-// add required bootstrap modules
-@import "../../node_modules/bootstrap/scss/functions";
-@import "../../node_modules/bootstrap/scss/variables";
-@import "../../node_modules/bootstrap/scss/mixins";
-
-// add additional bootstrap modules as needed
-@import "../../node_modules/bootstrap/scss/alert";
-@import "../../node_modules/bootstrap/scss/badge";
-@import "../../node_modules/bootstrap/scss/buttons";
-@import "../../node_modules/bootstrap/scss/button-group";
-@import "../../node_modules/bootstrap/scss/close";
-@import "../../node_modules/bootstrap/scss/dropdown";
-@import "../../node_modules/bootstrap/scss/forms";
-@import "../../node_modules/bootstrap/scss/grid";
-@import "../../node_modules/bootstrap/scss/input-group";
-@import "../../node_modules/bootstrap/scss/jumbotron";
-@import "../../node_modules/bootstrap/scss/modal";
-@import "../../node_modules/bootstrap/scss/nav";
-@import "../../node_modules/bootstrap/scss/navbar";
-@import "../../node_modules/bootstrap/scss/popover";
-@import "../../node_modules/bootstrap/scss/reboot";
-@import "../../node_modules/bootstrap/scss/tables";
-@import "../../node_modules/bootstrap/scss/type";
-@import "../../node_modules/bootstrap/scss/utilities";
-*/
+/***********************************************************************************************************************
+ *
+ * ALL MIXINS FOR COMMON STYLES
+ *
+ **********************************************************************************************************************/
+/***********************************************************************************************************************
+ *
+ * ALL COLORS
+ *
+ **********************************************************************************************************************/
 /*!
  * Bootstrap v4.1.1 (https://getbootstrap.com/)
  * Copyright 2011-2018 The Bootstrap Authors
@@ -6974,15 +6958,96 @@ button.toast-close-button {
     width: 25em; } }
 /***********************************************************************************************************************
  *
- * STYLES FOR ELEMENTS THAT MAKE UP THE HEADER AND FOOTER
+ * STYLES FOR THE HEADER
  *
  **********************************************************************************************************************/
-header svg {
-  position: absolute;
-  top: 3px;
-  height: 50px; }
-header .navbar-header {
-  margin-left: 106px; }
+header.navbar {
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.5);
+  padding: 0;
+  background: #777; }
+  header.navbar svg {
+    position: absolute;
+    top: 3px;
+    height: 50px;
+    fill: #222; }
+  header.navbar .navbar-header {
+    margin-left: 106px; }
+  header.navbar a {
+    color: #ddd; }
+    header.navbar a:hover {
+      color: #fff; }
+  header.navbar .navbar-text {
+    padding: 16px 0px 17px; }
+  header.navbar ul.navbar-nav li.nav-item a.nav-link {
+    padding: 16px 20px 17px; }
+  header.navbar ul.navbar-nav li.nav-item.active {
+    background: rgba(0, 0, 0, 0.25); }
+
+/***********************************************************************************************************************
+ *
+ * STYLES FOR PAGE CONTENT
+ *
+ **********************************************************************************************************************/
+body {
+  background: #aaa; }
+
+.page-content {
+  margin-top: 17px; }
+
+.tab-content, .page-content {
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.5);
+  margin-bottom: 15px;
+  background: #eee;
+  border-radius: 5px; }
+  .tab-content h4, .page-content h4 {
+    border-bottom: 1px solid #777;
+    padding-bottom: 0px;
+    text-transform: uppercase;
+    margin-top: 10px; }
+    .tab-content h4 div, .page-content h4 div {
+      margin-top: -10px; }
+  .tab-content section, .tab-content form, .page-content section, .page-content form {
+    padding: 8px 22px 22px; }
+    .tab-content section .form-control, .tab-content form .form-control, .page-content section .form-control, .page-content form .form-control {
+      box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.5);
+      background: #aaa;
+      border: none;
+      color: #222;
+      font-weight: bold; }
+      .tab-content section .form-control::placeholder, .tab-content form .form-control::placeholder, .page-content section .form-control::placeholder, .page-content form .form-control::placeholder {
+        color: #666; }
+    .tab-content section .input-group .btn, .tab-content form .input-group .btn, .page-content section .input-group .btn, .page-content form .input-group .btn {
+      box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.5);
+      background-color: #aaa;
+      border: none;
+      color: #666;
+      font-weight: bold; }
+      .tab-content section .input-group .btn.active, .tab-content form .input-group .btn.active, .page-content section .input-group .btn.active, .page-content form .input-group .btn.active {
+        background-color: #c4c4c4;
+        color: #222; }
+      .tab-content section .input-group .btn.dropdown-toggle, .tab-content form .input-group .btn.dropdown-toggle, .page-content section .input-group .btn.dropdown-toggle, .page-content form .input-group .btn.dropdown-toggle {
+        color: rgba(0, 0, 0, 0.5); }
+    .tab-content section .form-text a, .tab-content form .form-text a, .page-content section .form-text a, .page-content form .form-text a {
+      color: inherit;
+      text-decoration: underline; }
+  .tab-content hr, .page-content hr {
+    border-color: #777; }
+
+nav {
+  padding: 0px 5px; }
+  nav .nav-tabs {
+    margin-top: -3px;
+    border-bottom: 0; }
+    nav .nav-tabs .nav-link {
+      z-index: 1;
+      border: none;
+      color: #222; }
+      nav .nav-tabs .nav-link.active {
+        background-color: #eee; }
+        nav .nav-tabs .nav-link.active:hover {
+          background-color: #eee; }
+      nav .nav-tabs .nav-link:hover {
+        background-color: #c8c8c8; }
 
 /***********************************************************************************************************************
  *
@@ -7010,106 +7075,37 @@ button:disabled .active {
 button:disabled .disabled {
   display: block; }
 
-body {
-  background: #aaa; }
-
-header.navbar {
-  padding: 0;
-  background: #777;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.75); }
-  header.navbar svg {
-    fill: #222; }
-  header.navbar a {
-    color: #ddd; }
-    header.navbar a:hover {
-      color: #fff; }
-  header.navbar .navbar-text {
-    padding: 16px 0px 17px; }
-  header.navbar ul.navbar-nav li.nav-item a.nav-link {
-    padding: 16px 20px 17px; }
-  header.navbar ul.navbar-nav li.nav-item.active {
-    background: #666; }
-
-.page-content {
-  margin-top: 17px; }
-
-.tab-content, .page-content {
-  margin-bottom: 15px;
-  background: #eee;
-  border-radius: 5px;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.75); }
-  .tab-content h4, .page-content h4 {
-    border-bottom: 1px solid #aaa;
-    padding-bottom: 0px;
-    text-transform: uppercase;
-    margin-top: 10px; }
-    .tab-content h4 div, .page-content h4 div {
-      margin-top: -10px; }
-  .tab-content form, .tab-content section, .page-content form, .page-content section {
-    padding: 8px 22px 22px; }
-    .tab-content form input.form-control, .tab-content section input.form-control, .page-content form input.form-control, .page-content section input.form-control {
-      background: #aaa;
-      border: none;
-      box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.5);
-      color: #222;
-      font-weight: bold; }
-    .tab-content form .input-group .btn, .tab-content section .input-group .btn, .page-content form .input-group .btn, .page-content section .input-group .btn {
-      color: #222;
-      box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.5);
-      background-color: #aaa;
-      border: none; }
-    .tab-content form .form-text a, .tab-content section .form-text a, .page-content form .form-text a, .page-content section .form-text a {
-      color: inherit;
-      text-decoration: underline; }
-
-nav {
-  padding: 0px 5px; }
-  nav .nav-tabs {
-    margin-top: -3px;
-    border-bottom: 0; }
-    nav .nav-tabs .nav-link {
-      z-index: 1;
-      color: #222; }
-      nav .nav-tabs .nav-link.active {
-        background-color: #eee;
-        border: none; }
-        nav .nav-tabs .nav-link.active:hover {
-          background-color: #eee; }
-      nav .nav-tabs .nav-link:hover {
-        background-color: #ddd; }
-
-#modal-endpoint-uri-test #content-monitor-tested-uri {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis; }
-#modal-endpoint-uri-test textarea {
-  font-size: 12px;
-  font-family: monospace; }
-
-#content-monitor-tested-metrics {
-  margin-bottom: 15px; }
-
+/***********************************************************************************************************************
+ *
+ * STYLES FOR BUTTONS
+ *
+ **********************************************************************************************************************/
 .btn {
   text-transform: uppercase; }
 
+/***********************************************************************************************************************
+ *
+ * STYLES FOR MODAL WINDOWS
+ *
+ **********************************************************************************************************************/
 .modal .modal-content {
-  border: none;
-  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.5); }
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.5);
+  border: none; }
   .modal .modal-content .modal-header {
     padding: 5px 15px;
     background: #777; }
     .modal .modal-content .modal-header h5 {
-      text-transform: uppercase;
-      color: #eee;
+      color: #ddd;
       font-weight: normal;
-      font-size: 16px; }
+      font-size: 16px;
+      text-transform: uppercase; }
     .modal .modal-content .modal-header button.close {
-      padding: 0px;
       margin: -3px;
-      color: #eee;
+      padding: 0px;
+      color: #ddd;
       text-shadow: none; }
   .modal .modal-content .modal-body h6 {
-    border-bottom: 1px solid #aaa;
+    border-bottom: 1px solid #777;
     font-weight: bold; }
     .modal .modal-content .modal-body h6 a {
       font-weight: normal; }
@@ -7121,7 +7117,13 @@ nav {
     .modal .modal-content .modal-footer .btn {
       min-width: 90px; }
 
+/***********************************************************************************************************************
+ *
+ * STYLES FOR POPOVER TOOLTIPS
+ *
+ **********************************************************************************************************************/
 .popover {
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.5);
   max-width: 600px; }
   .popover.popover-confirmation {
     max-width: 300px; }
@@ -7131,14 +7133,34 @@ nav {
 #popover-shade {
   display: none;
   position: absolute;
+  z-index: 1059;
   width: 100%;
   height: 100%;
   left: 0px;
   top: 0px;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1059; }
+  background: rgba(0, 0, 0, 0.5); }
 
+/***********************************************************************************************************************
+ *
+ * STYLES FOR TABLES
+ *
+ **********************************************************************************************************************/
 .table-sm th, .table-sm td {
   padding-left: 22px; }
+
+/***********************************************************************************************************************
+ *
+ * STYLES SPECIFIC TO THE SETTINGS PAGE
+ *
+ **********************************************************************************************************************/
+#page-settings #modal-endpoint-uri-test #content-monitor-tested-uri {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis; }
+#page-settings #modal-endpoint-uri-test textarea {
+  font-size: 12px;
+  font-family: monospace; }
+#page-settings #content-monitor-tested-metrics {
+  margin-bottom: 15px; }
 
 /*# sourceMappingURL=site.css.map */

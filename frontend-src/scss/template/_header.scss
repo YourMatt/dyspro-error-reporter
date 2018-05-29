@@ -1,0 +1,39 @@
+/***********************************************************************************************************************
+ *
+ * STYLES FOR THE HEADER
+ *
+ **********************************************************************************************************************/
+
+header.navbar {
+  @include shadow;
+  padding: 0;
+  background: $color-header-background;
+  svg {
+    position: absolute;
+    top: 3px;
+    height: 50px;
+    fill: $color-header-logo;
+  }
+  .navbar-header {
+    margin-left: 106px;
+  }
+  a {
+    color: $color-header-link-text;
+    &:hover {
+      color: $color-header-link-text-hover;
+    }
+  }
+  .navbar-text {
+    padding: 16px 0px 17px;
+  }
+  ul.navbar-nav {
+    li.nav-item {
+      a.nav-link {
+        padding: 16px 20px 17px;
+      }
+      &.active {
+        background: rgba(0,0,0,0.25);
+      }
+    }
+  }
+}

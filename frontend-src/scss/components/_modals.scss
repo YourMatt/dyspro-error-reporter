@@ -1,0 +1,47 @@
+/***********************************************************************************************************************
+ *
+ * STYLES FOR MODAL WINDOWS
+ *
+ **********************************************************************************************************************/
+
+.modal {
+  .modal-content {
+    @include shadow;
+    border: none;
+    .modal-header {
+      padding: 5px 15px;
+      background: $color-modal-header-background;
+      h5 {
+        color: $color-modal-header-text;
+        font-weight: normal;
+        font-size: 16px;
+        text-transform: uppercase;
+      }
+      button.close {
+        margin: -3px;
+        padding: 0px;
+        color: $color-modal-header-text;
+        text-shadow: none;
+      }
+    }
+    .modal-body {
+      h6 {
+        border-bottom: 1px solid $color-heading-border;
+        font-weight: bold;
+        a {
+          font-weight: normal;
+          &:hover {
+            text-decoration: none;
+          }
+        }
+      }
+    }
+    .modal-footer {
+      padding: 8px;
+      border-top: none;
+      .btn {
+        min-width: 90px;
+      }
+    }
+  }
+}

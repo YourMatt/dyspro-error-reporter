@@ -1,16 +1,9 @@
 /***********************************************************************************************************************
  *
- * STYLES FOR ELEMENTS THAT MAKE UP THE HEADER AND FOOTER
+ * STYLES FOR BUTTONS
  *
  **********************************************************************************************************************/
 
-header {
-  svg {
-    position: absolute;
-    top: 3px;
-    height: 50px;
-  }
-  .navbar-header {
-    margin-left: 106px;
-  }
+.btn {
+  text-transform: uppercase;
 }

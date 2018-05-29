@@ -1,0 +1,27 @@
+/***********************************************************************************************************************
+ *
+ * ALL COLORS
+ *
+ **********************************************************************************************************************/
+
+$color-page-background: #aaa;
+
+$color-header-background:       #777;
+$color-header-logo:             #222;
+$color-header-link-text:        #ddd;
+$color-header-link-text-hover:  #fff;
+
+$color-heading-border: #777;
+
+$color-content-background:            #eee;
+$color-content-tab-text:              #222;
+$color-content-tab-background:        $color-content-background;
+$color-content-tab-background-hover:  darken($color-content-tab-background, 15%);
+
+$color-input-background:                $color-page-background;
+$color-input-text:                      #222;
+$color-input-text-placeholder:          #666;
+$color-input-group-background-selected: lighten($color-input-background, 10%);
+
+$color-modal-header-background:   $color-header-background;
+$color-modal-header-text:         $color-header-link-text;

@@ -1,0 +1,90 @@
+/***********************************************************************************************************************
+ *
+ * STYLES FOR PAGE CONTENT
+ *
+ **********************************************************************************************************************/
+
+body {
+  background: $color-page-background;
+}
+
+// Page content areas.
+.page-content {
+  margin-top: 17px;
+}
+.tab-content, .page-content {
+  @include shadow;
+  margin-bottom: 15px;
+  background: $color-content-background;
+  border-radius: 5px;
+  h4 {
+    border-bottom: 1px solid $color-heading-border;
+    padding-bottom: 0px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    div { // used for edit buttons
+      margin-top: -10px;
+    }
+  }
+  section, form {
+    padding: 8px 22px 22px;
+    .form-control {
+      @include shadow(true);
+      background: $color-input-background;
+      border: none;
+      color: $color-input-text;
+      font-weight: bold;
+      &::placeholder {
+        color: $color-input-text-placeholder;
+      }
+    }
+    .input-group {
+      .btn {
+        @include shadow(true);
+        background-color: $color-input-background;
+        border: none;
+        color: $color-input-text-placeholder;
+        font-weight: bold;
+        &.active {
+          background-color: $color-input-group-background-selected;
+          color: $color-input-text;
+        }
+        &.dropdown-toggle {
+          color: rgba(0,0,0,0.5);
+        }
+      }
+    }
+    .form-text {
+      a {
+        color: inherit;
+        text-decoration: underline;
+      }
+    }
+  }
+  hr {
+    border-color: $color-heading-border;
+  }
+}
+
+// Tabs at the top of each page that include them.
+nav {
+  padding: 0px 5px;
+  .nav-tabs {
+    margin-top: -3px;
+    border-bottom: 0;
+    .nav-link {
+      z-index: 1;
+      border: none;
+      color: $color-content-tab-text;
+      &.active {
+        background-color: $color-content-tab-background;
+        &:hover {
+          background-color: $color-content-tab-background;
+        }
+      }
+      &:hover {
+        background-color: $color-content-tab-background-hover;
+      }
+    }
+  }
+}
