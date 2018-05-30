@@ -4,8 +4,25 @@
  *
  **********************************************************************************************************************/
 
-.table-sm {
-  th, td {
-    padding-left: 22px; // align content to text outside of table
+table {
+  &.table-sm {
+    th, td {
+      padding-left: 22px; // align content to text outside of table
+      color: $color-table-text;
+    }
+  }
+}
+
+// Custom table where JSON data is converted to a table format.
+.table-json {
+  display: block;
+  overflow: scroll;
+  .table {
+    tr {
+      td {
+        padding: 0px 10px 0px 0px;
+        white-space: nowrap;
+      }
+    }
   }
 }

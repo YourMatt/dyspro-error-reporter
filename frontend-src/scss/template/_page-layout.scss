@@ -17,6 +17,7 @@ body {
   margin-bottom: 15px;
   background: $color-content-background;
   border-radius: 5px;
+  overflow: hidden;
   h4 {
     border-bottom: 1px solid $color-heading-border;
     padding-bottom: 0px;
@@ -63,6 +64,9 @@ body {
   }
   hr {
     border-color: $color-heading-border;
+  }
+  .display-new-lines {
+    white-space: pre-wrap;
   }
 }
 

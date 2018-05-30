@@ -1,55 +1,74 @@
-var current_environment;
+/***********************************************************************************************************************
+ *
+ * DASHBOARD PAGE
+ *
+ **********************************************************************************************************************/
 
 app.controller ("DashboardController", ["$scope", function ($scope) {
 
-    $scope.error_occurrences = [];
+    // local properties
+    $scope.currentEnvironment = "Dev";
+    $scope.errorOccurrences = [];
 
-    $scope.changeEnvironmentTab = function (event) {
+    // local methods
+    $scope.loadErrorOccurrences = dashboardPage.loadErrorOccurrences;
+    $scope.changeEnvironmentTab = dashboardPage.changeEnvironmentTab;
 
-        current_environment = $(event.currentTarget).text().trim();
-        $(".nav-tabs a").removeClass("active");
-        $(event.currentTarget).addClass("active");
-
-        this.reloadErrorOccurrences ();
-    };
-
-    $scope.reloadErrorOccurrences = function () {
-        if (! current_environment) current_environment = $(".nav-tabs a.active").text().trim(); // TODO: load this from a different method
-
-        $.ajax("/api/errors/" + current_environment + "/20")
-            .done(function (results) {
-
-                if (results.error) {
-                    // TODO: Show error message on screen
-                    console.log("Error: " + results.error);
-                    return;
-                }
-
-                $scope.error_occurrences = [];
-                for (var i = 0; i < results.length; i++) {
-                    var error_occurrence = new ErrorOccurrence ();
-                    error_occurrence.error_occurrence_id = results[i].ErrorOccurrenceId;
-                    error_occurrence.environment = results[i].Environment;
-                    error_occurrence.message = results[i].Message;
-                    error_occurrence.server = results[i].Server;
-                    error_occurrence.user_name = results[i].UserName;
-                    error_occurrence.date = moment(results[i].Date);
-                    error_occurrence.error.error_id = results[i].ErrorId;
-                    error_occurrence.error.account_id = results[i].AccountId;
-                    error_occurrence.error.product = results[i].ProductName;
-                    error_occurrence.error.stack_trace = results[i].StackTrace;
-
-                    $scope.error_occurrences.push(error_occurrence);
-
-                }
-
-                // refresh the error list and show the table
-                $scope.$apply();
-                $("#RecentErrors").removeClass("hidden");
-
-            });
-    };
-
-    $scope.reloadErrorOccurrences ();
+    // initialize the page
+    dashboardPage.init($scope);
 
 }]);
+
+var dashboardPage = {
+
+    angularScope: null, // allows access to $scope in DashboardController
+
+    init: function (angularScope) {
+        dashboardPage.angularScope = angularScope;
+
+        dashboardPage.loadErrorOccurrences();
+
+    },
+
+    // Applies an object update to the related scope.
+    updateAngularValue: function (command) {
+
+        // run the provided function to update the value
+        command();
+
+        // evaluate if need to run $apply() - if left out, will generate errors when updating an existing value
+        var phase = dashboardPage.angularScope.$root.$$phase;
+        if (phase !== "$apply" && phase !== "$digest")
+            dashboardPage.angularScope.$apply();
+
+    },
+
+    // Loads latest error occurrences.
+    loadErrorOccurrences: function () {
+
+        $.ajax("/api/errors/" + dashboardPage.angularScope.currentEnvironment + "/20")
+        .done(function (results) {
+
+            // add results to scope
+            dashboardPage.updateAngularValue(function () {
+                dashboardPage.angularScope.errorOccurrences = results;
+            });
+
+        })
+        .fail(function (response) {
+            notifications.errorFromServiceResponse(response);
+        });
+
+    },
+
+    // Updates the current environment and loads all related error occurrences.
+    changeEnvironmentTab: function (environmentName) {
+
+        dashboardPage.updateAngularValue(function () {
+            dashboardPage.angularScope.currentEnvironment = environmentName;
+        });
+
+        dashboardPage.loadErrorOccurrences ();
+    }
+
+};

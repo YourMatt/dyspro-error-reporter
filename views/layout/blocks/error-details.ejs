@@ -1,29 +1,29 @@
-<h3>Error Details</h3>
+<h3>Source Error</h3>
 
-<table class="table">
-    <tr>
-        <td class="col-2">Product:</td>
-        <td class="col-10"><%= error.productName %></td>
-    </tr>
-    <tr>
-        <td>Stack Trace:</td>
-        <td class="newlines"><%= error.stackTrace %></td>
-    </tr>
-    <tr>
-        <td>Notes:</td>
-        <td>
+<div class="row">
+    <div class="col-2">Product:</div>
+    <div class="col-10"><%= error.productName %></div>
+</div>
 
-            <p><strong>10/17/2014 Matt Sadowski</strong>
-                <button type="button" class="btn btn-sm btn-warning">Edit</button>
-                <button type="button" class="btn btn-sm btn-danger">Delete</button>
-                <br/>Not yet sure what's up.  Started looking and found
-                it to not be usual.</p>
+<div class="row">
+    <div class="col-2">Stack Trace:</div>
+    <div class="col-10"><span class="display-new-lines table-json"><%= error.stackTrace %></span></div>
+</div>
 
-            <p><strong>10/18/2014 Matt Olsen</strong>
-                <br/>This is happening only in IE8.</p>
+<div class="row">
+    <div class="col-2">Notes:</div>
+    <div class="col-10">
 
-            <textarea placeholder="New Note" class="col-12"></textarea>
+        <p><strong>10/17/2014 Matt Sadowski</strong>
+            <button type="button" class="btn btn-sm btn-warning">Edit</button>
+            <button type="button" class="btn btn-sm btn-danger">Delete</button>
+            <br/>Not yet sure what's up.  Started looking and found
+            it to not be usual.</p>
 
-        </td>
-    </tr>
-</table>
+        <p><strong>10/18/2014 Matt Olsen</strong>
+            <br/>This is happening only in IE8.</p>
+
+        <textarea placeholder="New Note" class="col-12"></textarea>
+
+    </div>
+</div>

@@ -1,32 +1,34 @@
-<h3>Error Occurrence Details</h3>
+<h3>Error Occurrence</h3>
 
-<table class="table">
-    <tr>
-        <td class="col-2">User:</td>
-        <td class="col-10"><%= errorOccurrence.userName %></td>
-    </tr>
-    <tr>
-        <td>Server:</td>
-        <td><%= errorOccurrence.server %> (<%= errorOccurrence.environmentName %>)</td>
-    </tr>
-    <tr>
-        <td>Date:</td>
-        <td><%= moment(errorOccurrence.date).format("MMMM Do, YYYY [at] h:mm:ss a") %></td>
-    </tr>
-    <tr>
-        <td>Message:</td>
-        <td><%= errorOccurrence.message %></td>
-    </tr>
-    <tr>
-        <td>Attachments:</td>
-        <td><% if (! errorOccurrence.attachments.length) { %>
-            None
-            <% } else { %>
-            <% for (var i = 0; i < errorOccurrence.attachments.length; i++) { %>
-            <a href="/attachments/<%= errorOccurrence.errorOccurrenceId %>/<%= errorOccurrence.attachments[i].fileName %>" target="_new">
-                <%= errorOccurrence.attachments[i].fileName %>
-            </a>
-            <% } } %>
-        </td>
-    </tr>
-</table>
+<div class="row">
+    <div class="col-2">User:</div>
+    <div class="col-10"><%= errorOccurrence.userName %></div>
+</div>
+
+<div class="row">
+    <div class="col-2">Server:</div>
+    <div class="col-10"><%= errorOccurrence.server %> (<%= errorOccurrence.environmentName %>)</div>
+</div>
+
+<div class="row">
+    <div class="col-2">Date:</div>
+    <div class="col-10"><%= moment(errorOccurrence.date).format("MMMM Do, YYYY [at] h:mm:ss a") %></div>
+</div>
+
+<div class="row">
+    <div class="col-2">Message:</div>
+    <div class="col-10 display-new-lines"><%= errorOccurrence.message %></div>
+</div>
+
+<div class="row">
+    <div class="col-2">Attachments:</div>
+    <div class="col-10"><% if (! errorOccurrence.attachments.length) { %>
+        None
+        <% } else { %>
+        <% for (var i = 0; i < errorOccurrence.attachments.length; i++) { %>
+        <a href="/attachments/<%= errorOccurrence.errorOccurrenceId %>/<%= errorOccurrence.attachments[i].fileName %>" target="_new">
+            <%= errorOccurrence.attachments[i].fileName %>
+        </a>
+        <% } } %>
+    </div>
+</div>

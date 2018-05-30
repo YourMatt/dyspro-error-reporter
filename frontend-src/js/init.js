@@ -2,6 +2,9 @@ var app = angular.module ("ErrorReporter", []);
 
 $(document).ready (function () {
 
+    // build JSON tables
+    utilities.formatJsonTables();
+
     // add shade behind popover bubbles
     $(".popover-link")
     .on("show.bs.popover", function () {

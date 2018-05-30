@@ -6,7 +6,7 @@
 
 app.controller ("SettingsController", ["$scope", function ($scope) {
 
-    // add local properties
+    // local properties
     $scope.user = {};
     $scope.isUserFormSubmitDisabled = true;
 
@@ -17,7 +17,7 @@ app.controller ("SettingsController", ["$scope", function ($scope) {
     $scope.monitorTestResults = {};
     $scope.isMonitorFormSubmitDisabled = true;
 
-    // add local methods
+    // local methods
     $scope.saveUser = settingsPage.userForm.saveUser;
     $scope.saveMonitor = settingsPage.monitorForm.saveMonitor;
     $scope.resetForm = settingsPage.monitorForm.resetForm;

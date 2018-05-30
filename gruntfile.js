@@ -46,6 +46,7 @@ module.exports = function (grunt) {
                         "frontend-src/js/error-detail.js",
                         "frontend-src/js/settings.js",
                         // general
+                        "frontend-src/js/filters.js",
                         "frontend-src/js/notifications.js",
                         "frontend-src/js/utilities.js"
                     ]

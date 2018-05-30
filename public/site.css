@@ -6998,7 +6998,8 @@ body {
   box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.5);
   margin-bottom: 15px;
   background: #eee;
-  border-radius: 5px; }
+  border-radius: 5px;
+  overflow: hidden; }
   .tab-content h4, .page-content h4 {
     border-bottom: 1px solid #777;
     padding-bottom: 0px;
@@ -7032,6 +7033,8 @@ body {
       text-decoration: underline; }
   .tab-content hr, .page-content hr {
     border-color: #777; }
+  .tab-content .display-new-lines, .page-content .display-new-lines {
+    white-space: pre-wrap; }
 
 nav {
   padding: 0px 5px; }
@@ -7145,8 +7148,26 @@ button:disabled .disabled {
  * STYLES FOR TABLES
  *
  **********************************************************************************************************************/
-.table-sm th, .table-sm td {
-  padding-left: 22px; }
+table.table-sm th, table.table-sm td {
+  padding-left: 22px;
+  color: #222; }
+
+.table-json {
+  display: block;
+  overflow: scroll; }
+  .table-json .table tr td {
+    padding: 0px 10px 0px 0px;
+    white-space: nowrap; }
+
+/***********************************************************************************************************************
+ *
+ * STYLES SPECIFIC TO THE DASHBOARD PAGE
+ *
+ **********************************************************************************************************************/
+#page-dashboard table td a {
+  color: #222; }
+  #page-dashboard table td a:hover {
+    text-decoration: none; }
 
 /***********************************************************************************************************************
  *

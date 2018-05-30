@@ -144,7 +144,7 @@ exports.renderErrorDetail = function (req, res) {
                 return res.redirect(req.headers.referer);
             }
 
-            pageUtils.renderPage(req, res, "error-details.ejs", {
+            pageUtils.renderPage(req, res, "error-detail.ejs", {
                 error: error
             });
         }

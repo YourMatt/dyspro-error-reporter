@@ -74,9 +74,10 @@ exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentI
     db.selectMultiple(
         {
             sql:
-            "SELECT     eo.ErrorOccurrenceId, eo.EnvironmentId, eo.Message, eo.Server, eo.UserName, eo.Date " +
-            ",          e.ErrorId, e.AccountId, e.ProductId, e.StackTrace " +
+            "SELECT     eo.ErrorOccurrenceId, eo.Message, eo.Server, eo.UserName, eo.Date " +
+            ",          e.ErrorId " +
             ",          p.Name AS ProductName " +
+            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND Date <= eo.Date) AS NumOccurrences " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "INNER JOIN Products p ON p.ProductId = e.ProductId " +

@@ -8,7 +8,7 @@
         <div class="nav nav-tabs">
             <span class="nav-item navbar-text mr-3">Environment</span>
             <% for (var i = 0; i < environments.length; i++) { %>
-            <a class="nav-item nav-link<% if (selectedEnvironment.environmentId == environments[i].environmentId ) { %> active<% } %>" href="javascript:" ng-click="changeEnvironmentTab($event)">
+            <a class="nav-item nav-link" ng-class="{active: (currentEnvironment == '<%= environments[i].name %>')}" href="javascript:" ng-click="changeEnvironmentTab('<%= environments[i].name %>')">
                 <%= environments[i].name %>
             </a>
             <% } %>
@@ -16,11 +16,6 @@
     </nav>
 
     <div class="tab-content">
-
-        <section>
-            Description of page.
-        </section>
-
         <%- include("blocks/error-list") %>
     </div>
 
@@ -28,9 +23,13 @@
 
 <% } else { %>
 
-<div class="jumbotron">
-    <h1>Dashboard</h1>
-    <p>You have not logged any errors.</p>
+<div class="container-fluid">
+    <div class="page-content">
+        <section>
+            <h1>Dashboard</h1>
+            <p>No activity.</p>
+        </section>
+    </div>
 </div>
 
 <% } %>
