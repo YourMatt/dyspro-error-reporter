@@ -15,29 +15,27 @@ let self = function (errorId, environmentId, environmentName, message, server, u
     this.date = date;
     this.errorOccurrenceId = utils.toInt(errorOccurrenceId);
     this.attachments = [];
+    this.errorMessage = ""; // set by isValid
+};
 
-    this.errorMessage = "";
+self.prototype.isValid = function () {
 
-    this.isValid = function () {
+    let missingFields = [];
+    let maxLengthExceededFields = [];
+    let outOfBoundsFields = [];
 
-        let missingFields = [];
-        let maxLengthExceededFields = [];
-        let outOfBoundsFields = [];
+    if (!this.errorId) missingFields.push("errorId");
 
-        if (!this.errorId) missingFields.push("errorId");
+    if (!this.environmentId) missingFields.push("environmentId");
 
-        if (!this.environmentId) missingFields.push("environmentId");
+    if (this.message && this.message.length > 64000) maxLengthExceededFields.push("message");
 
-        if (this.message.length > 64000) maxLengthExceededFields.push("message");
+    if (this.server && this.server.length > 50) maxLengthExceededFields.push("server");
 
-        if (this.server.length > 50) maxLengthExceededFields.push("server");
+    if (this.userName && this.userName.length > 50) maxLengthExceededFields.push("userName");
 
-        if (this.userName.length > 50) maxLengthExceededFields.push("userName");
-
-        this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
-        return (this.errorMessage === "");
-
-    }
+    this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
+    return (this.errorMessage === "");
 
 };
 

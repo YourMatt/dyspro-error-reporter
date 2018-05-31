@@ -13,26 +13,24 @@ let self = function (accountId, errorId, message, userId, userName, date, errorN
     this.message = message;
     this.date = date;
     this.errorNoteId = utils.toInt(errorNoteId);
+    this.errorMessage = ""; // set by isValid
+};
 
-    this.errorMessage = "";
+self.prototype.isValid = function () {
 
-    this.isValid = function () {
+    let missingFields = [];
+    let maxLengthExceededFields = [];
+    let outOfBoundsFields = [];
 
-        let missingFields = [];
-        let maxLengthExceededFields = [];
-        let outOfBoundsFields = [];
+    if (!this.errorId) missingFields.push("errorId");
 
-        if (!this.errorId) missingFields.push("errorId");
+    if (!this.userId) missingFields.push("userId");
 
-        if (!this.userId) missingFields.push("userId");
+    if (!this.message) missingFields.push("message");
+    else if (this.message.length > 64000) maxLengthExceededFields.push("message");
 
-        if (!this.message) missingFields.push("message");
-        else if (this.message.length > 64000) maxLengthExceededFields.push("message");
-
-        this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
-        return (this.errorMessage === "");
-
-    }
+    this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
+    return (this.errorMessage === "");
 
 };
 

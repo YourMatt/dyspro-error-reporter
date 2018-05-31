@@ -11,24 +11,22 @@ let self = function (accountId, name, sequence, createDate, productId) {
     this.sequence = sequence;
     this.createDate = createDate;
     this.productId = utils.toInt(productId);
+    this.errorMessage = ""; // set by isValid
+};
 
-    this.errorMessage = "";
+self.prototype.isValid = function () {
 
-    this.isValid = function () {
+    let missingFields = [];
+    let maxLengthExceededFields = [];
+    let outOfBoundsFields = [];
 
-        let missingFields = [];
-        let maxLengthExceededFields = [];
-        let outOfBoundsFields = [];
+    if (!this.name) missingFields.push("name");
+    else if (this.name.length > 50) maxLengthExceededFields.push("name");
 
-        if (!this.name) missingFields.push("name");
-        else if (this.name.length > 50) maxLengthExceededFields.push("name");
+    if (this.sequence && (this.sequence < 1 || this.sequence > 100)) outOfBoundsFields.push("sequence");
 
-        if (this.sequence && (this.sequence < 1 || this.sequence > 100)) outOfBoundsFields.push("sequence");
-
-        this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
-        return (this.errorMessage === "");
-
-    }
+    this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
+    return (this.errorMessage === "");
 
 };
 

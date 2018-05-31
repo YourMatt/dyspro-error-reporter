@@ -12,33 +12,31 @@ let self = function (monitorId, metric, day, rawData, averagesPer15MinuteInterva
     this.rawData = rawData; // comma-separated list
     this.averagesPer15MinuteInterval = averagesPer15MinuteInterval; // comma-separated list
     this.averageForDay = averageForDay; // this is a string to allow state tracking, ie if raw data is a series of "good" and "bad", the average can be calculated as most occurrences of either
+    this.errorMessage = ""; // set by isValid
+};
 
-    this.errorMessage = "";
+self.prototype.isValid = function () {
 
-    this.isValid = function () {
+    let missingFields = [];
+    let maxLengthExceededFields = [];
+    let outOfBoundsFields = [];
 
-        let missingFields = [];
-        let maxLengthExceededFields = [];
-        let outOfBoundsFields = [];
+    if (!this.monitorId) missingFields.push("monitorId");
 
-        if (!this.monitorId) missingFields.push("monitorId");
+    if (!this.metric) missingFields.push("metric");
+    else if (this.metric.length > 50) maxLengthExceededFields.push("metric");
 
-        if (!this.metric) missingFields.push("metric");
-        else if (this.metric.length > 50) maxLengthExceededFields.push("metric");
+    if (!this.day) missingFields.push("day");
+    else if (this.day.length !== 8) outOfBoundsFields.push("day");
 
-        if (!this.day) missingFields.push("day");
-        else if (this.day.length !== 8) outOfBoundsFields.push("day");
+    if (this.rawData && this.rawData.length > 16000000) maxLengthExceededFields.push("rawData");
 
-        if (this.rawData.length > 16000000) maxLengthExceededFields.push("rawData");
+    if (this.averagesPer15MinuteInterval && this.averagesPer15MinuteInterval.length > 1000) maxLengthExceededFields.push("averagesPer15MinuteInterval");
 
-        if (this.averagesPer15MinuteInterval.length > 1000) maxLengthExceededFields.push("averagesPer15MinuteInterval");
+    if (this.averageForDay && this.averageForDay.length > 25) maxLengthExceededFields.push("averageForDay");
 
-        if (this.averageForDay.length > 25) maxLengthExceededFields.push("averageForDay");
-
-        this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
-        return (this.errorMessage === "");
-
-    }
+    this.errorMessage = utils.buildApiFieldErrorMessage(missingFields, maxLengthExceededFields, outOfBoundsFields);
+    return (this.errorMessage === "");
 
 };
 
