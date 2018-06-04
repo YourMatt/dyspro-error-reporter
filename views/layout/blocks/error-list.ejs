@@ -1,17 +1,22 @@
 <div ng-show="errorOccurrences.length">
 
     <section>
-        <h3><ng-pluralize count="errorOccurrences.length" when="{'one': 'Latest Error', 'other': 'Latest {} Errors'}"></ng-pluralize></h3>
+        <h3>
+            Displaying {{errorOccurrences.length}} of {{totalErrors}}
+            <ng-pluralize count="errorOccurrences.length" when="{'one': 'Error', 'other': 'Errors'}"></ng-pluralize>
+        </h3>
     </section>
 
     <table id="RecentErrors" class="table table-sm table-hover table-striped">
         <thead>
         <tr>
-            <th class="row">
-                <div class="col-3">Date</div>
-                <div class="col-1">Count</div>
-                <div class="col-2">Product</div>
-                <div class="col-6">User</div>
+            <th>
+                <div class="float-left occurrence-spacer">&nbsp;</div>
+                <div class="row">
+                    <div class="col-3">Date</div>
+                    <div class="col-2">Product</div>
+                    <div class="col-7">User</div>
+                </div>
             </th>
         </tr>
         </thead>
@@ -19,14 +24,14 @@
         <tr ng-repeat="eo in errorOccurrences">
             <td>
                 <a href="/errors/{{eo.ErrorId}}/occurrence/{{eo.ErrorOccurrenceId}}">
+                    <div class="float-left occurrence">{{eo.OccurrenceIteration}}</div>
                     <div class="row text-nowrap">
                         <div class="col-3"><strong>{{eo.Date|formatDate:"MM/DD/YYYY [at] h:mm:ss A"}}</strong></div>
-                        <div class="col-1">{{eo.NumOccurrences}}</div>
                         <div class="col-2">{{eo.ProductName}}</div>
-                        <div class="col-6 text-truncate">{{eo.UserName}}</div>
+                        <div class="col-7 text-truncate">{{eo.UserName}}</div>
                     </div>
                     <div class="row">
-                        <div class="col-12 text-truncate">{{eo.Message|firstLine}}</div>
+                        <div class="col-11 text-truncate">{{eo.Message|firstLine}}</div>
                     </div>
                 </a>
             </td>

@@ -64,8 +64,8 @@ exports.error = {
 
     getLatestForEnvironment: function (req, res) {
 
-        let numErrors = utils.toInt(req.params.count);
-        if (!numErrors) numErrors = 20;
+        let sinceDate = req.params.sinceDate;
+        if (!sinceDate) sinceDate = "2018-01-01T00:00:00.000Z"; // default to beginning of time if no date set
 
         apiUtils.loadEnvironmentId(req, res, req.params.environment, function(environmentId) {
 
@@ -73,7 +73,7 @@ exports.error = {
                 req.db,
                 req.accountId,
                 environmentId,
-                numErrors,
+                sinceDate,
                 function (errors) {
                     apiUtils.sendResponse(res, 200, errors);
                 }

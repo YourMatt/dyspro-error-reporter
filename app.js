@@ -49,7 +49,7 @@ app.get     ("/logout", pageManager.processLogout);
 // handle api requests
 // errors
 app.get     ("/api/error/:errorId", api.error.getSingle);
-app.get     ("/api/errors/:environment/:count?", api.error.getLatestForEnvironment);
+app.get     ("/api/errors/:environment/:sinceDate?", api.error.getLatestForEnvironment);
 app.post    ("/api/error", api.error.create);
 // error notes
 app.get     ("/api/errornote/:errorNoteId", api.errorNotes.getSingle);

@@ -69,7 +69,7 @@ exports.getAllByErrorAndEnvironment = function (db, errorId, environmentId, call
 
 // Loads the latest errors from an account.
 // callback(array: List of error occurrences)
-exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentId, limit, callback) {
+exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentId, sinceDate, callback) {
 
     db.selectMultiple(
         {
@@ -77,18 +77,21 @@ exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentI
             "SELECT     eo.ErrorOccurrenceId, eo.Message, eo.Server, eo.UserName, eo.Date " +
             ",          e.ErrorId " +
             ",          p.Name AS ProductName " +
-            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND Date <= eo.Date) AS NumOccurrences " +
+            ",          en.Name AS EnvironmentName " +
+            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND Date <= eo.Date) AS OccurrenceIteration " +
+            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId) AS OccurrenceTotal " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "INNER JOIN Products p ON p.ProductId = e.ProductId " +
+            "INNER JOIN Environments en ON en.EnvironmentId = eo.EnvironmentId " +
             "WHERE      e.AccountId = ? " +
             "AND        eo.EnvironmentId = ? " +
-            "ORDER BY   Date DESC " +
-            "LIMIT ?    OFFSET 0 ",
+            "AND        eo.Date > CONVERT_TZ(?, '+00:00', @@global.time_zone) " +
+            "ORDER BY   Date DESC ",
             values: [
                 accountId,
                 environmentId,
-                limit
+                sinceDate
             ]
         },
         callback

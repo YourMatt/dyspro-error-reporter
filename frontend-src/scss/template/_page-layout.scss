@@ -82,6 +82,7 @@ nav {
       color: $color-content-tab-text;
       &.active {
         background-color: $color-content-tab-background;
+        color: $color-content-tab-text;
         &:hover {
           background-color: $color-content-tab-background;
         }

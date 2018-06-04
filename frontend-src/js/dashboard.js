@@ -6,12 +6,15 @@
 
 app.controller ("DashboardController", ["$scope", function ($scope) {
 
+    // default local storage options
+    if (!localStorage.selectedEnvironment) localStorage.selectedEnvironment = "Dev"; // TODO: Set to use an environment held by the current account
+
     // local properties
-    $scope.currentEnvironment = "Dev";
+    $scope.currentEnvironment = localStorage.selectedEnvironment;
     $scope.errorOccurrences = [];
+    $scope.totalErrors = 0;
 
     // local methods
-    $scope.loadErrorOccurrences = dashboardPage.loadErrorOccurrences;
     $scope.changeEnvironmentTab = dashboardPage.changeEnvironmentTab;
 
     // initialize the page
@@ -43,15 +46,16 @@ var dashboardPage = {
 
     },
 
-    // Loads latest error occurrences.
-    loadErrorOccurrences: function () {
+    // Loads error occurrences.
+    loadErrorOccurrences: function (sinceDate) {
 
-        $.ajax("/api/errors/" + dashboardPage.angularScope.currentEnvironment + "/20")
+        $.ajax("/api/errors/" + dashboardPage.angularScope.currentEnvironment + ((sinceDate) ? ("/" + sinceDate) : ""))
         .done(function (results) {
 
             // add results to scope
             dashboardPage.updateAngularValue(function () {
                 dashboardPage.angularScope.errorOccurrences = results;
+                dashboardPage.angularScope.totalErrors = results.length;
             });
 
         })
@@ -64,8 +68,10 @@ var dashboardPage = {
     // Updates the current environment and loads all related error occurrences.
     changeEnvironmentTab: function (environmentName) {
 
+        localStorage.selectedEnvironment = environmentName;
+
         dashboardPage.updateAngularValue(function () {
-            dashboardPage.angularScope.currentEnvironment = environmentName;
+            dashboardPage.angularScope.currentEnvironment = localStorage.selectedEnvironment;
         });
 
         dashboardPage.loadErrorOccurrences ();
