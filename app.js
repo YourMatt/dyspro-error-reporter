@@ -5,18 +5,18 @@
  **********************************************************************************************************************/
 
 // load configuration values
-require ("dotenv").config();
+require("dotenv").config();
 
 // include libraries from node modules
-const bodyParser = require ("body-parser"),
-    busboy = require ("connect-busboy"),
-    compression = require ("compression"),
-    ejs = require ("ejs"),
-    express = require ("express"),
-    session = require ("express-session");
+const bodyParser = require("body-parser"),
+    busboy = require("connect-busboy"),
+    compression = require("compression"),
+    ejs = require("ejs"),
+    express = require("express"),
+    session = require("express-session");
 
 // include local libraries
-const api = require ("./apiprocessor"),
+const api = require("./apiprocessor"),
     middleware = require("./middleware"),
     pageManager = require("./pagemanager");
 

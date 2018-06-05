@@ -12,6 +12,7 @@
   "author": "Matt Sadowski",
   "dependencies": {
     "angular": "^1.6.10",
+    "async": "^2.6.1",
     "body-parser": "^1.18.2",
     "bootstrap": "^4.1.1",
     "compression": "^1.7.2",

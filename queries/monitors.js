@@ -85,6 +85,45 @@ exports.getAllByAccountId = function(db, accountId, callback) {
 
 };
 
+// Loads all monitors eligible for processing by its interval period.
+// callback(array: List of model.Monitor)
+exports.getAllByInterval = function (db, cronIntervalSeconds, callback) {
+
+    // selects all monitors where the current second is within 5 seconds of the interval period - this 5 seconds
+    // accounts for any possible difference between web server time and database time, and thus should always match the
+    // cron run interval on the server
+    db.selectMultiple(
+        {
+            sql:
+            "SELECT  MonitorId, AccountId, EndpointUri, IntervalSeconds " +
+            "FROM    Monitors " +
+            "WHERE   TIME_TO_SEC(NOW()) % IntervalSeconds < ? " +
+            "OR (    TIME_TO_SEC(NOW()) = 25200 AND IntervalSeconds = 0) ",
+            values: [
+                cronIntervalSeconds
+            ]
+        },
+        function (m) {
+            if (!m) return callback([]);
+
+            let monitors = [];
+            for (let i = 0; i < m.length; i++) {
+                monitors.push(new models.Monitor(
+                    m[i].AccountId,
+                    0, "",
+                    0, "",
+                    m[i].EndpointUri,
+                    m[i].IntervalSeconds,
+                    m[i].MonitorId
+                ));
+            }
+            callback(monitors);
+
+        }
+    );
+
+};
+
 // Creates a new record.
 // callback(int: Monitor ID)
 exports.create = function(db, monitor, callback) {
