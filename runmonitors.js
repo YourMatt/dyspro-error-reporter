@@ -1,7 +1,7 @@
 #!/usr/bin/env nodejs
 
 // load configuration values
-require("dotenv").config();
+require("dotenv").config({path: "/etc/dyspromonitor.conf"});
 
 // include libraries from node modules
 const async = require("async"),

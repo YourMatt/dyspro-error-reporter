@@ -5,7 +5,7 @@
  **********************************************************************************************************************/
 
 // load configuration values
-require("dotenv").config();
+require("dotenv").config({path: "/etc/dyspromonitor.conf"});
 
 // include libraries from node modules
 const bodyParser = require("body-parser"),
