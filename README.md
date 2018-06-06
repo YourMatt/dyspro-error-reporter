@@ -24,6 +24,9 @@ Params:
  stackTrace     A stack trace showing where in the code the error originated from - This is used not only for debug,
                 but acts as an identifier for grouping error occurrences
 
+GET /api/monitor/[monitor id]/stats/[period as: day, week, month, year]
+
+
 Crontab Entries
 
 Sets to run at minimum resolution of 15 seconds.

@@ -502,7 +502,39 @@ exports.monitor = {
             apiUtils.sendResponse(res, 200, monitorResponse);
         });
 
-    }
+    },
+
+    getStats: function (req, res) {
+
+        const monitorId = utils.toInt(req.params.monitorId),
+            period = req.params.period;
+
+        if (!monitorId) return apiUtils.sendResponse(res, 400, "Missing monitor ID.");
+
+        // validate that the time period is an accepted type
+        const validPeriods = ["day", "week", "month", "year"];
+        if (validPeriods.indexOf(period) < 0) return apiUtils.sendResponse(res, 400, "Invalid time period.");
+
+        // load the monitor
+        queries.monitors.get(req.db, monitorId, function(monitor) {
+            if (monitor.accountId !== req.accountId) return apiUtils.sendResponse(res, 403, "Monitor does not exist.");
+
+            if (period === "day") {
+                queries.monitorResults.loadStatsForDay(req.db, monitorId, monitor.intervalSeconds, function (stats) {
+
+                    apiUtils.sendResponse(res, 200, stats);
+
+                });
+            }
+
+            // TODO: Add functionality for other time periods
+            else {
+                apiUtils.sendResponse(res, 400, "Time period not yet supported.");
+            }
+
+        });
+
+    },
 
 };
 
