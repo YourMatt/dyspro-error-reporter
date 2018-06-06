@@ -23,3 +23,12 @@ Params:
  userName       An account identifier for tracking who was affected
  stackTrace     A stack trace showing where in the code the error originated from - This is used not only for debug,
                 but acts as an identifier for grouping error occurrences
+
+Crontab Entries
+
+Sets to run at minimum resolution of 15 seconds.
+
+* * * * * node /srv/dyspro-system-monitor/runmonitors.js
+* * * * * sleep 15 && node /srv/dyspro-system-monitor/runmonitors.js
+* * * * * sleep 30 && node /srv/dyspro-system-monitor/runmonitors.js
+* * * * * sleep 45 && node /srv/dyspro-system-monitor/runmonitors.js
