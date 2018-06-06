@@ -29,7 +29,7 @@ let script = {
 
         script.db = new databaseAccessor(function (success) {
             if (!success) {
-                shell.writeLog("Error connecting to database.");
+                script.writeLog("Error connecting to database.");
                 script.exit();
             }
 
