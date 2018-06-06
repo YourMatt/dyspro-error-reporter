@@ -98,8 +98,9 @@ exports.getAllByInterval = function (db, cronIntervalSeconds, callback) {
             "SELECT  MonitorId, AccountId, EndpointUri, IntervalSeconds " +
             "FROM    Monitors " +
             "WHERE   TIME_TO_SEC(NOW()) % IntervalSeconds < ? " +
-            "OR (    TIME_TO_SEC(NOW()) = 25200 AND IntervalSeconds = 0) ",
+            "OR (    TIME_TO_SEC(NOW()) >= 25200 AND TIME_TO_SEC(NOW()) < (25200 + ?) AND IntervalSeconds = 0) ", // always run daily monitors at 7am
             values: [
+                cronIntervalSeconds,
                 cronIntervalSeconds
             ]
         },

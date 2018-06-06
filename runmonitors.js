@@ -12,6 +12,7 @@ const async = require("async"),
 const databaseAccessor = require("./databaseaccessor"),
     models = require("./models/all"),
     monitorQueries = require("./queries/monitors"),
+    monitorResultQueries = require("./queries/monitorresults"),
     uriMonitor = require("./urimonitor");
 
 let script = {
@@ -70,17 +71,39 @@ let script = {
 
         if (!script.monitors.length) return callback();
 
+        // remove the first element - this function will be called recursively until no monitors remain
         const currentMonitor = script.monitors.shift();
         script.writeLog(sprintf("Processing monitor %d against %s.", currentMonitor.monitorId, currentMonitor.endpointUri));
-        console.log(currentMonitor);
 
+        // load data from the URI
         uriMonitor.getResponse(currentMonitor.endpointUri, function (response) {
 
             script.writeLog(sprintf("Received response with status %d in %dms.", response.statusCode, response.responseMilliseconds));
-            response.response = "length was " + response.response.length;
-            console.log(response);
 
-            script.processMonitors(callback);
+            // build the list of metrics to store in the database
+            let metrics = [];
+            metrics.push(["responseTime", response.responseMilliseconds]); // all will include the time it took to load, but this can be overridden by the a metric of the same name if the user wants to track server time without network overhead
+            let metricKeys = Object.keys(response.responseParsed);
+            for (let i = 0; i < metricKeys.length; i++) {
+                metrics.push([metricKeys[i], response.responseParsed[metricKeys[i]]]);
+            }
+
+            // store metrics in the database
+            for (let i = 0; i < metrics.length; i++) {
+                monitorResultQueries.upsert(
+                    script.db,
+                    currentMonitor.monitorId,
+                    metrics[i][0],
+                    metrics[i][1],
+                    function (numUpdated) {
+                        if (!numUpdated) script.writeLog(sprintf("Could not add metric %s with value of %s to monitor results.", metrics[i][0], metrics[i][1]));
+
+                        if ((i + 1) === metrics.length)
+                            script.processMonitors(callback);
+
+                    }
+                );
+            }
 
         });
 
