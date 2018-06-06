@@ -47,7 +47,9 @@ module.exports = function (grunt) {
                         "frontend-src/js/settings.js",
                         // general
                         "frontend-src/js/filters.js",
+                        "frontend-src/js/graphing.js",
                         "frontend-src/js/notifications.js",
+                        "frontend-src/js/standard-object-extensions.js",
                         "frontend-src/js/utilities.js"
                     ]
                 }
@@ -68,7 +70,9 @@ module.exports = function (grunt) {
                         "node_modules/moment/moment.js",
                         "node_modules/toastr/toastr.js",
                         // third-party scripts not available through npm
-                        "frontend-src/js/plugins/jquery.mask.js"
+                        "frontend-src/js/plugins/jquery.mask.js",
+                        "frontend-src/js/plugins/snap.svg-min.js",
+                        "frontend-src/js/plugins/snap.svg.showhide.js"
                     ]
                 }
             }

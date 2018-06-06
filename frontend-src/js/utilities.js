@@ -62,5 +62,3 @@ var utilities = {
     }
 
 };
-
-var toptest = [];
