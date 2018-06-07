@@ -54,6 +54,7 @@ exports.loadStatsForDay = function (db, monitorId, monitorIntervalSeconds, callb
 
             for (let i = 0; i < s.length; i++) {
                 let rawDataPieces = s[i].RawData.split(",");
+                delete s[i].RawData;
 
                 // set the data unit type
                 if (rawDataPieces.length) {
@@ -89,10 +90,36 @@ exports.loadStatsForDay = function (db, monitorId, monitorIntervalSeconds, callb
                     rawDataPieces = paddedElements.concat(rawDataPieces);
                 }
 
-                delete s[i].RawData;
-                s[i].Stats = rawDataPieces.join(",");
-                s[i].StatCount = rawDataPieces.length;
-                s[i].IntervalSeconds = monitorIntervalSeconds;
+                // find number of elements in current 15-minute interval
+                let minutesPerAveragedPeriod = 15;
+                let currentTime = new Date();
+                let secondsInCurrentHour = currentTime.getMinutes() * 60 + currentTime.getSeconds();
+                let numStatsInEachPeriod = Math.round(minutesPerAveragedPeriod * 60 / monitorIntervalSeconds);
+                let numStatsInCurrentPeriod = Math.floor(secondsInCurrentHour / monitorIntervalSeconds) % numStatsInEachPeriod;
+
+                // build averages and split higher-resolution stats into separate arrays that make up each period average
+                let averagedStats = [];
+                let statsPerPeriod = [];
+                let statsInCurrentPeriod = [];
+                let periodTotal = 0;
+                for (let j = 0; j < rawDataPieces.length; j++) {
+
+                    let currentValue = parseInt(rawDataPieces[j]);
+                    periodTotal += currentValue;
+                    statsInCurrentPeriod.push(currentValue);
+
+                    if (j % numStatsInEachPeriod === (numStatsInEachPeriod - numStatsInCurrentPeriod - 1) || j === rawDataPieces.length - 1) {
+                        averagedStats.push(Math.round(periodTotal / statsInCurrentPeriod.length));
+                        periodTotal = 0;
+                        statsPerPeriod.push(statsInCurrentPeriod.join(","));
+                        statsInCurrentPeriod = [];
+                    }
+
+                }
+
+                s[i].AveragedStats = averagedStats.join(",");
+                s[i].StatsPerPeriod = statsPerPeriod;
+
             }
 
             callback(s);
