@@ -60,6 +60,7 @@ app.delete  ("/api/errornote/:errorNoteId", api.errorNotes.delete);
 // monitors
 app.get     ("/api/monitor/:monitorId", api.monitor.getSingle);
 app.get     ("/api/monitors", api.monitor.getAllInAccount);
+app.get     ("/api/monitors/:environment", api.monitor.getAllForEnvironment);
 app.get     ("/api/monitor/test/:uri", api.monitor.testUri);
 app.get     ("/api/monitor/:monitorId/stats/:period", api.monitor.getStats);
 app.post    ("/api/monitor", api.monitor.create);

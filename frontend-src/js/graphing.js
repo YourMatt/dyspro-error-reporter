@@ -7,9 +7,6 @@
 $(document).ready (function () {
 
     dysproGraph.BuildGraph();
-        
-    // add tooltip for disabled buttons
-    $("#GraphOptionSelector li").tooltip ();
 
 });
 $(window).resize (function () {
@@ -20,7 +17,7 @@ $(window).resize (function () {
 
 var dysproGraph = {
 
-    graphType: "",             // loaded from SVG element
+    graphType: "",              // loaded from SVG element
     gameData: {
         scores: [],             // loaded from HTML instructions
         levels: [],             // loaded from HTML instructions
@@ -29,7 +26,6 @@ var dysproGraph = {
         stats: {                // added through initialize graph method
             highScore: 0,
             lowScore: 0,
-            averageScore: 0,
             highLevel: 0
         },
         totalScores: 0,
@@ -52,7 +48,7 @@ var dysproGraph = {
         graphLevelSpacing: 0,
         graphMarginTop: 30,     // area above the graph area
         graphMarginBottom: 50,  // area below the graph area
-        graphMarginMinLeft: 50, // minimum margin for left and right margins
+        graphMarginMinLeft: 25, // minimum margin for left and right margins
         labelMarginTop: 5,      // spacing from the top where labels should be from the top of the graph
         labelMarginLeft: 10,    // spacing from the left axis where labels should be from the left of the graph
         labelMarginBottom: 14,  // spacing from the bottom axis where labels should be from the bottom of the graph
@@ -61,7 +57,6 @@ var dysproGraph = {
     colors: {
         axisLine: "#888888",
         graphLine: "#333333",
-        averageLine: "#f26522",
         levelWithoutTime: "#e6e6e6",
         alert: [ // ranges from worst to best
             "#ed2024",
@@ -79,7 +74,6 @@ var dysproGraph = {
     sizes: {
         axisLine: 2,
         graphLine: 3,
-        averageLine: 1,
         bestLine: 1,
         barGraphWidthPercent: 80,        // the percentage of the available width the bar with use
         labelSmall: 14,
@@ -113,7 +107,7 @@ var dysproGraph = {
         // load the base size information from the HTML page
         this.dims.width = $("#ProgressGraph").width ();
         this.dims.height = $("#ProgressGraph").height ();
-        if (this.dims.width == this.lastBuildWidth && this.graphType == this.lastGraphType) return false; // don't rebuild if the graph hasn't changed size and hasn't changed type, even if the page has
+        //if (this.dims.width == this.lastBuildWidth && this.graphType == this.lastGraphType) return false; // don't rebuild if the graph hasn't changed size and hasn't changed type, even if the page has
         this.lastBuildWidth = this.dims.width;
         this.lastGraphType = this.graphType;
 
@@ -140,42 +134,7 @@ var dysproGraph = {
         this.dims.graphPositionBottom = this.dims.height - this.dims.graphMarginBottom;
         this.dims.graphHeight = this.dims.graphPositionBottom - this.dims.graphPositionTop;
 
-        // changed to keep the score graph width when switching to the level graph
-        // find the left and right margins by calculating the size of the average score label - this will be removed when building the graph
-        var leftLabel = this.canvas.text (0, 100, this.gameData.stats.averageScore.toLocaleString());
-        leftLabel.attr ({
-            fontSize: this.sizes.labelMedium + "px"
-        });
-        var textWidthLeftLabel = parseInt (leftLabel.getBBox().width);
-
-        /*
-        // account for width of margin for score graph
-        if (this.graphType == "scores") {
-
-           // find the left and right margins by calculating the size of the average score label - this will be removed when building the graph
-           var leftLabel = this.canvas.text (0, 100, this.gameData.stats.averageScore.toLocaleString());
-           leftLabel.attr ({
-              fontSize: this.sizes.labelMedium + "px"
-           });
-           var textWidthLeftLabel = parseInt (leftLabel.getBBox().width);
-
-        }
-
-        // account for width of margin for level graph
-        else if (this.graphType == "levels") {
-
-           // find the left and right margin by calculating the size of the highest level label - this will be removed when building the graph
-           var leftLabel = this.canvas.text (0, 100, this.gameData.stats.highLevel);
-           leftLabel.attr ({
-              fontSize: this.sizes.labelSmall + "px"
-           });
-           var textWidthLeftLabel = parseInt (leftLabel.getBBox().width);
-
-        }
-        */
-
-        this.dims.graphPositionLeft = textWidthLeftLabel + this.dims.labelMarginLeft * 2; // double the margin for left and right padding, which looks better if ever put in a box
-        if (this.dims.graphPositionLeft < this.dims.graphMarginMinLeft) this.dims.graphPositionLeft = this.dims.graphMarginMinLeft; // set minimum width of the margin area
+        this.dims.graphPositionLeft = this.dims.graphMarginMinLeft; // set minimum width of the margin area
 
         this.dims.graphPositionRight = this.dims.width - this.dims.graphPositionLeft;
         this.dims.graphWidth = this.dims.graphPositionRight - this.dims.graphPositionLeft;
@@ -204,23 +163,21 @@ var dysproGraph = {
 
         this.gameData.stats.highScore = highScore;
         this.gameData.stats.lowScore = lowScore;
-        this.gameData.stats.averageScore = Math.round (totalScores / numScores);
         this.gameData.stats.highLevel = highLevel;
 
     },
 
     DrawGraph: function () {
 
-        if (this.graphType == "line") this.DrawScoreGraph ();
-        else if (this.graphType == "levels") this.DrawLevelGraph ();
+        if (this.graphType == "line") this.DrawLineGraph ();
+        //else if (this.graphType == "levels") this.DrawLevelGraph (); // TODO: Change to "bar" as type
 
     },
 
-    DrawScoreGraph: function () {
+    DrawLineGraph: function () {
 
         this.DrawAxisLines ();
-        this.DrawBottomDateLabels ();
-        this.DrawLeftScoreLabels ();
+        //this.DrawBottomDateLabels ();
 
         var graphTopLimit = this.dims.graphPositionTop + this.dims.graphPadding;
         var graphBottomLimit = this.dims.graphPositionBottom - this.dims.graphPadding;
@@ -356,6 +313,7 @@ var dysproGraph = {
 
     },
 
+    /*
     DrawLevelGraph: function () {
 
         this.DrawAxisLines ();
@@ -399,6 +357,7 @@ var dysproGraph = {
         }
 
     },
+    */
 
     DrawAxisLines: function () {
 
@@ -425,49 +384,7 @@ var dysproGraph = {
 
     },
 
-    DrawLeftScoreLabels: function () {
-
-        var smallLabelStyle = {
-            fontSize: this.sizes.labelSmall,
-            fill: this.colors.averageLine
-        };
-        var mediumLabelStyle = {
-            fontSize: this.sizes.labelMedium,
-            fill: this.colors.averageLine
-        };
-        var averageAxisStyle = {
-            stroke: this.colors.averageLine,
-            strokeWidth: this.sizes.averageLine
-        };
-
-        // calculate positions
-        var topPositionPercent = 0.5;
-        if (this.gameData.stats.highScore != this.gameData.stats.lowScore) {
-            topPositionPercent = (this.gameData.stats.averageScore - this.gameData.stats.lowScore) / (this.gameData.stats.highScore - this.gameData.stats.lowScore);
-        }
-        var averageLinePositionTop = this.dims.graphPositionBottom - (this.dims.graphHeight * topPositionPercent); // this does not take into account the graph padding, but will not make a discernible difference
-
-        // draw the line marking the average
-        this.canvas.path ("M{0} {1}L{2} {3}".format (
-            this.dims.graphPositionLeft,
-            averageLinePositionTop,
-            this.dims.graphPositionRight,
-            averageLinePositionTop
-        )).attr (averageAxisStyle);
-
-        // draw the labels
-        this.canvas.text (this.dims.labelMarginLeft, averageLinePositionTop + (this.sizes.labelMedium / 2), this.gameData.stats.averageScore.toLocaleString ())
-        .attr (mediumLabelStyle);
-
-        var labelTitle = this.canvas.text (0, 0, "avg")
-        .attr (smallLabelStyle);
-        labelTitle.transform ("t{0},{1}".format (
-            (this.dims.graphPositionLeft / 2) - (labelTitle.getBBox().width / 2),
-            averageLinePositionTop - (this.sizes.labelMedium / 2)
-        ));
-
-    },
-
+    /*
     DrawLeftLevelLabels: function () {
 
         // set the level to show for each horizontal line
@@ -513,7 +430,9 @@ var dysproGraph = {
         }
 
     },
+    */
 
+    /*
     DrawBottomDateLabels: function () {
 
         // set the label text
@@ -549,6 +468,7 @@ var dysproGraph = {
         ));
 
     },
+    */
 
     DrawScoreIndicator: function (positionLeft, scoreIndex) {
 
@@ -594,13 +514,16 @@ var dysproGraph = {
 
     },
 
+    /*
     GetFormattedStartDate: function (startDate) {
 
         // always use the month and year for the start date instead of time ago
         return moment.unix(startDate).format("MMMM YYYY");
 
     },
+    */
 
+    /*
     GetFormattedEndDate: function (endDate) {
 
         var today = new Date (Date.parse (moment().format("MM/DD/YYYY")));
@@ -622,7 +545,9 @@ var dysproGraph = {
         return endDescription;
 
     },
+    */
 
+    /*
     GetFormattedDateRange: function (unixDateStart, unixDateEnd) {
 
         var dateRangeSeconds = unixDateEnd - unixDateStart;
@@ -649,6 +574,7 @@ var dysproGraph = {
         return "{0} years".format (checkRange);
 
     },
+    */
 
     SplitDataElementsAsInt: function (dataString) {
 

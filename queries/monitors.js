@@ -85,6 +85,50 @@ exports.getAllByAccountId = function(db, accountId, callback) {
 
 };
 
+// Loads all for an account.
+// callback(array: List of model.Monitor)
+exports.getAllForEnvironment = function(db, accountId, environmentName, callback) {
+
+    db.selectMultiple(
+        {
+            sql:
+            "SELECT     m.MonitorId, m.AccountId, m.ProductId, m.EnvironmentId, m.EndpointUri, m.IntervalSeconds " +
+            ",          p.Name AS ProductName " +
+            ",          e.Name AS EnvironmentName " +
+            "FROM       Monitors m " +
+            "INNER JOIN Products p ON p.ProductId = m.ProductId " +
+            "INNER JOIN Environments e ON e.EnvironmentId = m.EnvironmentId " +
+            "WHERE      m.AccountId = ? " +
+            "AND        e.Name = ? " +
+            "ORDER BY   m.MonitorId ASC ",
+            values: [
+                accountId,
+                environmentName
+            ]
+        },
+        function (m) {
+            if (!m) return callback([]);
+
+            let monitors = [];
+            for (let i = 0; i < m.length; i++) {
+                monitors.push(new models.Monitor(
+                    m[i].AccountId,
+                    m[i].ProductId,
+                    m[i].ProductName,
+                    m[i].EnvironmentId,
+                    m[i].EnvironmentName,
+                    m[i].EndpointUri,
+                    m[i].IntervalSeconds,
+                    m[i].MonitorId
+                ));
+            }
+            callback(monitors);
+
+        }
+    );
+
+};
+
 // Loads all monitors eligible for processing by its interval period.
 // callback(array: List of model.Monitor)
 exports.getAllByInterval = function (db, cronIntervalSeconds, callback) {

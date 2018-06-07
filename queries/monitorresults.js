@@ -54,18 +54,20 @@ exports.loadStatsForDay = function (db, monitorId, monitorIntervalSeconds, callb
 
             for (let i = 0; i < s.length; i++) {
                 let rawDataPieces = s[i].RawData.split(",");
+                s[i].metric = s[i].Metric;
                 delete s[i].RawData;
+                delete s[i].Metric;
 
                 // set the data unit type
                 if (rawDataPieces.length) {
-                    if (rawDataPieces[0].indexOf("%") >= 0) s[i].UnitType = "percent";
-                    else if (rawDataPieces[0] === "true" || rawDataPieces[0] === "false") s[i].UnitType = "boolean";
-                    else s[i].UnitType = "numeric";
+                    if (rawDataPieces[0].indexOf("%") >= 0) s[i].unitType = "percent";
+                    else if (rawDataPieces[0] === "true" || rawDataPieces[0] === "false") s[i].unitType = "boolean";
+                    else s[i].unitType = "numeric";
                 }
 
                 // loop through data standardizing to a number for each
                 for (let j = 0; j < rawDataPieces.length; j++) {
-                    switch (s[i].UnitType) {
+                    switch (s[i].unitType) {
                         case "percent":
                             rawDataPieces[j] = rawDataPieces[j].replace("%", "");
                             break;
@@ -117,8 +119,8 @@ exports.loadStatsForDay = function (db, monitorId, monitorIntervalSeconds, callb
 
                 }
 
-                s[i].AveragedStats = averagedStats.join(",");
-                s[i].StatsPerPeriod = statsPerPeriod;
+                s[i].averagedStats = averagedStats.join(",");
+                s[i].statsPerPeriod = statsPerPeriod;
 
             }
 

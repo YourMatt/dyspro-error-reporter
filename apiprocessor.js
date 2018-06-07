@@ -421,6 +421,14 @@ exports.monitor = {
 
     },
 
+    getAllForEnvironment: function (req, res) {
+
+        queries.monitors.getAllForEnvironment(req.db, req.accountId, req.params.environment, function(monitors) {
+            apiUtils.sendResponse(res, 200, monitors);
+        });
+
+    },
+
     create: function (req, res) {
 
         apiUtils.loadProductAndEnvironmentIds(req, res, req.body.product, req.body.environment, function(productId, environmentId) {
