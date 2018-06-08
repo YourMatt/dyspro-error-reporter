@@ -7,7 +7,7 @@
         </h3>
     </section>
 
-    <table id="RecentErrors" class="table table-sm table-hover table-striped">
+    <table id="RecentErrors" class="table table-sm table-hover table-striped table-full-width">
         <thead>
         <tr>
             <th>
@@ -21,7 +21,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="eo in errorOccurrences">
+        <tr ng-repeat="eo in errorOccurrences" fixerrorlistwidth>
             <td>
                 <a href="/errors/{{eo.ErrorId}}/occurrence/{{eo.ErrorOccurrenceId}}">
                     <div class="float-left occurrence">{{eo.OccurrenceIteration}}</div>
@@ -31,7 +31,7 @@
                         <div class="col-7 text-truncate">{{eo.UserName}}</div>
                     </div>
                     <div class="row">
-                        <div class="col-11 text-truncate">{{eo.Message|firstLine}}</div>
+                        <div class="col-12 text-truncate">{{eo.Message|firstLine}}</div>
                     </div>
                 </a>
             </td>

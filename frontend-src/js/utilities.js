@@ -59,6 +59,14 @@ var utilities = {
             catch (e) {}
         });
 
+    },
+
+    // This accounts for some odd issue where full-width tables are being expanded out to thousands of pixels wide.
+    restrictFullWidthTableToMaxWidthOfArea: function () {
+
+        // applies to error list tables
+        $(".table-full-width .text-truncate").css("width", $(".table-full-width").parent().width());
+
     }
 
 };
