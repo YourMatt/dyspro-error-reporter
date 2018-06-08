@@ -6,22 +6,20 @@
 
 $(document).ready (function () {
 
-    dysproGraph.BuildGraph();
+    dysproGraph.buildGraph();
 
 });
 $(window).resize (function () {
 
-    dysproGraph.BuildGraph ();
+    dysproGraph.buildGraph ();
 
 });
 
 var dysproGraph = {
 
     graphType: "",              // loaded from SVG element
-    gameData: {
-        scores: [],             // loaded from HTML instructions
-        levels: [],             // loaded from HTML instructions
-        times: [],              // loaded from HTML instructions
+    graphData: {
+        dataPoints: [],             // loaded from HTML instructions
         dates: [],              // loaded from HTML instructions
         stats: {                // added through initialize graph method
             highScore: 0,
@@ -88,15 +86,15 @@ var dysproGraph = {
         graphLine: null
     },
 
-    BuildGraph: function () {
-        if (! this.InitializeGraph ()) return;
+    buildGraph: function () {
+        if (! this.initializeGraph ()) return;
 
         this.canvas.clear ();
-        this.DrawGraph ();
+        this.drawGraph ();
 
     },
 
-    InitializeGraph: function () {
+    initializeGraph: function () {
 
         if (! $("#ProgressGraph").length) return false;
         if (! this.canvas) this.canvas = Snap ("#ProgressGraph");
@@ -112,22 +110,22 @@ var dysproGraph = {
         this.lastGraphType = this.graphType;
 
         // load game data from the HTML page
-        this.gameData.scores = this.SplitDataElementsAsInt ($("scores", $("#ProgressGraphData")).text ());
-        this.gameData.dates = this.SplitDataElementsAsInt ($("dates", $("#ProgressGraphData")).text ());
-        this.gameData.totalScores = this.gameData.scores.length;
+        this.graphData.dataPoints = this.splitDataElementsAsInt ($("scores", $("#ProgressGraphData")).text ());
+        this.graphData.dates = this.splitDataElementsAsInt ($("dates", $("#ProgressGraphData")).text ());
+        this.graphData.totalScores = this.graphData.dataPoints.length;
 
         // load base stats about the game deriving from the provided data
-        this.LoadGameStats ();
+        this.loadGameStats ();
 
         // load positional information for the graph - this has to happen after loading stats because the average score
         // is used as a label and will define the margin for the left and right of the graph
-        this.LoadGraphPositions ();
+        this.loadGraphPositions ();
 
         return true;
 
     },
 
-    LoadGraphPositions: function () {
+    loadGraphPositions: function () {
 
         // set the top, bottom and height of the graph
         this.dims.graphPositionTop = this.dims.graphMarginTop;
@@ -141,42 +139,41 @@ var dysproGraph = {
 
     },
 
-    LoadGameStats: function () {
+    loadGameStats: function () {
 
         var highScore = 0;
         var lowScore = 0;
         var totalScores = 0;
         var highLevel = 0;
-        var numScores = this.gameData.scores.length;
+        var numScores = this.graphData.dataPoints.length;
 
         if (numScores) {
-            highScore = this.gameData.scores[0];
-            lowScore = this.gameData.scores[0];
+            highScore = this.graphData.dataPoints[0];
+            lowScore = this.graphData.dataPoints[0];
 
             for (var i = 0; i < numScores; i++) {
-                if (this.gameData.scores[i] > highScore) highScore = this.gameData.scores[i];
-                if (this.gameData.scores[i] < lowScore) lowScore = this.gameData.scores[i];
-                if (this.gameData.levels[i] > highLevel) highLevel = this.gameData.levels[i];
-                totalScores += this.gameData.scores[i];
+                if (this.graphData.dataPoints[i] > highScore) highScore = this.graphData.dataPoints[i];
+                if (this.graphData.dataPoints[i] < lowScore) lowScore = this.graphData.dataPoints[i];
+                totalScores += this.graphData.dataPoints[i];
             }
         }
 
-        this.gameData.stats.highScore = highScore;
-        this.gameData.stats.lowScore = lowScore;
-        this.gameData.stats.highLevel = highLevel;
+        this.graphData.stats.highScore = highScore;
+        this.graphData.stats.lowScore = lowScore;
+        this.graphData.stats.highLevel = highLevel;
 
     },
 
-    DrawGraph: function () {
+    drawGraph: function () {
 
-        if (this.graphType == "line") this.DrawLineGraph ();
+        if (this.graphType == "line") this.drawLineGraph ();
         //else if (this.graphType == "levels") this.DrawLevelGraph (); // TODO: Change to "bar" as type
 
     },
 
-    DrawLineGraph: function () {
+    drawLineGraph: function () {
 
-        this.DrawAxisLines ();
+        this.drawAxisLines ();
         //this.DrawBottomDateLabels ();
 
         var graphTopLimit = this.dims.graphPositionTop + this.dims.graphPadding;
@@ -184,7 +181,7 @@ var dysproGraph = {
         var graphLimitHeight = graphBottomLimit - graphTopLimit;
 
         var pathInstruction = "";
-        var numScores = this.gameData.scores.length;
+        var numScores = this.graphData.dataPoints.length;
         var numScoreIndexes = numScores - 1;
 
         var scorePositionLeft = 0;
@@ -201,7 +198,7 @@ var dysproGraph = {
         this.dims.graphScoreSpacing = this.dims.graphWidth / numScoreIndexes;
 
         // draw a single line if only one score has been logged
-        if (this.gameData.totalScores == 1) {
+        if (this.graphData.totalScores == 1) {
 
             pathInstruction = "M{0} {1}L{2} {3}".format (
                 this.dims.graphPositionLeft,
@@ -222,7 +219,7 @@ var dysproGraph = {
                 scorePositionLeft = parseInt(this.dims.graphPositionLeft + i * this.dims.graphScoreSpacing);
 
                 // set the y position to be the bottom edge minus the percent of the height of the graph
-                scorePositionTop = parseInt(graphBottomLimit - graphLimitHeight * (this.gameData.scores[i] - this.gameData.stats.lowScore) / (this.gameData.stats.highScore - this.gameData.stats.lowScore));
+                scorePositionTop = parseInt(graphBottomLimit - graphLimitHeight * (this.graphData.dataPoints[i] - this.graphData.stats.lowScore) / (this.graphData.stats.highScore - this.graphData.stats.lowScore));
 
                 // if just starting, move to the starting point
                 if (!i) {
@@ -242,16 +239,16 @@ var dysproGraph = {
                     if (i > 0 && i < numScores - 1) {
 
                         // find if the scores are moving up or down
-                        if (this.gameData.scores[i - 1] < this.gameData.scores[i] && this.gameData.scores[i] < this.gameData.scores[i + 1]) {
+                        if (this.graphData.dataPoints[i - 1] < this.graphData.dataPoints[i] && this.graphData.dataPoints[i] < this.graphData.dataPoints[i + 1]) {
                             slopeDirection = -1;
                         }
-                        else if (this.gameData.scores[i - 1] > this.gameData.scores[i] && this.gameData.scores[i] > this.gameData.scores[i + 1]) {
+                        else if (this.graphData.dataPoints[i - 1] > this.graphData.dataPoints[i] && this.graphData.dataPoints[i] > this.graphData.dataPoints[i + 1]) {
                             slopeDirection = 1;
                         }
 
                         // if found slope, then move the handles up or down by the smallest difference between the previous, current and next scores
                         if (slopeDirection) {
-                            scoreNextPositionTop = parseInt(graphBottomLimit - graphLimitHeight * (this.gameData.scores[i + 1] - this.gameData.stats.lowScore) / (this.gameData.stats.highScore - this.gameData.stats.lowScore));
+                            scoreNextPositionTop = parseInt(graphBottomLimit - graphLimitHeight * (this.graphData.dataPoints[i + 1] - this.graphData.stats.lowScore) / (this.graphData.stats.highScore - this.graphData.stats.lowScore));
                             handlePositionTopAdjustment = Math.min(slopeDirection * (scorePositionTop - scorePreviousPositionTop), slopeDirection * (scoreNextPositionTop - scorePositionTop));
                             handlePositionTop = scorePositionTop - (slopeDirection * handlePositionTopAdjustment);
                         }
@@ -274,10 +271,10 @@ var dysproGraph = {
                 }
 
                 // add the high score if found
-                if (this.gameData.scores[i] == this.gameData.stats.highScore) {
-                    this.gameData.highScoreIndex = i;
-                    this.gameData.lastSelectedIndex = i;
-                    this.DrawScoreIndicator(scorePositionLeft, i);
+                if (this.graphData.dataPoints[i] == this.graphData.stats.highScore) {
+                    this.graphData.highScoreIndex = i;
+                    this.graphData.lastSelectedIndex = i;
+                    this.drawScoreIndicator(scorePositionLeft, i);
                 }
 
                 // add hover points to show the score for this date
@@ -290,7 +287,7 @@ var dysproGraph = {
                     fill: "rgba(255,255,255,0)",                 // set to transparent fill - mouseover will not work if fill set to none
                     scoreIndex: i,
                     linePositionLeft: scorePositionLeft
-                }).mouseover(dysproGraphEventHandlers.MoveScoreIndicator);
+                }).mouseover(dysproGraphEventHandlers.moveScoreIndicator);
 
                 // set the last y position so can use for the handle when drawing the next curve
                 scorePreviousPositionTop = scorePositionTop;
@@ -359,7 +356,7 @@ var dysproGraph = {
     },
     */
 
-    DrawAxisLines: function () {
+    drawAxisLines: function () {
 
         var axisStyle = {
             stroke: this.colors.axisLine,
@@ -470,7 +467,7 @@ var dysproGraph = {
     },
     */
 
-    DrawScoreIndicator: function (positionLeft, scoreIndex) {
+    drawScoreIndicator: function (positionLeft, scoreIndex) {
 
         var topLabelStyle = {
             fontSize: this.sizes.labelMedium + "px",
@@ -496,7 +493,7 @@ var dysproGraph = {
         )).attr (scoreLine);
 
         // add score as the top label
-        this.elements.scoreIndicatorScore = this.canvas.text (0, 0, this.gameData.stats.highScore.toLocaleString ())
+        this.elements.scoreIndicatorScore = this.canvas.text (0, 0, this.graphData.stats.highScore.toLocaleString ())
         .attr (topLabelStyle);
         this.elements.scoreIndicatorScore.transform ("t{0},{1}".format (
             positionLeft - (this.elements.scoreIndicatorScore.getBBox().width / 2),
@@ -504,7 +501,7 @@ var dysproGraph = {
         ));
 
         // add date below the graph
-        var dateHighScore = new Date (this.gameData.dates[scoreIndex]);
+        var dateHighScore = new Date (this.graphData.dates[scoreIndex]);
         this.elements.scoreIndicatorDate = this.canvas.text (0, 0, moment.unix(dateHighScore).format("MM/DD/YYYY"))
         .attr (bottomLabelStyle);
         this.elements.scoreIndicatorDate.transform ("t{0},{1}".format (
@@ -576,7 +573,7 @@ var dysproGraph = {
     },
     */
 
-    SplitDataElementsAsInt: function (dataString) {
+    splitDataElementsAsInt: function (dataString) {
 
         var elements = dataString.split (",");
         for (var i = 0; i < elements.length; i++) {
@@ -591,18 +588,18 @@ var dysproGraph = {
 
 var dysproGraphEventHandlers = {
 
-    MoveScoreIndicator: function (event) {
+    moveScoreIndicator: function (event) {
 
         // pull variables from hit point
         var index = event.target.attributes.scoreIndex.value;
         var linePositionLeft = event.target.attributes.linePositionLeft.value;
 
         // find if should animate movement of not - if moving more than 10% of the distance, then animate it
-        var animateMovement = (Math.abs (dysproGraph.gameData.lastSelectedIndex - index) / dysproGraph.gameData.totalScores > 0.1);
+        var animateMovement = (Math.abs (dysproGraph.graphData.lastSelectedIndex - index) / dysproGraph.graphData.totalScores > 0.1);
 
         // find the color to change the element to based on the score
-        var currentScoreOffset = dysproGraph.gameData.scores[index] - dysproGraph.gameData.stats.lowScore;
-        var topScoreOffset = dysproGraph.gameData.stats.highScore - dysproGraph.gameData.stats.lowScore + 1;
+        var currentScoreOffset = dysproGraph.graphData.dataPoints[index] - dysproGraph.graphData.stats.lowScore;
+        var topScoreOffset = dysproGraph.graphData.stats.highScore - dysproGraph.graphData.stats.lowScore + 1;
         var colorIndex = Math.ceil ((1 - (currentScoreOffset / topScoreOffset)) * 10) - 1;
 
         // set common variables
@@ -610,7 +607,7 @@ var dysproGraphEventHandlers = {
 
         // move the line indicator relative to the current position
         movementTransform = "t{0},{1}".format (
-            (index - dysproGraph.gameData.highScoreIndex) * dysproGraph.dims.graphScoreSpacing,
+            (index - dysproGraph.graphData.highScoreIndex) * dysproGraph.dims.graphScoreSpacing,
             0
         );
 
@@ -618,7 +615,7 @@ var dysproGraphEventHandlers = {
         else dysproGraph.elements.scoreIndicatorLine.transform (movementTransform);
 
         // move the date and change the value as absolute positioned
-        var dateHighScore = new Date (dysproGraph.gameData.dates[index]);
+        var dateHighScore = new Date (dysproGraph.graphData.dates[index]);
         dysproGraph.elements.scoreIndicatorDate.attr ({ text: moment.unix(dateHighScore).format("MM/DD/YYYY") });
 
         movementTransform = "t{0},{1}".format (
@@ -630,7 +627,7 @@ var dysproGraphEventHandlers = {
         else dysproGraph.elements.scoreIndicatorDate.transform (movementTransform);
 
         // move the score and change the value absolute positioned
-        dysproGraph.elements.scoreIndicatorScore.attr ({ text: dysproGraph.gameData.scores[index].toLocaleString() });
+        dysproGraph.elements.scoreIndicatorScore.attr ({ text: dysproGraph.graphData.dataPoints[index].toLocaleString() });
 
         movementTransform = "t{0},{1}".format (
             linePositionLeft - (dysproGraph.elements.scoreIndicatorScore.getBBox().width / 2),
@@ -646,7 +643,7 @@ var dysproGraphEventHandlers = {
         dysproGraph.elements.scoreIndicatorScore.animate ({ fill: dysproGraph.colors.alert[colorIndex] }, dysproGraph.sizes.animationTime);
 
         // reset the last selected index
-        dysproGraph.gameData.lastSelectedIndex = index;
+        dysproGraph.graphData.lastSelectedIndex = index;
 
     }
 

@@ -67,6 +67,13 @@ exports.loadStatsForDay = function (db, monitorId, monitorIntervalSeconds, callb
 
                 // loop through data standardizing to a number for each
                 for (let j = 0; j < rawDataPieces.length; j++) {
+
+                    // set to 0 if no value
+                    if (!rawDataPieces[j].length) {
+                        rawDataPieces[j] = 0;
+                    }
+
+                    // determine the unit type from the first record
                     switch (s[i].unitType) {
                         case "percent":
                             rawDataPieces[j] = rawDataPieces[j].replace("%", "");
@@ -75,6 +82,7 @@ exports.loadStatsForDay = function (db, monitorId, monitorIntervalSeconds, callb
                             rawDataPieces[j] = (rawDataPieces[j] === "true") ? 1 : 0;
                             break;
                     }
+
                 }
 
                 // trim from start if more elements than expected

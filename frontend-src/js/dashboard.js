@@ -133,7 +133,7 @@ var dashboardPage = {
         // TODO: This is a POC only - update to load for each monitor and provide directly to graphing object instead of updating DOM
         $("scores", $("#ProgressGraphData")).text (stats[9].averagedStats);
         $("dates", $("#ProgressGraphData")).text (stats[9].averagedStats);
-        dysproGraph.BuildGraph ();
+        dysproGraph.buildGraph ();
 
     }
 

@@ -78,8 +78,8 @@ exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentI
             ",          e.ErrorId " +
             ",          p.Name AS ProductName " +
             ",          en.Name AS EnvironmentName " +
-            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND Date <= eo.Date) AS OccurrenceIteration " +
-            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId) AS OccurrenceTotal " +
+            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND EnvironmentId = ? AND Date <= eo.Date) AS OccurrenceIteration " +
+            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND EnvironmentId = ?) AS OccurrenceTotal " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
             "INNER JOIN Products p ON p.ProductId = e.ProductId " +
@@ -89,6 +89,8 @@ exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentI
             "AND        eo.Date > CONVERT_TZ(?, '+00:00', @@global.time_zone) " +
             "ORDER BY   Date DESC ",
             values: [
+                environmentId,
+                environmentId,
                 accountId,
                 environmentId,
                 sinceDate

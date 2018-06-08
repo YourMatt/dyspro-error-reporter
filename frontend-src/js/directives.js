@@ -8,7 +8,6 @@
 app.directive("fixerrorlistwidth", function () {
     return function (scope, element, attrs) {
         if (scope.$last) {
-            console.log("fin");
             utilities.restrictFullWidthTableToMaxWidthOfArea();
         }
     }
