@@ -69,16 +69,31 @@ exports.getAllByErrorAndEnvironment = function (db, errorId, environmentId, call
 
 // Loads the latest errors from an account.
 // callback(array: List of error occurrences)
-exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentId, sinceDate, callback) {
+exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentId, numRecords,
+    sinceDate, productName, occurrenceFilter, occurrenceThreshold,
+    callback) {
+
+    // create the having clause based upon filtering on aggregates
+    let havingClause = "";
+    if (occurrenceThreshold && occurrenceFilter === "first") // show on the first occurrence of each error that has happened a number of times
+        havingClause = "HAVING OccurrenceIteration = 1 AND OccurrenceTotal >= " + occurrenceThreshold + " ";
+    else if (occurrenceFilter === "first") // show only the first occurrence of each error
+        havingClause = "HAVING OccurrenceIteration = 1 ";
+    else if (occurrenceThreshold && !occurrenceFilter) // show ALL errors that have happened at least a number of times
+        havingClause = "HAVING OccurrenceTotal >= " + occurrenceThreshold + " ";
+    else if (occurrenceThreshold && occurrenceFilter === "last") // show only the last error occurrence of errors that had happened at least a number of times
+        havingClause = "HAVING OccurrenceTotal >= " + occurrenceThreshold + " AND OccurrenceIteration = OccurrenceTotal ";
+    else if (occurrenceFilter === "last") // show only the last occurrence of each error
+        havingClause = "HAVING OccurrenceIteration = OccurrenceTotal ";
 
     db.selectMultiple(
         {
             sql:
-            "SELECT     eo.ErrorOccurrenceId, eo.Message, eo.Server, eo.UserName, eo.Date " +
+            "SELECT     eo.ErrorOccurrenceId, SUBSTRING_INDEX(eo.Message, '\n', 1) AS Message, eo.Server, eo.UserName, eo.Date " +
             ",          e.ErrorId " +
             ",          p.Name AS ProductName " +
             ",          en.Name AS EnvironmentName " +
-            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND EnvironmentId = ? AND Date <= eo.Date) AS OccurrenceIteration " +
+            ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND EnvironmentId = ? AND ErrorOccurrenceId <= eo.ErrorOccurrenceId) AS OccurrenceIteration " +
             ", (        SELECT COUNT(*) FROM ErrorOccurrences WHERE ErrorId = e.ErrorId AND EnvironmentId = ?) AS OccurrenceTotal " +
             "FROM       ErrorOccurrences eo " +
             "INNER JOIN Errors e ON e.ErrorId = eo.ErrorId " +
@@ -87,13 +102,18 @@ exports.getLatestByAccountAndEnvironment = function (db, accountId, environmentI
             "WHERE      e.AccountId = ? " +
             "AND        eo.EnvironmentId = ? " +
             "AND        eo.Date > CONVERT_TZ(?, '+00:00', @@global.time_zone) " +
-            "ORDER BY   Date DESC ",
+            "AND (      '' = ? OR p.Name = ?) " +
+            havingClause +
+            "ORDER BY   Date DESC " +
+            "LIMIT      ? OFFSET 0 ",
             values: [
                 environmentId,
                 environmentId,
                 accountId,
                 environmentId,
-                sinceDate
+                sinceDate,
+                productName, productName,
+                numRecords
             ]
         },
         callback

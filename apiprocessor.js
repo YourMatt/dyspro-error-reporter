@@ -62,18 +62,32 @@ exports.error = {
 
     },
 
-    getLatestForEnvironment: function (req, res) {
+    getForEnvironment: function (req, res) {
 
-        let sinceDate = req.params.sinceDate;
+        // load possible parameters
+        let numRecords = utils.toInt(req.params.numRecords);
+        let sinceDate = utils.toString(req.query.sinceDate);
+        let productName = utils.toString(req.query.product);
+        let occurrenceFilter = req.query.occurrenceFilter;
+        let occurrenceThreshold = utils.toInt(req.query.occurrenceThreshold);
+
+        // set defaults for blank parameters that need them
+        if (!numRecords) numRecords = 100;
         if (!sinceDate) sinceDate = "2018-01-01T00:00:00.000Z"; // default to beginning of time if no date set
 
+        // load the environment ID
         apiUtils.loadEnvironmentId(req, res, req.params.environment, function(environmentId) {
 
+            // load all error occurrences for the environment, matching the filters
             queries.errorOccurrences.getLatestByAccountAndEnvironment(
                 req.db,
                 req.accountId,
                 environmentId,
+                numRecords,
                 sinceDate,
+                productName,
+                occurrenceFilter,
+                occurrenceThreshold,
                 function (errors) {
                     apiUtils.sendResponse(res, 200, errors);
                 }
