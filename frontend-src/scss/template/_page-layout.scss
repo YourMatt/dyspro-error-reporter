@@ -55,6 +55,15 @@ body {
         }
       }
     }
+    .dropdown {
+      .dropdown-toggle {
+        @include shadow(true);
+        background-color: $color-input-background;
+        border: none;
+        color: $color-input-text;
+        font-weight: bold;
+      }
+    }
     .form-text {
       a {
         color: inherit;

@@ -1,11 +1,42 @@
 <div ng-show="errorOccurrences.length">
 
-    <section>
-        <h3>
-            Displaying {{errorOccurrences.length}} of {{totalErrors}}
-            <ng-pluralize count="errorOccurrences.length" when="{'one': 'Error', 'other': 'Errors'}"></ng-pluralize>
-        </h3>
-    </section>
+    <form class="form-inline">
+        <label class="mr-2">Filters</label>
+        <div class="dropdown mr-2">
+            <button id="dropdown-filter-product-name" class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                All Products
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdown-filter-product-name">
+                <a class="dropdown-item" href="#" ng-click="selectProduct('all')">All Products</a>
+                <a class="dropdown-item" href="#" ng-repeat="p in products" ng-click="selectProduct(p.name)">{{p.name}}</a>
+            </div>
+        </div>
+        <div id="filter-error-enumeration" class="btn-group btn-group-sm btn-group-toggle input-group mr-2" data-toggle="buttons">
+            <label class="btn btn-secondary">
+                <input type="radio" name="filter-error-enumeration" value="all" autocomplete="off" checked /> All Occurrences
+            </label>
+            <label class="btn btn-secondary">
+                <input type="radio" name="filter-error-enumeration" value="first" autocomplete="off" /> First Only
+            </label>
+            <label class="btn btn-secondary">
+                <input type="radio" name="filter-error-enumeration" value="last" autocomplete="off" /> Last Only
+            </label>
+        </div>
+        <div class="dropdown mr-2">
+            <button id="dropdown-filter-product-name" class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Occurred at least once
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdown-filter-product-name">
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(1)">Occurred at least once</a>
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(2)">Occurred more than once</a>
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(5)">Occurred at least 5 times</a>
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(10)">Occurred at least 10 times</a>
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(25)">Occurred at least 25 times</a>
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(50)">Occurred at least 50 times</a>
+                <a class="dropdown-item" href="#" ng-click="selectMinOccurrence(100)">Occurred at least 100 times</a>
+            </div>
+        </div>
+    </form>
 
     <table id="RecentErrors" class="table table-sm table-hover table-striped table-full-width">
         <thead>

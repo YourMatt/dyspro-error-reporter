@@ -12,9 +12,9 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
     // local properties
     $scope.currentEnvironment = localStorage.selectedEnvironment;
     $scope.errorOccurrences = [];
-    $scope.totalErrors = 0;
     $scope.monitors = [];
     $scope.monitorStats = [];
+    $scope.products = [];
 
     // local methods
     $scope.changeEnvironmentTab = dashboardPage.changeEnvironmentTab;
@@ -34,8 +34,18 @@ var dashboardPage = {
     init: function (angularScope) {
         dashboardPage.angularScope = angularScope;
 
+        dashboardPage.initFilters();
         dashboardPage.loadMonitors();
+        dashboardPage.loadProducts();
         dashboardPage.loadErrorOccurrences();
+
+    },
+
+    // Loads default state of the filters bar.
+    initFilters: function () {
+
+        var filterErrorEnumeration = "all";
+        $("input[name=filter-error-enumeration][value=" + filterErrorEnumeration + "]").parent().click();
 
     },
 
@@ -93,6 +103,23 @@ var dashboardPage = {
 
     },
 
+    // Loads all products to allow select from existing.
+    loadProducts: function () {
+
+        $.ajax("/api/products")
+        .done(function (results) {
+
+            dashboardPage.updateAngularValue(function () {
+                dashboardPage.angularScope.products = results;
+            });
+
+        })
+        .fail(function (response) {
+            notifications.errorFromServiceResponse(response);
+        });
+
+    },
+
     // Loads error occurrences.
     loadErrorOccurrences: function (sinceDate) {
 
@@ -102,7 +129,6 @@ var dashboardPage = {
             // add results to scope
             dashboardPage.updateAngularValue(function () {
                 dashboardPage.angularScope.errorOccurrences = results;
-                dashboardPage.angularScope.totalErrors = results.length;
             });
 
         })
