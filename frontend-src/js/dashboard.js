@@ -8,6 +8,9 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
 
     // default local storage options
     if (!localStorage.selectedEnvironment) localStorage.selectedEnvironment = "Dev"; // TODO: Set to use an environment held by the current account
+    if (!localStorage.selectedFilterProduct) localStorage.selectedFilterProduct = "All Products";
+    if (!localStorage.selectedFilterMinOccurrence) localStorage.selectedFilterMinOccurrence = 1;
+    if (!localStorage.selectedFilterErrorEnumeration) localStorage.selectedFilterErrorEnumeration = "all";
 
     // local properties
     $scope.currentEnvironment = localStorage.selectedEnvironment;
@@ -15,9 +18,16 @@ app.controller ("DashboardController", ["$scope", function ($scope) {
     $scope.monitors = [];
     $scope.monitorStats = [];
     $scope.products = [];
+    $scope.minOccurrenceOptions = [];
+    $scope.filterProduct = localStorage.selectedFilterProduct;
+    $scope.filterMinOccurrence = localStorage.selectedFilterMinOccurrence;
+    $scope.filterErrorEnumeration = localStorage.selectedFilterErrorEnumeration;
 
     // local methods
     $scope.changeEnvironmentTab = dashboardPage.changeEnvironmentTab;
+    $scope.selectProduct = dashboardPage.selectProduct;
+    $scope.selectMinOccurrence = dashboardPage.selectMinOccurrence;
+    $scope.formatMinOccurrenceText = dashboardPage.formatMinOccurrenceText;
 
     // watch for changes in stats and update the graph accordingly
     $scope.$watch("monitorStats", dashboardPage.handleMonitorStatsChange, true);
@@ -36,7 +46,6 @@ var dashboardPage = {
 
         dashboardPage.initFilters();
         dashboardPage.loadMonitors();
-        dashboardPage.loadProducts();
         dashboardPage.loadErrorOccurrences();
 
     },
@@ -44,8 +53,18 @@ var dashboardPage = {
     // Loads default state of the filters bar.
     initFilters: function () {
 
-        var filterErrorEnumeration = "all";
-        $("input[name=filter-error-enumeration][value=" + filterErrorEnumeration + "]").parent().click();
+        $("input[name=filter-error-enumeration][value=" + dashboardPage.angularScope.filterErrorEnumeration + "]").parent().click();
+        $("input[name=filter-error-enumeration]").change(function () {
+            var newErrorEnumeration = $(this).val();
+            dashboardPage.updateAngularValue(function () {
+                localStorage.selectedFilterErrorEnumeration = newErrorEnumeration;
+                dashboardPage.angularScope.filterErrorEnumeration = newErrorEnumeration;
+                dashboardPage.loadErrorOccurrences();
+            });
+        });
+
+        dashboardPage.loadFilterOptionProducts();
+        dashboardPage.loadFilterOptionMinOccurrences();
 
     },
 
@@ -104,7 +123,7 @@ var dashboardPage = {
     },
 
     // Loads all products to allow select from existing.
-    loadProducts: function () {
+    loadFilterOptionProducts: function () {
 
         $.ajax("/api/products")
         .done(function (results) {
@@ -120,10 +139,34 @@ var dashboardPage = {
 
     },
 
+    // Loads all options for the minimum number of occurrences filter.
+    loadFilterOptionMinOccurrences: function () {
+
+        var options = [];
+        options.push({count: 1, title: "Occurred at least once"});
+        options.push({count: 2, title: "Occurred more than once"});
+        options.push({count: 5, title: "Occurred at least 5 times"});
+        options.push({count: 10, title: "Occurred at least 10 times"});
+        options.push({count: 25, title: "Occurred at least 25 times"});
+        options.push({count: 50, title: "Occurred at least 50 times"});
+        options.push({count: 100, title: "Occurred at least 100 times"});
+
+        dashboardPage.updateAngularValue(function () {
+            dashboardPage.angularScope.minOccurrenceOptions = options;
+        });
+
+    },
+
     // Loads error occurrences.
     loadErrorOccurrences: function (sinceDate) {
 
-        $.ajax("/api/errors/" + dashboardPage.angularScope.currentEnvironment + ((sinceDate) ? ("/" + sinceDate) : ""))
+        var filters = {};
+        filters.occurrenceThreshold = dashboardPage.angularScope.filterMinOccurrence;
+        if (sinceDate) filters.sinceDate = sinceDate;
+        if (dashboardPage.angularScope.filterProduct !== "All Products") filters.product = dashboardPage.angularScope.filterProduct;
+        if (dashboardPage.angularScope.filterErrorEnumeration !== "all") filters.occurrenceFilter = dashboardPage.angularScope.filterErrorEnumeration;
+
+        $.get("/api/errors/" + dashboardPage.angularScope.currentEnvironment, filters)
         .done(function (results) {
 
             // add results to scope
@@ -160,6 +203,42 @@ var dashboardPage = {
         $("scores", $("#ProgressGraphData")).text (stats[9].averagedStats);
         $("dates", $("#ProgressGraphData")).text (stats[9].averagedStats);
         dysproGraph.buildGraph ();
+
+    },
+
+    // Filters by a product name.
+    selectProduct: function (name) {
+
+        localStorage.selectedFilterProduct = name;
+
+        dashboardPage.updateAngularValue(function () {
+            dashboardPage.angularScope.filterProduct = localStorage.selectedFilterProduct;
+            dashboardPage.loadErrorOccurrences();
+        });
+
+    },
+
+    // Filters by a minimum number of occurrences.
+    selectMinOccurrence: function (occurrenceCount) {
+
+        localStorage.selectedFilterMinOccurrence = occurrenceCount;
+
+        dashboardPage.updateAngularValue(function () {
+            dashboardPage.angularScope.filterMinOccurrence = localStorage.selectedFilterMinOccurrence;
+            dashboardPage.loadErrorOccurrences();
+        });
+
+    },
+
+    // Displays text related to the minimum occurrence count.
+    formatMinOccurrenceText: function (count) {
+
+        for (var i = 0; i < dashboardPage.angularScope.minOccurrenceOptions.length; i++) {
+            if (dashboardPage.angularScope.minOccurrenceOptions[i].count == count)
+                return dashboardPage.angularScope.minOccurrenceOptions[i].title;
+        }
+
+        return count;
 
     }
 

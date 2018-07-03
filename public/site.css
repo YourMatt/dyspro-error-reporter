@@ -7184,11 +7184,18 @@ table.table-sm th, table.table-sm td {
   width: 46px;
   height: 46px;
   text-align: center;
-  padding-top: 8px;
+  padding-top: 4px;
   border-radius: 23px;
   margin-left: -6px;
-  box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.5);
-  font-weight: bold; }
+  box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.5); }
+  #page-dashboard table td .occurrence h5 {
+    margin: 0px 4px 0px 0px;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: -4px; }
+  #page-dashboard table td .occurrence h6 {
+    font-size: 8px;
+    line-height: 1px; }
 
 /***********************************************************************************************************************
  *
